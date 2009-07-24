@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>prepod</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec/>
+	<natures>
+		<nature>com.palm.pdt.nature</nature>
+		<!--nature>org.eclipse.wst.jsdt.core.jsNature</nature-->
+	</natures>
+</projectDescription>

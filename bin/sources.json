@@ -1,0 +1,42 @@
+[
+	{
+		"source": "app\/assistants\/app-assistant.js"
+	},
+	{
+		"source": "app\/assistants\/stage-assistant.js"
+	},
+	{
+		"source": "javascript\/mediadb-service.js"
+	},
+	{
+		"source": "javascript\/download-service.js"
+	},
+	{
+		"source": "javascript\/utilities.js"
+	},
+	{
+		"source": "javascript\/applicationManager-service.js"
+	},
+	{
+		"source": "app\/models\/feed.js"
+	},
+	{
+		"source": "app\/models\/episode.js"
+	},
+	{
+		"source": "app\/assistants\/feedList-assistant.js",
+		"scenes": "feedList"
+	},
+	{
+		"source": "app\/assistants\/addFeed-assistant.js",
+		"scenes": "feedList"
+	},
+	{
+		"source": "app\/assistants\/episodeList-assistant.js",
+		"scenes": "episodeList"
+	},
+	{
+		"source": "app\/assistants\/episodeDetails-assistant.js",
+		"scenes": "episodeDetails"
+	},
+]

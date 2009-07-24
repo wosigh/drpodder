@@ -1,0 +1,141 @@
+.palm-row {
+	margin-top: 0px;
+}
+
+.palm-row-wrapper {
+	margin-top: 0px;
+}
+
+.feedlist-icon-container {
+    height: 60px;
+    margin-top: 0px;
+}
+
+.feedlist-icon {
+    width: 60px;
+    height: 60px;
+	padding-right: 10px;
+}
+
+.feedLine {
+	height: 60px;
+}
+
+.feedTitle {
+	height: 30px;
+	vertical-align: middle;
+	padding-left: 10px;
+}
+
+.feedDetails {
+	/*margin-left: 70px;*/
+	padding-left: 10px;
+	font-size: 75%;
+}
+
+.feedStatsContainer {
+	height: 60px;
+	font-size: 14px;
+	margin-right: 9px;
+	margin-top: 0px;
+	display: inline-block;
+	float: right;
+}
+
+.feedStatsNew,
+.feedStatsDownloaded,
+.feedStatsStarted {
+	width: 32px;
+}
+
+.feedStatsNew {
+	color: red;
+}
+
+.feedStatsDownloaded {
+	color: green;
+}
+
+.feedStatsStarted {
+	color: blue;
+}
+
+.feedStatsIcon {
+	display: inline-block;
+	float: right;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+.feedLine {
+	width: 70%
+}
+
+*/
+
+
+
+.bodyScroller {
+    height: 250px;
+}
+
+.stream-info .elapsed,
+.stream-info .duration {
+	font-size: 14px;
+	vertical-align: middle;
+	color: black;
+}
+
+.stream-info .elapsed {
+	text-align: left;
+}
+
+.stream-info .elapsed,
+.stream-info .duration {
+	display: table-cell;
+	text-align: center;
+	width: 20%;
+}
+
+.progress-widget-width {
+	width: 200px;
+}
+
+.episodeStatus {
+    background: center center no-repeat;
+}
+
+.episodeTitle {
+	margin-left: 10px;
+	margin-top: 10px;
+	color: gray;
+}
+
+.episodeSelected {
+	outline-style: inset;
+	outline-color: blue;
+	outline-width: 2px;
+}
+
+.progressDone {
+	background-color: yellow;
+	z-index: -1;
+	position: absolute;
+	left: 10px;
+	width: 0%;
+}

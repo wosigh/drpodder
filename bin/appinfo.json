@@ -1,0 +1,10 @@
+{
+	"title": "PrePod",
+	"type": "web",
+	"main": "index.html",
+	"id": "com.palm.drnull.prepod",
+	"version": "0.2.2",
+	"vendor": "drnull",
+	"icon": "icon.png",
+	"removable": "true"
+}

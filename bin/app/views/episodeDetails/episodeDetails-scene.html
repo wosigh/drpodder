@@ -1,0 +1,24 @@
+<div id="episodeViewScene">
+	<div class="palm-page-header multi-line">
+		<div class="palm-page-header-wrapper">
+			<div id="episodeDetailsTitle" class="title left">
+				${title}
+			</div>
+		</div>
+	</div>
+
+	<div id="progress-info" class="stream-info">
+		<div id="playback-progress" class="elapsed">00:00</div>
+		<div id="progress" x-mojo-element="ProgressSlider" class="stream-buffer-bar"></div>
+		<div id="playback-remaining" class="duration">00:00</div>
+	</div>
+
+	<div id="bodyScroller" x-mojo-element="Scroller">
+		<div class="palm-text-wrapper bodyScroller">
+			<div id="episodeDetailsDescription" class="palm-body-text">
+				${-description}
+			</div>
+		</div>
+	</div>
+	<div id="episodeDetailsAudio" autoplay=false></div>
+</div>
