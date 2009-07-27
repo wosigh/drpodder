@@ -79,6 +79,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 		url = url.replace(/^\/{1,2}/, "");
 		url = "http://" + url;
 	}
+	Mojo.Log.error("url:", url);
 
 	// Update the entered URL & model
 	this.urlModel.value = url;

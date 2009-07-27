@@ -30,7 +30,7 @@ EpisodeListAssistant.prototype.setup = function() {
 	for (var i=0; i<this.episodeModel.items.length; i++) {
 		var episode = this.episodeModel.items[i];
 		if (episode.downloadTicket) {
-			Mojo.Log.error("Hey, looks like you were downloading:", episode.title, " resuming:", episode.downloadTicket);
+			Mojo.Log.error("Resuming download of:", episode.title, " ticket:", episode.downloadTicket);
 			episode.downloading = true;
 			episode.downloadingPercent = 0;
 			episode.downloadingIndex = i;
@@ -144,12 +144,12 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, index, command)
 		case "listen-cmd":
 			this.listened(episode);
 			this.refresh();
-			DB.saveFeeds();
+			DB.saveFeed(this.feedObject);
 			break;
 		case "unlisten-cmd":
 			this.unlistened(episode);
 			this.refresh();
-			DB.saveFeeds();
+			DB.saveFeed(this.feedObject);
 			break;
 		case "download-cmd":
 			this.download(episode, index);
@@ -173,7 +173,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, index, command)
 			this.deleteFile(episode);
 			this.listened(episode);
 			this.refresh();
-			DB.saveFeeds();
+			DB.saveFeed(this.feedObject);
 			break;
 	}
 };
@@ -205,7 +205,7 @@ EpisodeListAssistant.prototype.deleteFile = function(episode) {
 		this.updateStatusIcon(episode);
 		this.feedObject.numDownloaded--;
 		this.refresh();
-		DB.saveFeeds();
+		DB.saveFeed(this.feedObject);
 	}.bind(this));
 };
 
@@ -248,7 +248,7 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 			episode.downloading = true;
 			this.updateStatusIcon(episode);
 			this.refresh();
-			DB.saveFeeds();
+			DB.saveFeed(this.feedObject);
 		}
 	} else if (event.aborted || event.completed === false) {
 		Mojo.Log.error("Download aborted!", episode.title);
@@ -257,7 +257,7 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 		episode.downloading = false;
 		this.updateStatusIcon(episode);
 		this.refresh();
-		DB.saveFeeds();
+		DB.saveFeed(this.feedObject);
 	} else if (event.completed) {
 		Mojo.Log.error("Download complete!", episode.title);
 		episode.downloadTicket = 0;
@@ -268,7 +268,7 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 		episode.file = event.target;
 		this.downloaded(episode);
 		this.refresh();
-		DB.saveFeeds();
+		DB.saveFeed(this.feedObject);
 	} else if (episode.downloading) {
 		var per = 0;
 		// if amountTotal is < 2048 or so, we'll assume it's a redirect
@@ -288,7 +288,7 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 		episode.downloadingIndex = index;
 		this.updateStatusIcon(episode);
 		this.refresh();
-		DB.saveFeeds();
+		DB.saveFeed(this.feedObject);
 	}
 };
 

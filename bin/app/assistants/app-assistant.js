@@ -6,4 +6,3 @@ AppAssistant.prototype.setup = function() {
 	AppAssistant.mediaService = new MediaDBService();
 	AppAssistant.applicationManagerService = new ApplicationManagerService();
 };
-
