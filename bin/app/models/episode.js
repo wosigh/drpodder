@@ -1,52 +1,48 @@
-function Episode(xmlObject) {
-	if (xmlObject) {
-		this.title = this.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
-		this.link = this.xmlTagValue(xmlObject, "link");
-		this.description = this.xmlTagValue(xmlObject, "description");
-		this.enclosure = this.xmlTagAttributeValue(xmlObject, "enclosure", "url");
-		this.pubDate = new Date(this.xmlTagValue(xmlObject, "pubDate"));
-		this.guid = new Date(this.xmlTagValue(xmlObject, "guid"));
-
+function Episode(init) {
+	if (init !== undefined) {
+		this.id = init.id;
+		this.displayOrder = init.displayOrder;
+		this.feedId = init.feedId;
+		this.title = init.title;
+		this.link = init.link;
+		this.description = init.description;
+		this.enclosure = init.enclosure;
+		this.pubDate = init.pubDate;
+		this.guid = init.guid;
+		this.file = init.file;
+		this.downloadTicket = init.downloadTicket;
+		this.downloaded = init.downloaded;
+		this.listened = init.listened;
+		this.length = init.length;
+		this.position = init.position;
 	} else {
 		this.title = null;
 		this.link = null;
 		this.description = null;
 		this.enclosure = null;
 		this.pubDate = null;
-		this.guid = guid;
+		this.guid = null;
+		this.file = null;
+		this.downloadTicket = null;
+		this.downloaded = false;
+		this.listened = false;
+		this.length = 0;
+		this.position = 0;
 	}
 
-	this.listened = false;
-	this.length = 0;
-	this.position = 0;
 }
 
-Episode.prototype.xmlTagValue = function(node, element, def) {
-	var arr = node.getElementsByTagName(element);
-	var val = def;
-	if (arr && arr.length > 0 && arr[0].firstChild) { val = arr[0].firstChild.nodeValue; }
-	return val;
-};
-
-Episode.prototype.xmlTagAttributeValue = function(node, element, attr, def) {
-	var arr = node.getElementsByTagName(element);
-	var val = def;
-	if (arr && arr.length > 0) {
-		// we found the element
-		node = arr[0];
-
-		if (node.attributes !== null) {
-			// just stepping through the attributes till we find the one asked for
-			for (var i=0; i<node.attributes.length; i++) {
-				var attrNode = node.attributes[i];
-				if (attrNode.nodeName.toLowerCase() == attr.toLowerCase()) {
-					val = attrNode.nodeValue;
-					break;
-				}
-			}
-		}
+Episode.prototype.loadFromXML = function(xmlObject) {
+	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
+	this.link = Util.xmlTagValue(xmlObject, "link");
+	this.description = Util.xmlTagValue(xmlObject, "description");
+	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
+	// fix stupid redirect url's BOL has started to use
+	if (this.enclosure !== undefined && this.enclosure !== null) {
+		this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
 	}
-	return val;
+	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
+	this.guid = Util.xmlTagValue(xmlObject, "guid");
 };
 
 var EpisodeUtil = new Episode();

@@ -1,12 +1,4 @@
 function FeedListAssistant() {
-	/*
-	this.demoDepot = new Mojo.Depot(this.depotOptions,
-			function() {
-				this.demoDepot.simpleGet("feeds", this.loadFeedSuccess.bind(this), this.defaultFeeds.bind(this));
-			}.bind(this),
-			function() {Mojo.Log.error("Depot open failed");});
-	*/
-
 }
 
 FeedListAssistant.prototype.feedAttr = {
@@ -40,6 +32,8 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("feedSpinner", {property: "updating"});
 
+	this.controller.setupWidget(Mojo.Menu.appMenu, StageAssistant.appMenuAttr, StageAssistant.appMenuModel);
+
 	this.waitForFeedsReady();
 };
 
@@ -63,8 +57,8 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 };
 
 FeedListAssistant.prototype.cleanup = function() {
-	// this doesn't seem to actually save the feeds.  demoDepot has gone away maybe?
-	// DB.saveFeeds();
+	// this doesn't seem to actually save the feeds.  db has gone away maybe?
+	//DB.saveFeeds();
 };
 
 FeedListAssistant.prototype.setInterval = function(feed) {
@@ -107,7 +101,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 		// edit feed
 		this.controller.popupSubmenu({
 			onChoose: this.popupHandler.bind(this, feed),
-			placeNear: event.target,
+			placeNear: event.originalEvent.target,
 			items: [
 			        //{label: "Last: "+feed.lastUpdate, command: 'dontwant-cmd', enabled: false},
 			        //{label: "Next: "+feed.lastUpdate+feed.interval, command: 'dontwant-cmd'},
@@ -139,7 +133,7 @@ FeedListAssistant.prototype.popupHandler = function(feed, command) {
 			}
 			feed.numNew = 0;
 			this.refresh();
-			DB.saveFeeds();
+			DB.saveFeed(feed);
 			break;
 	}
 
@@ -167,6 +161,7 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 
 
 FeedListAssistant.prototype.handleDelete = function(event) {
+	DB.removeFeed(event.model.items[event.index]);
 	event.model.items.splice(event.index, 1);
 	DB.saveFeeds();
 };

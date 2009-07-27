@@ -1,3 +1,5 @@
+var Util;
+
 function Utilities(){
 }
 
@@ -43,7 +45,32 @@ Utilities.alert = function(message){
     });
 };
 
-/*
-var Util;
+Utilities.prototype.xmlTagValue = function(node, element, def) {
+	var arr = node.getElementsByTagName(element);
+	var val = def;
+	if (arr && arr.length > 0 && arr[0].firstChild) { val = arr[0].firstChild.nodeValue; }
+	return val;
+};
+
+Utilities.prototype.xmlTagAttributeValue = function(node, element, attr, def) {
+	var arr = node.getElementsByTagName(element);
+	var val = def;
+	if (arr && arr.length > 0) {
+		// we found the element
+		node = arr[0];
+
+		if (node.attributes !== null) {
+			// just stepping through the attributes till we find the one asked for
+			for (var i=0; i<node.attributes.length; i++) {
+				var attrNode = node.attributes[i];
+				if (attrNode.nodeName.toLowerCase() == attr.toLowerCase()) {
+					val = attrNode.nodeValue;
+					break;
+				}
+			}
+		}
+	}
+	return val;
+};
+
 Util = new Utilities();
-*/

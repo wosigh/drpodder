@@ -18,6 +18,9 @@
 		"source": "javascript\/applicationManager-service.js"
 	},
 	{
+		"source": "app\/models\/db.js"
+	},
+	{
 		"source": "app\/models\/feed.js"
 	},
 	{

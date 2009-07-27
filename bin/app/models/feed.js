@@ -2,10 +2,10 @@ var UPDATECHECK_INVALID = -1;
 var UPDATECHECK_NOUPDATES = 0;
 var UPDATECHECK_UPDATES = 1; // maybe number of updates would be better?
 
-var DB;
-
 function Feed(init) {
 	if (init) {
+		this.id = init.id;
+		this.displayOrder = init.displayOrder;
 		this.url = init.url;
 		this.title = init.title;
 		this.albumArt = init.albumArt;
@@ -71,7 +71,7 @@ Feed.prototype.update = function(assistant) {
 			assistant.refresh();
 
 			if (updateCheckStatus > 0) {
-				DB.saveFeeds();
+				DB.saveFeed(this);
 			}
 			assistant.updating = false;
 		}.bind(this)
@@ -86,12 +86,11 @@ Feed.prototype.validateXML = function(transport){
 };
 
 Feed.prototype.getTitle = function(transport) {
-	var titlePath = "/rss/channel/title";
+	var titlePath = "/rss/channel/title ";
 	this.validateXML(transport);
 
 	var nodes = document.evaluate(titlePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
 	var title = nodes.iterateNext().firstChild.nodeValue;
-
 	return title;
 };
 
@@ -99,16 +98,26 @@ Feed.prototype.getAlbumArt = function(transport) {
 	var imagePath = "/rss/channel/image/url";
 	this.validateXML(transport);
 
-	var nodes = document.evaluate(imagePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
-	var imageUrl = "";
-	if (nodes) {
+	try {
+		var nodes = document.evaluate(imagePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
+		var imageUrl = "";
 		var node = nodes.iterateNext();
+		if (node === undefined || node === null) {
+			// ugh, nonstandard rss, try to find the itunes image
+			var xpe = transport.responseXML.ownerDocument || transport.responseXML;
+			var nsResolver = xpe.createNSResolver(xpe.documentElement);
+			imagePath = "/rss/channel/itunes:image/@href";
+			nodes = document.evaluate(imagePath, transport.responseXML, nsResolver, XPathResult.ANY_TYPE, null);
+			node = nodes.iterateNext();
+		}
 		if (node) {
 			var firstChild = node.firstChild;
 			if (firstChild) {
 				imageUrl = firstChild.nodeValue;
 			}
 		}
+	} catch (e) {
+		Mojo.Log.error("Error finding feed image: %o", e);
 	}
 
 	return imageUrl;
@@ -118,7 +127,7 @@ Feed.prototype.updateCheck = function(transport) {
 	var lastModified = transport.getHeader("Last-Modified");
 	var updateCheckStatus = UPDATECHECK_NOUPDATES;
 
-	if (this.lastModified === lastModified) {
+	if (lastModified !== null && this.lastModified === lastModified) {
 		return updateCheckStatus;
 	}
 
@@ -127,7 +136,7 @@ Feed.prototype.updateCheck = function(transport) {
 
 	// this isn't the best way to keep things unique, maybe should use guid
 	var topEpisodeTitle = "-a-title-that-will-never-match-anything-";
-	if (this.episodes[0]) {topEpisodeTitle = this.episodes[0].title;}
+	if (this.episodes.length > 0) {topEpisodeTitle = this.episodes[0].title;}
 
 	this.validateXML(transport);
 
@@ -154,7 +163,9 @@ Feed.prototype.updateCheck = function(transport) {
 	// end debugging
 	while (result) {
 		// construct a new Episode based on the current item from XML
-		var episode = new Episode(result);
+		var episode = new Episode();
+		episode.loadFromXML(result);
+		episode.feedId = this.id;
 
 		// what really needs to happen here:
 		// check based on guid each of the episodes, add new ones to the top of the array
@@ -193,89 +204,4 @@ Feed.prototype.updateCheck = function(transport) {
 
 var FeedUtil = new Feed();
 
-var feedModel = {items: []};
-
-function DBClass() {
-	this.demoDepot = new Mojo.Depot(this.depotOptions,
-			function() {
-				this.demoDepot.simpleGet("feeds", this.loadFeedSuccess.bind(this), this.defaultFeeds.bind(this));
-			}.bind(this),
-			function() {Mojo.Log.error("Depot open failed");});
-}
-
-DBClass.prototype.depotOptions = { name: "feed", replace: false };
-DBClass.prototype.feedsReady = false;
-
-DBClass.prototype.saveFeeds = function() {
-	//Mojo.Log.error("DBClass.saveFeeds");
-	this.demoDepot.simpleAdd("feeds",
-			feedModel.items,
-			function() {Mojo.Log.error("Feed save successful!");},
-			function() {Mojo.Log.error("Feed save ERROR!");});
-};
-
-DBClass.prototype.loadFeedSuccess = function(response) {
-	if (Object.values(response).size() > 0) {
-		for (var i=0; i<response.length; i++) {
-			var feed = new Feed(response[i]);
-			feedModel.items.push(feed);
-		}
-		this.feedsReady = true;
-	} else {
-		this.defaultFeeds();
-	}
-};
-
-DBClass.prototype.defaultFeeds = function() {
-	var feed = new Feed();
-	feed.url = "http://leo.am/podcasts/twit";
-	feed.title = "TWiT";
-	feed.interval = 30000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://feeds.feedburner.com/TreocentralTreoCast";
-	feed.title = "PalmCast";
-	feed.interval = 45000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://feeds.gdgt.com/gdgt/podcast-mp3/";
-	feed.title = "gdgt weekly";
-	feed.interval = 60000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://feeds.feedburner.com/cnet/buzzoutloud";
-	feed.title = "Buzz Out Loud";
-	feed.interval = 60000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://feeds2.feedburner.com/javaposse";
-	feed.title = "The Java Posse";
-	feed.interval = 60000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://blog.stackoverflow.com/index.php?feed=podcast";
-	feed.title = "Stack Overflow";
-	feed.interval = 60000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://feeds.feedburner.com/podictionary";
-	feed.interval = 60000;
-	feedModel.items.push(feed);
-
-	feed = new Feed();
-	feed.url = "http://www.merriam-webster.com/word/index.xml";
-	feed.interval = 60000;
-	feedModel.items.push(feed);
-
-	this.feedsReady = true;
-
-	this.saveFeeds();
-};
-
-var DB = new DBClass();
+var feedModel = {items: [], ids: []};
