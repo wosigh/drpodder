@@ -31,11 +31,12 @@ Utilities.albumArtListUrlFormatter = function(url){
     }
 };
 
-Utilities.alert = function(message){
-    this.controller.showAlertDialog({
+Utilities.prototype.showError = function(title, message){
+    var controller = Mojo.Controller.stageController.activeScene();
+	controller.showAlertDialog({
         onChoose: function(value){
         },
-        title: $L("Error"),
+        title: title,
         message: message,
         choices: [{
             label: $L('OK'),

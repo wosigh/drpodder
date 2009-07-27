@@ -233,6 +233,12 @@ EpisodeListAssistant.prototype.cancelDownload = function(episode) {
 	AppAssistant.downloadService.cancelDownload(this.controller, episode.downloadTicket,
 		function(event) {
 			Mojo.Log.error("Canceling download");
+			episode.downloadTicket = 0;
+			episode.downloadingPercent = 0;
+			episode.downloading = false;
+			this.updateStatusIcon(episode);
+			this.refresh();
+			DB.saveFeed(this.feedObject);
 		}.bind(this)
 	);
 };
@@ -290,7 +296,11 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 			DB.saveFeed(this.feedObject);
 		}
 	} else if (event.aborted || event.completed === false) {
-		Mojo.Log.error("Download aborted!", episode.title);
+		Mojo.Log.error("event=%j", event);
+		if (!event.aborted) {
+			// if the user didn't do this, let them know what happened
+			Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
+		}
 		episode.downloadTicket = 0;
 		episode.downloadingPercent = 0;
 		episode.downloading = false;
@@ -319,8 +329,8 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 			this.updatePercent(episode);
 		}
 	} else {
-		Mojo.Log.error("Error handling downloading of", episode.title);
-		Utilities.dump(event);
+		Util.showError("Error downloading "+episode.title, "There was an error downloading url:"+episode.enclosure);
+		Mojo.Log.error("Error handling downloading of %s (%j)", episode.title, event);
 		episode.downloadTicket = 0;
 		episode.downloading = false;
 		episode.downloadingPercent = 0;

@@ -193,7 +193,10 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 					this.saveEpisode(f.episodes[i], i);
 				}
 			}.bind(this),
-			function(transaction, error) { Mojo.Log.error("Feed Save failed: (%s), %j", f.title, error);});
+			function(transaction, error) {
+				Util.showError("Error Saving Feed", "There was an error saving feed: "+f.title);
+				Mojo.Log.error("Feed Save failed: (%s), %j", f.title, error);
+			});
 	}.bind(this));
 };
 
@@ -218,7 +221,9 @@ DBClass.prototype.saveEpisode = function(e, displayOrder) {
 					e.id = results.insertId;
 				}
 			},
-			function(transaction, error) { Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);});
+			function(transaction, error) {
+				Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);
+			});
 	}.bind(this));
 };
 
