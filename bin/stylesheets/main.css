@@ -12,7 +12,7 @@
 }
 
 .feedlist-icon {
-    width: 60px;
+    /*width: 60px;*/
     height: 60px;
 	padding-right: 10px;
 }
@@ -45,7 +45,7 @@
 .feedStatsNew,
 .feedStatsDownloaded,
 .feedStatsStarted {
-	width: 36px;
+	width: 38px;
 }
 
 .feedStatsNew {
