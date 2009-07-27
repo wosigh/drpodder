@@ -231,7 +231,7 @@ DBClass.prototype.removeFeed = function(f) {
 			function(transaction, results) {Mojo.Log.error("Feed removed: %s", f.title);},
 			function(transaction, error) { Mojo.Log.error("Feed remove failed: (%s), %j", f.title, error);});
 		transaction.executeSql(removeEpisodesSQL, [f.id],
-			function(transaction, results) {Mojo.Log.error("Episodes removed: %s", f.id);},
+			function(transaction, results) {Mojo.Log.error("Episodes removed for feed %s", f.id);},
 			function(transaction, error) { Mojo.Log.error("Episodes remove failed: (%s), %j", f.id, error);});
 	});
 };
@@ -239,52 +239,6 @@ DBClass.prototype.removeFeed = function(f) {
 DBClass.prototype.removeEpisode = function(episode) {
 	// this functionality doesn't exist (doesn't need to either)
 };
-
-
-
-
-
-
-
-
-
-
-// OLD DEPOT
-/*
-DBClass.prototype.saveFeeds = function() {
-	//Mojo.Log.error("DBClass.saveFeeds");
-	this.demoDepot.simpleAdd("feeds",
-			feedModel.items,
-			function() {Mojo.Log.error("Feed save successful!");},
-			function() {Mojo.Log.error("Feed save ERROR!");});
-};
-
-DBClass.prototype.depotLoadFeedSuccess = function(response) {
-	if (Object.values(response).size() > 0) {
-		for (var i=0; i<response.length; i++) {
-			var f = new Feed(response[i]);
-			feedModel.items.push(f);
-			feedModel.ids[f.id] = f;
-			for (var j=0; j<f.episodes.length; j++) {
-				var e = f.episodes[j];
-				if (e.file === undefined) {e.file = null;}
-				if (e.downloadTicket === undefined) {e.downloadTicket = null;}
-				if (e.downloaded === undefined) {e.downloaded = false;}
-				if (e.listened === undefined) {e.listened = false;}
-				if (e.length === undefined) {e.length = 0;}
-				if (e.position === undefined) {e.position = 0;}
-				Mojo.Log.error("pubDate:", e.pubDate);
-				Mojo.Log.error("pubDate.toString():", e.pubDate.toString());
-				Mojo.Log.error("pubDate.toUTCString():", e.pubDate.toUTCString());
-			}
-		}
-		this.feedsReady = true;
-		this.saveFeeds();
-	} else {
-		this.defaultFeeds();
-	}
-};
-*/
 
 DBClass.prototype.defaultFeeds = function() {
 	var feed = new Feed();

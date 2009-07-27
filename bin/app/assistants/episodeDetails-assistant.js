@@ -49,7 +49,6 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
 	this.controller.update(this.controller.get("episodeDetailsDescription"), this.episodeObject.description);
 
-
 	this.progressModel.value = 0;
 	this.progressModel.progressStart = 0;
 	this.progressModel.progressEnd = 0;
@@ -58,7 +57,6 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.listen("progress", Mojo.Event.propertyChange, this.progressChange.bind(this));
 	this.controller.listen("progress", Mojo.Event.sliderDragStart, this.sliderDragStart.bind(this));
 	this.controller.listen("progress", Mojo.Event.sliderDragEnd, this.sliderDragEnd.bind(this));
-
 
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
@@ -110,10 +108,29 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 EpisodeDetailsAssistant.prototype.bookmark = function() {
 	var cur = this.audioObject.currentTime;
 	if (cur !== undefined && cur !== null && cur > 15) {
-		Mojo.Log.error("Setting episode position:", cur);
+		Mojo.Log.error("Saving episode position:", cur);
+		if (this.episodeObject.position === 0) {
+			feedModel.ids[this.episodeObject.feedId].numStarted++;
+		}
 		this.episodeObject.position = cur;
+		this.episodeObject.length = this.audioObject.duration;
 	}
-	DB.saveFeeds();
+	DB.saveFeed(feedModel.ids[this.episodeObject.feedId]);
+};
+
+EpisodeDetailsAssistant.prototype.clearBookmark = function() {
+	Mojo.Log.error("Clearing bookmark");
+	this.audioObject.currentTime = 0;
+	if (this.episodeObject.position) {
+		this.episodeObject.position = 0;
+		feedModel.ids[this.episodeObject.feedId].numStarted--;
+	}
+	if (!this.episodeObject.listened) {
+		this.episodeObject.listened = true;
+		feedModel.ids[this.episodeObject.feedId].numNew--;
+	}
+	DB.saveFeed(feedModel.ids[this.episodeObject.feedId]);
+	this.controller.stageController.popScene(true);
 };
 
 EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
@@ -127,7 +144,7 @@ EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 };
 
 EpisodeDetailsAssistant.prototype.keyDownHandler = function(event) {
-	var key = event.originalEvent.keyCode
+	var key = event.originalEvent.keyCode;
 	if (key === 32) {
 		//play/pause
 		if (this.audioObject.paused) {
@@ -175,8 +192,11 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
-	Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
-	Utilities.dump(this.audioObject.mojo._media.error);
+	try {
+		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %o", event);
+		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
+	} catch (e) {
+	}
 	this.stop();
 	this.readyToPlay();
 };
@@ -185,27 +205,14 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 	Mojo.Log.error("AudioEvent: %j", event);
 	switch (event.type) {
 		case "play":
-			//if (this.episodeObject.downloaded) {
-				this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.pause;
-			//} else {
-				//this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.streamPause;
-			//}
-			this.setTimer(true);
-			if (this.resume) {
-				this.audioObject.currentTime = this.episodeObject.position;
-				Mojo.Log.error("we set currentTime to", this.episodeObject.position);
-				this.resume = false;
-			}
-			this.bookmark();
+			this.doPlay();
 			break;
 		case "pause":
-			//if (this.episodeObject.downloaded) {
-				this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.play;
-			//} else {
-				//this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.streamPlay;
-			//}
-			this.setTimer(false);
-			this.bookmark();
+			this.doPause();
+			break;
+		case "ended":
+			this.doPause();
+			this.clearBookmark();
 			break;
 	}
 };
@@ -219,20 +226,6 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 				this.controller.modelChanged(this.cmdMenuModel);
 				this.download();
 				break;
-            /*
-			case "streamPlay-cmd":
-				this.cmdMenuModel.items[2].items[0] = this.menuCommandItems.skipBack;
-				this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.streamPause;
-				this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.skipForward;
-				this.controller.modelChanged(this.cmdMenuModel);
-				this.streamPlay();
-				break;
-            case "streamPause-cmd":
-				this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.streamPlay;
-				this.controller.modelChanged(this.cmdMenuModel);
-				this.pause();
-				break;
-			*/
             case "play-cmd":
 				this.doPlay();
 				break;
@@ -274,12 +267,21 @@ EpisodeDetailsAssistant.prototype.doPlay = function() {
 	this.cmdMenuModel.items[2].items[4] = this.menuCommandItems.skipForward2;
 	this.controller.modelChanged(this.cmdMenuModel);
 	this.play();
+	this.setTimer(true);
+	if (this.resume) {
+		this.audioObject.currentTime = this.episodeObject.position;
+		Mojo.Log.error("loading resume position:", this.episodeObject.position);
+		this.resume = false;
+	}
+	this.bookmark();
 };
 
 EpisodeDetailsAssistant.prototype.doPause = function() {
 	this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.play;
 	this.controller.modelChanged(this.cmdMenuModel);
+	this.bookmark();
 	this.pause();
+	this.setTimer(false);
 };
 
 EpisodeDetailsAssistant.prototype.doSkip = function(secs) {
@@ -375,7 +377,9 @@ EpisodeDetailsAssistant.prototype.streamPlay = function() {
 		Mojo.Log.error("Setting stream src to:", this.episodeObject.enclosure);
 		this.audioObject.src = this.episodeObject.enclosure;
 	}
-	this.audioObject.play();
+	if (this.audioObject.paused) {
+		this.audioObject.play();
+	}
 };
 
 EpisodeDetailsAssistant.prototype.filePlay = function() {
@@ -386,7 +390,9 @@ EpisodeDetailsAssistant.prototype.filePlay = function() {
 		this.progressModel.progressEnd = 1;
 		this.controller.modelChanged(this.progressModel);
 	}
-	this.audioObject.play();
+	if (this.audioObject.paused) {
+		this.audioObject.play();
+	}
 };
 
 EpisodeDetailsAssistant.prototype.stop = function() {

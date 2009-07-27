@@ -63,7 +63,7 @@ FeedListAssistant.prototype.cleanup = function() {
 
 FeedListAssistant.prototype.setInterval = function(feed) {
 	if (this.updating) {
-		setTimeout(this.setInterval.bind(this, feed), 2000);
+		setTimeout(this.setInterval.bind(this, feed), 500);
 	} else {
 		if (feed.intervalID) {
 			clearInterval(feed.intervalID);

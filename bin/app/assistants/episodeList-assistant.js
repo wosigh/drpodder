@@ -27,6 +27,8 @@ EpisodeListAssistant.prototype.setup = function() {
 	//this.feedObject.numNew = 0;
 	//this.feedObject.numDownloaded = 0;
 	//this.feedObject.numEpisodes = 0;
+	this.feedObject.numStarted = 0;
+
 	for (var i=0; i<this.episodeModel.items.length; i++) {
 		var episode = this.episodeModel.items[i];
 		if (episode.downloadTicket) {
@@ -51,7 +53,14 @@ EpisodeListAssistant.prototype.setup = function() {
 		}
 		//this.feedObject.numEpisodes++;
 
+		if (episode.position) {
+			this.feedObject.numStarted++;
+		}
 		this.updateStatusIcon(episode);
+
+		if (episode.length) {
+			episode.bookmarkPercent = 100*episode.position/episode.length;
+		}
 	}
 
 	this.controller.get("episodeListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
@@ -64,6 +73,22 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
+};
+
+EpisodeListAssistant.prototype.activate = function(changes) {
+	for (var i=0; i<this.episodeModel.items.length; i++) {
+		var episode = this.episodeModel.items[i];
+		if (episode.listened) {
+			episode.indicatorColor = "gray";
+		} else {
+			episode.indicatorColor = "black";
+		}
+		this.updateStatusIcon(episode);
+		if (episode.length) {
+			episode.bookmarkPercent = 100*episode.position/episode.length;
+		}
+	}
+	this.refresh();
 };
 
 EpisodeListAssistant.prototype.refresh = function() {
@@ -95,10 +120,12 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var items = [];
 	var deleteCmd     = {label: "Delete", command: "delete-cmd"};
 	var downloadCmd   = {label: "Download", command: "download-cmd"};
+	var playCmd       = {label: "Play", command: "resume-cmd"};
 	var resumeCmd     = {label: "Resume", command: "resume-cmd"};
 	var restartCmd    = {label: "Restart", command: "restart-cmd"};
 	var listenedCmd   = {label: "Mark Listened", command: "listen-cmd"};
 	var unlistenedCmd = {label: "Mark Unlistened", command: "unlisten-cmd"};
+	var clearCmd      = {label: "Clear Bookmark", command: "clear-cmd"};
 	var detailsCmd    = {label: "Episode Details", command: "details-cmd"};
 
 	if (targetClass.indexOf("episodeStatus") === -1) {
@@ -114,8 +141,13 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 			if (!episode.downloaded) {
 				items.push(downloadCmd);
 			}
-			items.push(resumeCmd);
-			items.push(restartCmd);
+			if (episode.position) {
+				items.push(resumeCmd);
+				items.push(clearCmd);
+				items.push(restartCmd);
+			} else {
+				items.push(playCmd);
+			}
 			if (episode.downloaded) {
 				items.push(deleteCmd);
 			}
@@ -168,6 +200,13 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, index, command)
 			break;
 		case "play-cmd":
 			this.play(episode, true, true);
+			break;
+		case "clear-cmd":
+			episode.position = 0;
+			episode.bookmarkPercent = 0;
+			this.refresh();
+			this.feedObject.numStarted--;
+			DB.saveFeed(this.feedObject);
 			break;
 		case "delete-cmd":
 			this.deleteFile(episode);
@@ -297,6 +336,19 @@ EpisodeListAssistant.prototype.updatePercent = function(episode) {
 	var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episode.downloadingIndex);
 	var nodes = node.getElementsByClassName("progressDone");
 	nodes[0].style.width = episode.downloadingPercent + "%";
+};
+
+EpisodeListAssistant.prototype.updateBookmark = function(episode) {
+	/*
+	// might not be good to rely on displayOrder...
+	var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episode.displayOrder);
+	var nodes = node.getElementsByClassName("bookmarkDone");
+	if (episode.length) {
+		episode.bookmarkPercent = episode.position/episode.length;
+		Mojo.Log.error("Setting bookmark to:", episode.bookmarkPercent);
+		nodes[0].style.width = episode.bookmarkPercent + "%";
+	}
+	*/
 };
 
 EpisodeListAssistant.prototype.updateStatusIcon = function(episode) {

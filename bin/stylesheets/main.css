@@ -117,12 +117,14 @@
 }
 
 .episodeStatus {
-    background: center center no-repeat;
+    height: 32px;
+	background: center center no-repeat;
 }
 
 .episodeTitle {
 	margin-left: 10px;
 	margin-top: 10px;
+	/*height: 52px;*/
 	color: gray;
 }
 
@@ -136,6 +138,22 @@
 	background-color: yellow;
 	z-index: -1;
 	position: absolute;
-	left: 10px;
+	left: 0px;
 	width: 0%;
+	height: 58px;
+	margin-top: -36px;
+	display: inline-block;
+	float: left;
+}
+
+.bookmarkDone {
+	background-color: lightblue;
+	z-index: -2;
+	position: absolute;
+	left: 0px;
+	width: 0%;
+	height: 58px;
+	margin-top: -36px;
+	display: inline-block;
+	float: left;
 }

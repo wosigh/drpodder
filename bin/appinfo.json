@@ -3,7 +3,7 @@
 	"type": "web",
 	"main": "index.html",
 	"id": "com.palm.drnull.prepod",
-	"version": "0.2.5",
+	"version": "0.3.0",
 	"vendor": "drnull",
 	"icon": "icon.png",
 	"removable": "true"
