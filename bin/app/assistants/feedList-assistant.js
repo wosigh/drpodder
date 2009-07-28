@@ -34,6 +34,7 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, StageAssistant.appMenuAttr, StageAssistant.appMenuModel);
 
+	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 2);
 	this.waitForFeedsReady();
 };
 
@@ -48,12 +49,22 @@ FeedListAssistant.prototype.activate = function() {
 
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
+		this._refresh();
+		this.updateFeeds();
 		/*
+
+		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
-			this.setInterval(feedModel.items[i]);
+			if (feedModel.items[i].episodes.length > 0) {
+				firstLoad = false;
+				break;
+			}
 		}
-		*/
+		if (firstLoad) {
+			this.updateFeeds();
+		}
 		this.refresh();
+		*/
 	} else {
 		setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
@@ -65,9 +76,9 @@ FeedListAssistant.prototype.cleanup = function() {
 };
 
 FeedListAssistant.prototype.setInterval = function(feed) {
-	if (this.updating) {
-		setTimeout(this.setInterval.bind(this, feed), 500);
-	} else {
+	//if (this.updating) {
+		//setTimeout(this.setInterval.bind(this, feed), 500);
+	//} else {
 		if (feed.intervalID) {
 			clearInterval(feed.intervalID);
 			feed.intervalID = 0;
@@ -76,7 +87,7 @@ FeedListAssistant.prototype.setInterval = function(feed) {
 		}
 		// TODO: uncomment
 		// if (feed.interval) {feed.intervalID = setInterval(feed.update.bind(feed, this), feed.interval);}
-	}
+	//}
 };
 
 FeedListAssistant.prototype.clearIntervals = function() {
@@ -87,7 +98,12 @@ FeedListAssistant.prototype.clearIntervals = function() {
 	}
 };
 
-FeedListAssistant.prototype.refresh = function() {
+FeedListAssistant.prototype._refreshDebounced = function() {
+	Mojo.Log.error("You want a refresh?  you wait");
+};
+
+FeedListAssistant.prototype._refresh = function() {
+	Mojo.Log.error("refresh");
 	this.controller.modelChanged(feedModel);
 };
 
@@ -153,15 +169,18 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 				});
 				break;
 			case "refresh-cmd":
-				this.clearIntervals();
-				for (var i=0; i<feedModel.items.length; i++) {
-					this.setInterval(feedModel.items[i]);
-				}
+				this.updateFeeds();
 				break;
 		}
 	}
 };
 
+FeedListAssistant.prototype.updateFeeds = function(event) {
+	this.clearIntervals();
+	for (var i=0; i<feedModel.items.length; i++) {
+		this.setInterval(feedModel.items[i]);
+	}
+};
 
 FeedListAssistant.prototype.handleDelete = function(event) {
 	DB.removeFeed(event.model.items[event.index]);

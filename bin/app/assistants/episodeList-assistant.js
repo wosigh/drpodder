@@ -307,17 +307,32 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 		this.updateStatusIcon(episode);
 		this.refresh();
 		DB.saveFeed(this.feedObject);
-	} else if (event.completed) {
-		Mojo.Log.error("Download complete!", episode.title);
-		episode.downloadTicket = 0;
-		episode.downloading = false;
-		episode.downloadingPercent = 0;
-		this.unlistened(episode);
+	} else if (event.completed && event.completionStatusCode === 200) {
+			//success!
+			Mojo.Log.error("Download complete!", episode.title);
+			episode.downloadTicket = 0;
+			episode.downloading = false;
+			episode.downloadingPercent = 0;
+			this.unlistened(episode);
 
-		episode.file = event.target;
-		this.downloaded(episode);
-		this.refresh();
-		DB.saveFeed(this.feedObject);
+			episode.file = event.target;
+			this.downloaded(episode);
+			this.refresh();
+			DB.saveFeed(this.feedObject);
+	} else if (event.completed && event.completionStatusCode === 302) {
+			Mojo.Log.error("Redirecting...", episode.title);
+			var req = new Ajax.Request(event.target, {
+				method: 'get',
+				onFailure: function() {
+					Mojo.Log.error("Couldn't find %s... strange", event.target);
+				},
+				onComplete: function(transport) {
+					Mojo.Log.error("Trying to read redirect url:", transport.responseXML);
+					//AppAssistant.downloadService.download(this.controller, null,
+						//this.downloading.bind(this, episode, episode.downloadingIndex));
+					Mojo.Log.error("onComplete finished");
+				}.bind(this)
+			});
 	} else if (episode.downloading) {
 		var per = 0;
 		// if amountTotal is < 2048 or so, we'll assume it's a redirect

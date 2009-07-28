@@ -7,13 +7,14 @@
 }
 
 .feedlist-icon-container {
-    height: 60px;
+    width: 58px;
+	height: 58px;
     margin-top: 0px;
 }
 
 .feedlist-icon {
-    /*width: 60px;*/
-    height: 60px;
+    width: auto;
+    height: 58px;
 	padding-right: 10px;
 }
 

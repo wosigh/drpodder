@@ -126,6 +126,7 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 			f.numDownloaded = 0;
 			f.numStarted = 0;
 			f.episodes = [];
+			f.guid = [];
 			feedModel.items.push(f);
 			feedModel.ids[f.id] = f;
 		}
@@ -152,6 +153,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 			var f = feedModel.ids[e.feedId];
 			if (f.details === undefined) {f.details = e.title;}
 			f.episodes.push(e);
+			f.guid[e.guid] = e;
 			f.numEpisodes++;
 			if (!e.listened) {f.numNew++;}
 			if (e.downloaded) {f.numDownloaded++;}

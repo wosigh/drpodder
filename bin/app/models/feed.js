@@ -13,6 +13,7 @@ function Feed(init) {
 		this.autoDelete = init.autoDelete;
 		this.maxDownloads = init.maxDownloads;
 		this.episodes = init.episodes;
+		this.guid = init.guid;
 		this.interval = init.interval;
 		this.lastModified = init.lastModified;
 		this.details = init.details;
@@ -29,6 +30,7 @@ function Feed(init) {
 		this.autoDelete = true;
 		this.maxDownloads = 5;
 		this.episodes = [];
+		this.guid = [];
 		this.interval = 60000;
 		this.lastModified = null;
 		this.details = null;
@@ -65,14 +67,12 @@ Feed.prototype.update = function(assistant) {
 		onComplete: function(transport) {
 			// could check return value here and indicate that the feed update failed
 
-			var updateCheckStatus = this.updateCheck(transport, assistant);
+			this.updateCheck(transport, assistant);
 
 			this.updating = false;
 			assistant.refresh();
 
-			if (updateCheckStatus > 0) {
-				DB.saveFeed(this);
-			}
+			DB.saveFeed(this);
 			assistant.updating = false;
 		}.bind(this)
 	});
@@ -165,27 +165,30 @@ Feed.prototype.updateCheck = function(transport) {
 		// construct a new Episode based on the current item from XML
 		var episode = new Episode();
 		episode.loadFromXML(result);
-		episode.feedId = this.id;
 
 		// what really needs to happen here:
 		// check based on guid each of the episodes, add new ones to the top of the array
 		// update information for existing ones
-		// TODO: remove this line when we have updated album art
-		if (episode.title === topEpisodeTitle) {
-			// we have seen this episode already, so skip the rest
-			break;
+		var e = this.guid[episode.guid];
+		if (e === undefined) {
+			episode.feedId = this.id;
+			// record the title of the topmost episode
+			if (newEpisodeCount === 0) {
+				this.details = episode.title;
+			}
+			// insert the new episodes at the head of the list
+			this.episodes.splice(newEpisodeCount, 0, episode);
+			this.guid[episode.guid] = episode;
+			newEpisodeCount++;
+			updateCheckStatus = UPDATECHECK_UPDATES;
+		} else {
+			// it already exists, check that the enclosure url is up to date
+			e.title = episode.title;
+			e.pubDate = episode.pubDate;
+			e.description = episode.description;
+			e.link = episode.link;
+			e.enclosure = episode.enclosure;
 		}
-
-		// record the title of the topmost episode
-		if (newEpisodeCount === 0) {
-			this.details = episode.title;
-		}
-
-		// insert the new episodes at the head of the list
-		this.episodes.splice(newEpisodeCount, 0, episode);
-		newEpisodeCount++;
-		updateCheckStatus = UPDATECHECK_UPDATES;
-
 		result = nodes.iterateNext();
 	}
 
