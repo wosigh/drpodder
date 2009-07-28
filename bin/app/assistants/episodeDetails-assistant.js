@@ -279,8 +279,8 @@ EpisodeDetailsAssistant.prototype.doPlay = function() {
 EpisodeDetailsAssistant.prototype.doPause = function() {
 	this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.play;
 	this.controller.modelChanged(this.cmdMenuModel);
-	this.bookmark();
 	this.pause();
+	this.bookmark();
 	this.setTimer(false);
 };
 

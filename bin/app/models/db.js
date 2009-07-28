@@ -185,6 +185,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 				Mojo.Log.error("Feed saved: %s", f.title);
 				if (f.id === null) {
 					f.id = results.insertId;
+					feedModel.ids[f.id] = f;
 					for (var j=0; j<f.episodes.length; j++) {
 						f.episodes[j].feedId = f.id;
 					}

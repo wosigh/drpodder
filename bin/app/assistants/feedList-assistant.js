@@ -48,9 +48,12 @@ FeedListAssistant.prototype.activate = function() {
 
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
+		/*
 		for (var i=0; i<feedModel.items.length; i++) {
 			this.setInterval(feedModel.items[i]);
 		}
+		*/
+		this.refresh();
 	} else {
 		setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
