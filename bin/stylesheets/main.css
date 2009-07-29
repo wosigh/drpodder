@@ -1,3 +1,10 @@
+/* shouldn't have to do this, but to get the menu to show up lower-case,
+   I had to override this.  Otherwise, people would be naming the file Prepod.Xml for import
+*/
+.title {
+  text-transform: none;
+}
+
 .palm-row {
 	margin-top: 0px;
 }

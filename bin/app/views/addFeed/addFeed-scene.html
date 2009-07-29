@@ -1,0 +1,44 @@
+<div class="palm-page-header">
+    <div class="palm-page-header-wrapper">
+        <div id="dialogTitle" class="title">Add Podcast XML Feed</div>
+    </div>
+</div>
+
+<div class="palm-group">
+    <div class="palm-group-title"><span>Feed Details</span></div>
+    <div class="palm-list">
+        <div class="palm-row first">
+            <div class="textfield-group" x-mojo-focus-highlight="true">
+                <div x-mojo-element="TextField" id="newFeedURL"></div>
+            </div>
+        </div>
+        <div class="palm-row last">
+            <div class="textfield-group" x-mojo-focus-highlight="true">
+                <div x-mojo-element="TextField" id="newFeedName"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="palm-group">
+    <div class="palm-group-title"><span>Feed Configuration</span></div>
+    <div class="palm-list">
+        <div class="palm-row first">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="autoDownloadToggle"></div>
+                <div class="title left">Auto-Download</div>
+            </div>
+        </div>
+        <div class="palm-row">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="autoDeleteToggle"></div>
+                <div class="title left">Auto-Delete</div>
+            </div>
+        </div>
+        <div x-mojo-element="IntegerPicker" id="maxDownloadList"></div>
+    </div>
+</div>
+
+<div class="palm-dialog-buttons">
+    <div x-mojo-element="Button" id="okButton"></div>
+</div>

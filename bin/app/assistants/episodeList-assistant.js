@@ -142,24 +142,25 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 			// if we're downloading, just cancel the download
 			this.cancelDownload(episode);
 		} else {
-			if (!episode.downloaded) {
-				items.push(downloadCmd);
-			}
-			if (episode.position) {
-				items.push(resumeCmd);
-				items.push(clearCmd);
-				items.push(restartCmd);
-			} else {
-				items.push(playCmd);
-			}
-			if (episode.downloaded) {
-				items.push(deleteCmd);
-			}
-
-			if (episode.listened) {
-				items.push(unlistenedCmd);
-			} else {
-				items.push(listenedCmd);
+			if (episode.enclosure) {
+				if (!episode.downloaded) {
+					items.push(downloadCmd);
+				}
+				if (episode.position) {
+					items.push(resumeCmd);
+					items.push(clearCmd);
+					items.push(restartCmd);
+				} else {
+					items.push(playCmd);
+				}
+				if (episode.downloaded) {
+					items.push(deleteCmd);
+				}
+				if (episode.listened) {
+					items.push(unlistenedCmd);
+				} else {
+					items.push(listenedCmd);
+				}
 			}
 			items.push(detailsCmd);
 		}
@@ -410,6 +411,9 @@ EpisodeListAssistant.prototype.updateStatusIcon = function(episode) {
 			} else {
 				episode.statusIcon = "Knob Download.png";
 			}
+		}
+		if (!episode.enclosure) {
+			episode.statusIcon = "Knob Grey.png";
 		}
 	}
 };

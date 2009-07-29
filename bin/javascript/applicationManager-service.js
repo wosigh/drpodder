@@ -10,7 +10,7 @@ ApplicationManagerService.prototype.stream = function(sceneController, url, call
         onFailure: function() {callback("failure");},
         onComplete: function() {callback("complete");},
         parameters: {target: url}
-    }); 
+    });
 };
 
 ApplicationManagerService.prototype.play = function(sceneController, file, callback) {
@@ -20,5 +20,18 @@ ApplicationManagerService.prototype.play = function(sceneController, file, callb
         onFailure: function() {callback("failure");},
         onComplete: function() {callback("complete");},
         parameters: {target: file}
-    }); 
+    });
+};
+
+ApplicationManagerService.prototype.email = function(summary, text) {
+    var obj = new Mojo.Service.Request(this.URI, {
+        method: "open",
+        parameters: {
+            id: "com.palm.app.email",
+            params: {
+                "summary": summary,
+                "text": text
+            }
+        }
+    });
 };

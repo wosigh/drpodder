@@ -32,7 +32,7 @@
 	},
 	{
 		"source": "app\/assistants\/addFeed-assistant.js",
-		"scenes": "feedList"
+		"scenes": "addFeed"
 	},
 	{
 		"source": "app\/assistants\/episodeList-assistant.js",

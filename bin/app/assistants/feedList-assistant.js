@@ -61,7 +61,7 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 		if (firstLoad) {
 			this.updateFeeds();
 		}
-	
+
 		this.refresh();
 	} else {
 		setTimeout(this.waitForFeedsReady.bind(this), 200);
@@ -137,10 +137,7 @@ FeedListAssistant.prototype.popupHandler = function(feed, command) {
 	switch(command) {
 		case "edit-cmd":
 			this.clearIntervals();
-			this.controller.showDialog({
-				template: "feedList/addFeed-dialog",
-				assistant: new AddFeedAssistant(this, feed)
-			});
+			this.controller.stageController.pushScene("addFeed", this, feed);
 			break;
 		case "listened-cmd":
 			for (var i=0; i<feed.episodes.length; i++) {
@@ -160,10 +157,7 @@ FeedListAssistant.prototype.handleCommand = function(event) {
         switch (event.command) {
 			case "add-cmd":
 				this.clearIntervals();
-				this.controller.showDialog({
-					template: "feedList/addFeed-dialog",
-					assistant: new AddFeedAssistant(this, null)
-				});
+				this.controller.stageController.pushScene("addFeed", this, null);
 				break;
 			case "refresh-cmd":
 				this.updateFeeds();

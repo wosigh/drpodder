@@ -43,7 +43,6 @@ function Feed(init) {
 }
 
 Feed.prototype.update = function(assistant) {
-
 	/*
 	if (Mojo.Host.current === Mojo.Host.mojoHost) {
 		// same original policy means we need to use the proxy on mojo-host
@@ -89,8 +88,15 @@ Feed.prototype.getTitle = function(transport) {
 	var titlePath = "/rss/channel/title ";
 	this.validateXML(transport);
 
-	var nodes = document.evaluate(titlePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
-	var title = nodes.iterateNext().firstChild.nodeValue;
+	var title;
+	try {
+		var nodes = document.evaluate(titlePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
+		title = nodes.iterateNext().firstChild.nodeValue;
+	} catch (e) {
+		// bring this back once feed add dialog is its own page
+		//Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
+		Mojo.Log.error("Error finding feed title: %o", e);
+	}
 	return title;
 };
 
@@ -153,6 +159,8 @@ Feed.prototype.updateCheck = function(transport) {
 	nodes = document.evaluate(itemPath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
 
 	if (!nodes) {
+		// bring this back once feed add dialog is its own page
+		//Util.showError("Error parsing feed", "No items found in feed");
 		return false;
 	}
 
