@@ -50,9 +50,7 @@ FeedListAssistant.prototype.activate = function() {
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
 		this._refresh();
-		this.updateFeeds();
-		/*
-
+		//this.updateFeeds();
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
 			if (feedModel.items[i].episodes.length > 0) {
@@ -63,8 +61,8 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 		if (firstLoad) {
 			this.updateFeeds();
 		}
+	
 		this.refresh();
-		*/
 	} else {
 		setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
@@ -76,9 +74,9 @@ FeedListAssistant.prototype.cleanup = function() {
 };
 
 FeedListAssistant.prototype.setInterval = function(feed) {
-	//if (this.updating) {
-		//setTimeout(this.setInterval.bind(this, feed), 500);
-	//} else {
+	if (this.updating) {
+		setTimeout(this.setInterval.bind(this, feed), 500);
+	} else {
 		if (feed.intervalID) {
 			clearInterval(feed.intervalID);
 			feed.intervalID = 0;
@@ -87,7 +85,7 @@ FeedListAssistant.prototype.setInterval = function(feed) {
 		}
 		// TODO: uncomment
 		// if (feed.interval) {feed.intervalID = setInterval(feed.update.bind(feed, this), feed.interval);}
-	//}
+	}
 };
 
 FeedListAssistant.prototype.clearIntervals = function() {
@@ -99,7 +97,6 @@ FeedListAssistant.prototype.clearIntervals = function() {
 };
 
 FeedListAssistant.prototype._refreshDebounced = function() {
-	Mojo.Log.error("You want a refresh?  you wait");
 };
 
 FeedListAssistant.prototype._refresh = function() {
