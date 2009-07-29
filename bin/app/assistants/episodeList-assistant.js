@@ -20,6 +20,8 @@ EpisodeListAssistant.prototype.episodeAttr = {
     //onFailure: this.onFailureHandler
 	//});
 
+EpisodeListAssistant.prototype.findLinks = new RegExp("http://[^'\"<>]*\.mp3[^\s<>'\"]*");
+
 EpisodeListAssistant.prototype.setup = function() {
 	// probably would be good to go ahead and go through the episode list here
 	// check if we have any tickets for downloads, and see if they're done.
@@ -295,12 +297,10 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 			this.refresh();
 			DB.saveFeed(this.feedObject);
 		}
-	} else if (event.aborted || event.completed === false) {
-		Mojo.Log.error("event=%j", event);
-		if (!event.aborted) {
-			// if the user didn't do this, let them know what happened
-			Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
-		}
+	} else if (!event.aborted && event.completed === false) {
+		Mojo.Log.error("Download error=%j", event);
+		// if the user didn't do this, let them know what happened
+		Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
 		episode.downloadTicket = 0;
 		episode.downloadingPercent = 0;
 		episode.downloading = false;
@@ -308,31 +308,47 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 		this.refresh();
 		DB.saveFeed(this.feedObject);
 	} else if (event.completed && event.completionStatusCode === 200) {
-			//success!
-			Mojo.Log.error("Download complete!", episode.title);
-			episode.downloadTicket = 0;
-			episode.downloading = false;
-			episode.downloadingPercent = 0;
-			this.unlistened(episode);
+		//success!
+		Mojo.Log.error("Download complete!", episode.title);
+		episode.downloadTicket = 0;
+		episode.downloading = false;
+		episode.downloadingPercent = 0;
+		this.unlistened(episode);
 
-			episode.file = event.target;
-			this.downloaded(episode);
-			this.refresh();
-			DB.saveFeed(this.feedObject);
+		episode.file = event.target;
+		this.downloaded(episode);
+		this.refresh();
+		DB.saveFeed(this.feedObject);
 	} else if (event.completed && event.completionStatusCode === 302) {
-			Mojo.Log.error("Redirecting...", episode.title);
-			var req = new Ajax.Request(event.target, {
-				method: 'get',
-				onFailure: function() {
-					Mojo.Log.error("Couldn't find %s... strange", event.target);
-				},
-				onComplete: function(transport) {
-					Mojo.Log.error("Trying to read redirect url:", transport.responseXML);
-					//AppAssistant.downloadService.download(this.controller, null,
-						//this.downloading.bind(this, episode, episode.downloadingIndex));
-					Mojo.Log.error("onComplete finished");
-				}.bind(this)
-			});
+		Mojo.Log.error("Redirecting...", episode.title);
+		episode.downloadTicket = 0;
+		episode.downloading = false;
+		episode.downloadingPercent = 0;
+		this.refresh();
+		var req = new Ajax.Request(event.target, {
+			method: 'get',
+			onFailure: function() {
+				Mojo.Log.error("Couldn't find %s... strange", event.target);
+			},
+			onComplete: function(transport) {
+				var redirect;
+				try {
+					var matches = this.findLinks.exec(transport.responseText);
+					if (matches) {
+						redirect = matches[0];
+					}
+				} catch (e){
+					Mojo.Log.error("error with regex: (%s)", e);
+					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
+				}
+				AppAssistant.mediaService.deleteFile(this.controller, event.target, function(event) {});
+				if (redirect !== undefined) {
+					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
+					AppAssistant.downloadService.download(this.controller, redirect,
+						this.downloading.bind(this, episode, episode.downloadingIndex));
+				}
+			}.bind(this)
+		});
 	} else if (episode.downloading) {
 		var per = 0;
 		// if amountTotal is < 2048 or so, we'll assume it's a redirect

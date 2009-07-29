@@ -53,7 +53,7 @@ Feed.prototype.update = function(assistant) {
 
 	assistant.updating = true;
 	this.updating = true;
-	assistant.refresh();
+	assistant._refresh();
 
 	var req = new Ajax.Request(this.url, {
 		method: 'get',

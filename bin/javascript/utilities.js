@@ -59,15 +59,20 @@ Utilities.prototype.xmlTagAttributeValue = function(node, element, attr, def) {
 	if (arr && arr.length > 0) {
 		// we found the element
 		node = arr[0];
+		val = this.xmlGetAttributeValue(node, attr);
+	}
+	return val;
+};
 
-		if (node.attributes !== null) {
-			// just stepping through the attributes till we find the one asked for
-			for (var i=0; i<node.attributes.length; i++) {
-				var attrNode = node.attributes[i];
-				if (attrNode.nodeName.toLowerCase() == attr.toLowerCase()) {
-					val = attrNode.nodeValue;
-					break;
-				}
+Utilities.prototype.xmlGetAttributeValue = function(node, attr) {
+	var val;
+	if (node.attributes !== null) {
+		// just stepping through the attributes till we find the one asked for
+		for (var i=0; i<node.attributes.length; i++) {
+			var attrNode = node.attributes[i];
+			if (attrNode.nodeName.toLowerCase() == attr.toLowerCase()) {
+				val = attrNode.nodeValue;
+				break;
 			}
 		}
 	}
