@@ -14,6 +14,16 @@ EpisodeListAssistant.prototype.items = [];
     //onFailure: this.onFailureHandler
 	//});
 
+EpisodeListAssistant.menuAttr = {omitDefaultItems: true};
+EpisodeListAssistant.menuModel = {
+	visible: true,
+	items: [
+		{label: "Mark all Listened...", command: "listened-cmd"},
+		{label: "Mark all Unlistened...", command: "unlistened-cmd"},
+		{label: "About...", command: "about-cmd"}
+	]
+};
+
 EpisodeListAssistant.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^\\s<>'\"]*");
 
 EpisodeListAssistant.prototype.setup = function() {
@@ -22,6 +32,9 @@ EpisodeListAssistant.prototype.setup = function() {
 		listTemplate: "episodeList/episodeListTemplate",
 		renderLimit: 40,
 		reorderable: false,
+		swipeToDelete: true,
+		// autoconfirmDelete: true,
+		// doesn't exist yet preventDeleteProperty: "downloaded",
 		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this)}};
 
 	// probably would be good to go ahead and go through the episode list here
@@ -69,6 +82,7 @@ EpisodeListAssistant.prototype.setup = function() {
 	}
 
 	this.controller.get("episodeListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
+	this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
 	//this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
 	//this.controller.get("episodeListWgt").observe(Mojo.Event.hold, this.handleHold.bindAsEventListener(this));
 	// might be better to do the holdEnd...
@@ -78,6 +92,38 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
+
+	this.controller.setupWidget(Mojo.Menu.appMenu, EpisodeListAssistant.menuAttr, EpisodeListAssistant.menuModel);
+};
+
+EpisodeListAssistant.prototype.handleCommand = function(event) {
+	var i, episode;
+	if (event.type === Mojo.Event.command) {
+		switch (event.command) {
+			case "unlistened-cmd":
+				for (i=0; i<this.feedObject.episodes.length; i++) {
+					episode = this.feedObject.episodes[i];
+					episode.listened = false;
+					episode.indicatorColor = "black";
+					this.updateStatusIcon(episode);
+				}
+				this.feedObject.numNew = this.feedObject.episodes.length;
+				DB.saveFeed(this.feedObject);
+				this.refresh();
+				break;
+			case "listened-cmd":
+				for (i=0; i<this.feedObject.episodes.length; i++) {
+					episode = this.feedObject.episodes[i];
+					episode.listened = true;
+					episode.indicatorColor = "gray";
+					this.updateStatusIcon(episode);
+				}
+				this.feedObject.numNew = 0;
+				DB.saveFeed(this.feedObject);
+				this.refresh();
+				break;
+		}
+	}
 };
 
 EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
@@ -89,7 +135,21 @@ EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 };
 
 EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
-	return pubDate;
+	var formatted = pubDate;
+	if (pubDate) {
+		var d = new Date(pubDate);
+		var y = d.getFullYear();
+		var m = (d.getMonth()+1);
+		var dom=d.getDate();
+		var h=d.getHours();
+		var min=d.getMinutes();
+		if (m<10) {m="0"+m;}
+		if (dom<10) {dom="0"+dom;}
+		if (h<10) {h="0"+h;}
+		if (min<10) {min="0"+min;}
+		formatted = y+"/"+m+"/"+dom+" "+h+":"+min;
+	}
+	return formatted;
 };
 
 EpisodeListAssistant.prototype.activate = function(changes) {
@@ -130,6 +190,14 @@ EpisodeListAssistant.prototype.handleHold = function(event) {
 	Mojo.Log.error("Hold stopped?");
 };
 */
+
+EpisodeListAssistant.prototype.handleDelete = function(event) {
+	event.stop();
+	if (event.item.downloaded) {
+		this.listened(event.item);
+		this.deleteFile(event.item);
+	}
+};
 
 EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
@@ -262,14 +330,13 @@ EpisodeListAssistant.prototype.cancelDownload = function(episode) {
 };
 
 EpisodeListAssistant.prototype.deleteFile = function(episode) {
-	AppAssistant.mediaService.deleteFile(this.controller, episode.file, function(event) {
-		episode.file = null;
-		episode.downloaded = false;
-		this.updateStatusIcon(episode);
-		this.feedObject.numDownloaded--;
-		this.refresh();
-		DB.saveFeed(this.feedObject);
-	}.bind(this));
+	episode.file = null;
+	episode.downloaded = false;
+	this.updateStatusIcon(episode);
+	this.feedObject.numDownloaded--;
+	this.refresh();
+	DB.saveFeed(this.feedObject);
+	AppAssistant.mediaService.deleteFile(this.controller, episode.file, function() {});
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {

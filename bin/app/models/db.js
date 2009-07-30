@@ -62,7 +62,7 @@ function DBClass() {
 
 	this.db = openDatabase(this.dbName, this.dbVersions[0].version);
 	if (!this.db) {
-		setTimeout("Util.showError('Error opening db', 'There was an unknown error opening the feed db');", 1000);
+		setTimeout(Util.showError.bind(this, 'Error opening db', 'There was an unknown error opening the feed db'), 1000);
 	} else {
 		this.initDB(this.loadFeeds.bind(this));
 	}
@@ -317,13 +317,20 @@ DBClass.prototype.removeFeed = function(f) {
 	var removeFeedSQL = "DELETE FROM feed WHERE id=?";
 	var removeEpisodesSQL = "DELETE FROM episode WHERE feedId=?";
 
+	for (var i=0; i<f.episodes.length; i++) {
+		var episode = f.episodes[i];
+		if (episode.downloaded) {
+			AppAssistant.mediaService.deleteFile(this.controller, episode.file, null);
+		}
+	}
+
 	this.db.transaction(function(transaction) {
-		transaction.executeSql(removeFeedSQL, [f.id],
-			function(transaction, results) {Mojo.Log.error("Feed removed: %s", f.title);},
-			function(transaction, error) { Mojo.Log.error("Feed remove failed: (%s), %j", f.title, error);});
 		transaction.executeSql(removeEpisodesSQL, [f.id],
 			function(transaction, results) {Mojo.Log.error("Episodes removed for feed %s", f.id);},
 			function(transaction, error) { Mojo.Log.error("Episodes remove failed: (%s), %j", f.id, error);});
+		transaction.executeSql(removeFeedSQL, [f.id],
+			function(transaction, results) {Mojo.Log.error("Feed removed: %s", f.title);},
+			function(transaction, error) { Mojo.Log.error("Feed remove failed: (%s), %j", f.title, error);});
 	});
 };
 

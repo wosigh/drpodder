@@ -120,16 +120,25 @@ EpisodeDetailsAssistant.prototype.bookmark = function() {
 
 EpisodeDetailsAssistant.prototype.clearBookmark = function() {
 	Mojo.Log.error("Clearing bookmark");
+	var feed = feedModel.getFeedById(this.episodeObject.feedId);
 	this.audioObject.currentTime = 0;
 	if (this.episodeObject.position) {
 		this.episodeObject.position = 0;
-		feedModel.ids[this.episodeObject.feedId].numStarted--;
+		feed.numStarted--;
 	}
 	if (!this.episodeObject.listened) {
 		this.episodeObject.listened = true;
-		feedModel.ids[this.episodeObject.feedId].numNew--;
+		feed.numNew--;
 	}
-	DB.saveFeed(feedModel.ids[this.episodeObject.feedId]);
+
+	if (feed.autoDelete && this.episodeObject.downloaded) {
+		this.episodeObject.file = null;
+		this.episodeObject.downloaded = false;
+		feed.numDownloaded--;
+		AppAssistant.mediaService.deleteFile(null, this.episodeObject.file, function() {});
+	}
+
+	DB.saveFeed(feed);
 	this.controller.stageController.popScene(true);
 };
 
