@@ -6,12 +6,6 @@ function EpisodeListAssistant(feedObject) {
 EpisodeListAssistant.prototype.items = [];
 //EpisodeListAssistant.prototype.episodeModel = {items: this.feedObject.episodes};
 	// why can't we initialize this here?
-EpisodeListAssistant.prototype.episodeAttr = {
-	itemTemplate: "episodeList/episodeRowTemplate",
-	listTemplate: "episodeList/episodeListTemplate",
-	renderLimit: 40,
-	reorderable: false};
-
 	// use this to determine if we are wifi connected, if not, then we'll NOT auto-download mp3's
 	// this.controller.serviceRequest('palm://com.palm.connectionmanager', {
     //method: 'getStatus',
@@ -23,6 +17,13 @@ EpisodeListAssistant.prototype.episodeAttr = {
 EpisodeListAssistant.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^\\s<>'\"]*");
 
 EpisodeListAssistant.prototype.setup = function() {
+	this.episodeAttr = {
+		itemTemplate: "episodeList/episodeRowTemplate",
+		listTemplate: "episodeList/episodeListTemplate",
+		renderLimit: 40,
+		reorderable: false,
+		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this)}};
+
 	// probably would be good to go ahead and go through the episode list here
 	// check if we have any tickets for downloads, and see if they're done.
 	// if not, start the download watcher
@@ -77,6 +78,18 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
+};
+
+EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
+	var formatted = title;
+	if (title) {
+		formatted = this.feedObject.replace(title);
+	}
+	return formatted;
+};
+
+EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
+	return pubDate;
 };
 
 EpisodeListAssistant.prototype.activate = function(changes) {
@@ -300,16 +313,18 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 			this.refresh();
 			DB.saveFeed(this.feedObject);
 		}
-	} else if (!event.aborted && event.completed === false) {
+	} else if (event.completed === false) {
 		Mojo.Log.error("Download error=%j", event);
 		// if the user didn't do this, let them know what happened
-		Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
 		episode.downloadTicket = 0;
 		episode.downloadingPercent = 0;
 		episode.downloading = false;
 		this.updateStatusIcon(episode);
 		this.refresh();
 		DB.saveFeed(this.feedObject);
+		if (!event.aborted) {
+			Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
+		}
 	} else if (event.completed && event.completionStatusCode === 200) {
 		//success!
 		Mojo.Log.error("Download complete!", episode.title);

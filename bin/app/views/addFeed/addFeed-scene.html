@@ -4,8 +4,8 @@
     </div>
 </div>
 
-<div class="palm-group">
-    <div class="palm-group-title"><span>Feed Details</span></div>
+<div class="palm-group unlabeled">
+    <!--div class="palm-group-title"><span>Feed Details</span></div-->
     <div class="palm-list">
         <div class="palm-row first">
             <div class="textfield-group" x-mojo-focus-highlight="true">
@@ -21,21 +21,32 @@
 </div>
 
 <div class="palm-group">
-    <div class="palm-group-title"><span>Feed Configuration</span></div>
+    <div class="palm-group-title"><span>Feed Options</span></div>
     <div class="palm-list">
         <div class="palm-row first">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="autoDeleteToggle"></div>
+                <div class="title left">Delete when finished</div>
+            </div>
+        </div>
+        <div id="autoDownloadRow" class="palm-row">
             <div class="palm-row-wrapper">
                 <div x-mojo-element="ToggleButton" id="autoDownloadToggle"></div>
                 <div class="title left">Auto-Download</div>
             </div>
         </div>
-        <div class="palm-row">
+        <div id="maxDownloadsRow" class="palm-row last">
             <div class="palm-row-wrapper">
-                <div x-mojo-element="ToggleButton" id="autoDeleteToggle"></div>
-                <div class="title left">Auto-Delete</div>
+                <div x-mojo-element="ListSelector" id="maxDownloadsSelector"></div>
             </div>
         </div>
-        <div x-mojo-element="IntegerPicker" id="maxDownloadList"></div>
+    </div>
+</div>
+
+<div class="palm-group">
+    <div class="palm-group-title"><span>Episode Title Replacements</span></div>
+    <div class="palm-list">
+        <div id="replacementList" x-mojo-element="List"></div>
     </div>
 </div>
 

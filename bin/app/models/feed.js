@@ -17,6 +17,7 @@ function Feed(init) {
 		this.interval = init.interval;
 		this.lastModified = init.lastModified;
 		this.details = init.details;
+		this.replacements = init.replacements;
 
 		this.numEpisodes = init.numEpisodes;
 		this.numNew = init.numNew;
@@ -28,12 +29,13 @@ function Feed(init) {
 		this.albumArt = null;
 		this.autoDownload = false;
 		this.autoDelete = true;
-		this.maxDownloads = 5;
+		this.maxDownloads = 1;
 		this.episodes = [];
 		this.guid = [];
 		this.interval = 60000;
 		this.lastModified = null;
 		this.details = null;
+		this.replacements = null;
 
 		this.numEpisodes = 0;
 		this.numNew = 0;
@@ -50,17 +52,12 @@ Feed.prototype.update = function(assistant) {
 	}
 	*/
 
-	assistant.updating = true;
-	this.updating = true;
-	assistant._refresh();
-
 	var req = new Ajax.Request(this.url, {
 		method: 'get',
 		onFailure: function() {
 			Mojo.Log.error("Failed to request feed:", this.title, "(", this.url, ")");
 			this.updating = false;
 			assistant.refresh();
-
 			assistant.updating = false;
 		},
 		onComplete: function(transport) {
@@ -70,7 +67,6 @@ Feed.prototype.update = function(assistant) {
 
 			this.updating = false;
 			assistant.refresh();
-
 			DB.saveFeed(this);
 			assistant.updating = false;
 		}.bind(this)
@@ -166,6 +162,7 @@ Feed.prototype.updateCheck = function(transport) {
 
 	var result = nodes.iterateNext();
 	var newEpisodeCount = 0;
+	var downloaded = 0;
 	// debugging, we only want to update 5 or so at a time, so that we can watch the list grow
 	//var newToKeep = Math.floor(Math.random()*4+1);
 	// end debugging
@@ -196,6 +193,20 @@ Feed.prototype.updateCheck = function(transport) {
 			e.description = episode.description;
 			e.link = episode.link;
 			e.enclosure = episode.enclosure;
+
+			episode = e;
+			if (episode.downloaded || episode.downloadTicket) {
+				downloaded++;
+			}
+		}
+
+		if (this.autoDownload &&
+			!episode.listened && !episode.downloaded && !episode.downloadTicket && episode.enclosure &&
+			(this.maxDownloads === 0 || downloaded < this.maxDownloads)) {
+			AppAssistant.downloadService.download(null, episode.enclosure,
+				this.downloadCallback.bind(this, episode),
+				false);
+			downloaded++;
 		}
 		result = nodes.iterateNext();
 	}
@@ -213,6 +224,68 @@ Feed.prototype.updateCheck = function(transport) {
 	return updateCheckStatus;
 };
 
+Feed.prototype.downloadCallback = function(episode, event) {
+	if (event.returnValue) {
+		episode.downloadTicket = event.ticket;
+	}
+};
+
+Feed.prototype.replace = function(title) {
+	var arr = this.getReplacementsArray();
+	for (var i=0; i<arr.length; i++) {
+		title = title.replace(arr[i].from, arr[i].to);
+	}
+	return title;
+};
+
+Feed.prototype.getReplacementsArray = function() {
+	var arr = [];
+	if (this.replacements) {
+		var spl = this.replacements.split(",");
+		if (spl.length % 2 === 1) {
+			Mojo.Log.error("error parsing replacements string: %s", this.replacements);
+		} else {
+			for (var i=0; i<spl.length; i+=2) {
+				arr.push({from: spl[i].replace("#COMMA#", ","), to: spl[i+1].replace("#COMMA#", ",")});
+			}
+		}
+	}
+	return arr;
+};
+
+
+Feed.prototype.setReplacements = function(arr) {
+	var replacements;
+	this.replacements = "";
+	for (var i=0; i<arr.length; i++) {
+		if (arr[i].from.length > 0) {
+			if (this.replacements.length > 0) { this.replacements += ",";}
+			this.replacements += arr[i].from.replace(",","#COMMA#") + "," +
+			                     arr[i].to.replace(",","#COMMA#");
+		}
+	}
+};
+
+
+
+
 var FeedUtil = new Feed();
 
-var feedModel = {items: [], ids: []};
+function FeedModel(init) {
+}
+
+FeedModel.prototype.items = [];
+FeedModel.prototype.ids = [];
+
+FeedModel.prototype.add = function(feed) {
+	this.items.push(feed);
+	this.ids[feed.id] = feed;
+	// fire the NEWFEED event
+};
+
+FeedModel.prototype.getFeedById = function(id) {
+	return this.ids[id];
+};
+
+//var feedModel = {items: [], ids: []};
+var feedModel = new FeedModel();

@@ -34,8 +34,7 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, StageAssistant.appMenuAttr, StageAssistant.appMenuModel);
 
-	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 2);
-	this.waitForFeedsReady();
+	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 1);
 };
 
 FeedListAssistant.prototype.activate = function() {
@@ -44,7 +43,7 @@ FeedListAssistant.prototype.activate = function() {
 		this.setInterval(feedModel.items[i]);
 	}
 	*/
-	this.refresh();
+	this.waitForFeedsReady();
 };
 
 FeedListAssistant.prototype.waitForFeedsReady = function() {
@@ -61,8 +60,6 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 		if (firstLoad) {
 			this.updateFeeds();
 		}
-
-		this.refresh();
 	} else {
 		setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
@@ -81,6 +78,9 @@ FeedListAssistant.prototype.setInterval = function(feed) {
 			clearInterval(feed.intervalID);
 			feed.intervalID = 0;
 		} else {
+			this.updating = true;
+			feed.updating = true;
+			this._refresh();
 			feed.update(this);
 		}
 		// TODO: uncomment

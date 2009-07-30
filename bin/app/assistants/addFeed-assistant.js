@@ -2,6 +2,9 @@ function AddFeedAssistant(sceneAssistant, feed) {
 	this.sceneAssistant = sceneAssistant;
 	this.feed = feed;
 
+	// default empty replacement
+	this.replacementModel = {items: []};
+
 	if (this.feed !== null) {
 		this.newFeed = false;
 		this.dialogTitle = "Edit Podcast XML Feed";
@@ -11,14 +14,15 @@ function AddFeedAssistant(sceneAssistant, feed) {
 		this.autoDelete = this.feed.autoDelete;
 		this.maxDownloads = this.feed.maxDownloads;
 		this.okButtonValue = "Update";
+		this.replacementModel.items = this.feed.getReplacementsArray();
 	} else {
 		this.newFeed = true;
 		this.dialogTitle = "Add Podcast XML Feed";
 		this.title = null;
 		this.url = null;
-		this.autoDownload = true;
+		this.autoDownload = false;
 		this.autoDelete = true;
-		this.maxDownloads = 5;
+		this.maxDownloads = 1;
 		this.okButtonValue = "Add Feed";
 	}
 }
@@ -45,20 +49,67 @@ AddFeedAssistant.prototype.setup = function() {
 		},
 		this.nameModel = { value : this.title });
 
-	this.controller.setupWidget("autoDownloadToggle",
-		{},
-		this.autoDownloadModel = { value : this.autoDownload });
-
 	this.controller.setupWidget("autoDeleteToggle",
 		{},
 		this.autoDeleteModel = { value : this.autoDelete });
 
-	this.controller.setupWidget("maxDownloadList",
+	this.controller.setupWidget("autoDownloadToggle",
+		{},
+		this.autoDownloadModel = { value : this.autoDownload });
+
+	this.controller.setupWidget("maxDownloadsSelector",
 		{label: "Keep at most",
-		 modelProperty: "value",
-		 min: 1, max: 20
+		 choices: [
+			{label: "All", value: 0},
+			{label: "1", value: 1},
+			{label: "2", value: 2},
+			{label: "3", value: 3},
+			{label: "4", value: 4},
+			{label: "5", value: 5},
+			{label: "10", value: 10},
+			{label: "15", value: 15},
+			{label: "20", value: 20}
+		]
 		},
 		this.maxDownloadsModel = { value : this.maxDownloads });
+
+
+	this.controller.setupWidget("replacementList", {
+		itemTemplate: "addFeed/replacementRowTemplate",
+		swipeToDelete: true,
+		reorderable: true,
+		addItemLabel: "Add..."
+		},
+		this.replacementModel
+	);
+
+	this.controller.setupWidget("fromText", {
+		hintText: "Replace this...",
+		modelProperty: "from",
+		textReplacement: false,
+		textCase : Mojo.Widget.steModeLowerCase,
+		limitResize: false,
+		autoResize: false,
+		multiline: false
+	});
+
+	this.controller.setupWidget("toText", {
+		hintText: "With this...",
+		modelProperty: "to",
+		textCase : Mojo.Widget.steModeLowerCase,
+		textReplacement: false,
+		limitResize: false,
+		autoResize: false,
+		multiline: false
+	});
+
+	this.replacementList = this.controller.get("replacementList");
+	this.listAddHandler = this.listAddHandler.bindAsEventListener(this);
+	this.listDeleteHandler = this.listDeleteHandler.bindAsEventListener(this);
+	this.listReorderHandler = this.listReorderHandler.bindAsEventListener(this);
+	Mojo.Event.listen(this.replacementList, Mojo.Event.listAdd, this.listAddHandler);
+	Mojo.Event.listen(this.replacementList, Mojo.Event.listDelete, this.listDeleteHandler);
+	Mojo.Event.listen(this.replacementList, Mojo.Event.listReorder, this.listReorderHandler);
 
 	this.controller.setupWidget("okButton", {
 		type : Mojo.Widget.activityButton
@@ -72,22 +123,48 @@ AddFeedAssistant.prototype.setup = function() {
 	this.controller.listen("okButton", Mojo.Event.tap,
 			this.checkFeedHandler);
 
-	if (!this.autoDeleteModel.value) {
-		this.controller.get("maxDownloadList").hide();
+	if (!this.autoDownloadModel.value) {
+		this.controller.get("maxDownloadsRow").hide();
+		this.controller.get("autoDownloadRow").addClassName("last");
 	}
 
-	this.autoDeleteHandler = this.autoDeleteChanged.bindAsEventListener(this);
-	Mojo.Event.listen(this.controller.get('autoDeleteToggle'),Mojo.Event.propertyChange,this.autoDeleteHandler);
+	this.autoDownloadHandler = this.autoDownloadChanged.bindAsEventListener(this);
+	Mojo.Event.listen(this.controller.get('autoDownloadToggle'),Mojo.Event.propertyChange,this.autoDownloadHandler);
 
 	//Mojo.Event.listen(this.sceneAssistant.controller, Mojo.Event.back, this.cancelHandler);
 };
 
-AddFeedAssistant.prototype.autoDeleteChanged = function(event) {
+AddFeedAssistant.prototype.listAddHandler = function(event){
+	var newItem = {from:"", to: ""};
+	this.replacementModel.items.push(newItem);
+	this.replacementList.mojo.noticeAddedItems(this.replacementModel.items.length, [newItem]);
+};
+
+AddFeedAssistant.prototype.listDeleteHandler = function(event){
+	this.replacementModel.items.splice(this.replacementModel.items.indexOf(event.item), 1);
+};
+
+AddFeedAssistant.prototype.listReorderHandler = function(event){
+	this.replacementModel.items.splice(this.replacementModel.items.indexOf(event.item), 1);
+	this.replacementModel.items.splice(event.toIndex, 0, event.item);
+};
+
+AddFeedAssistant.prototype.autoDownloadChanged = function(event) {
 	if (event.value) {
-		this.controller.get("maxDownloadList").show();
+		this.controller.get("maxDownloadsRow").show();
+		this.controller.get("autoDownloadRow").removeClassName("last");
 	} else {
-		this.controller.get("maxDownloadList").hide();
+		this.controller.get("maxDownloadsRow").hide();
+		this.controller.get("autoDownloadRow").addClassName("last");
 	}
+};
+
+AddFeedAssistant.prototype.updateFields = function() {
+	this.feed.title = this.nameModel.value;
+	this.feed.autoDownload = this.autoDownloadModel.value;
+	this.feed.autoDelete = this.autoDeleteModel.value;
+	this.feed.maxDownloads = this.maxDownloadsModel.value;
+	this.feed.setReplacements(this.replacementModel.items);
 };
 
 AddFeedAssistant.prototype.checkFeed = function() {
@@ -116,10 +193,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
 	if (this.feed !== null && this.feed.url === this.urlModel.value) {
-		this.feed.title = this.nameModel.value;
-		this.feed.autoDownload = this.autoDownloadModel.value;
-		this.feed.autoDelete = this.autoDeleteModel.value;
-		this.feed.maxDownloads = this.maxDownloadsModel.value;
+		this.updateFields();
 		this.sceneAssistant.refresh();
 		DB.saveFeeds();
 		this.controller.stageController.popScene();
@@ -155,7 +229,6 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 
 	//  If a new feed, push the entered feed data on to the feedlist and
 	//  call processFeed to evaluate it.
-	Mojo.Log.error("is it new?");
 	if (this.newFeed) {
 		this.feed = new Feed();
 		this.feed.url = this.urlModel.value;
@@ -170,16 +243,10 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 		this.feed.numDownloaded = 0;
 		this.feed.albumArt = null;
 	}
-	Mojo.Log.error("it's new done!");
-	this.feed.title = this.nameModel.value;
 	this.feed.interval = 60000;
-	this.feed.autoDownload = this.autoDownloadModel.value;
-	this.feed.autoDelete = this.autoDeleteModel.value;
-	this.feed.maxDownloads = this.maxDownloadsModel.value;
+	this.updateFields();
 
-	Mojo.Log.error("checking feed");
 	feedSuccess = this.feed.updateCheck(transport, this.sceneAssistant);
-	Mojo.Log.error("checked");
 
 	if (feedSuccess <= 0) {
 		// Feed can't be processed - remove it but keep the dialog open

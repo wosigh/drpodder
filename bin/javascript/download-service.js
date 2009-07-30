@@ -2,6 +2,15 @@ function DownloadService() {
 }
 DownloadService.prototype.URI = "palm://com.palm.downloadmanager/";
 
+DownloadService.prototype._serviceRequest = function(sceneController, uri, params) {
+	if (sceneController) {
+		return sceneController.serviceRequest(uri, params);
+	} else {
+		var obj = new Mojo.Service.Request(uri, params);
+		return obj;
+	}
+};
+
 	// the download manager currently has a bug where if you cancel a download
 	// with another download in the queue, it will then start the next download
 	// but the amountTotal will never be set to the filesize
@@ -10,14 +19,16 @@ DownloadService.prototype.URI = "palm://com.palm.downloadmanager/";
 	//  hold the download call until there are no downloads pending, thus never calling
 	//   callback until we are ready?
 	//  in downloadStatus, capture the 0 amountTotal error and restart the download? (ugh)
-DownloadService.prototype.download = function(sceneController, target, callback, force) {
+
+DownloadService.prototype.download = function(sceneController, target, callback, subscribe) {
 	//if (force) { // has palm fixed the downloadmanager bug yet?
 	//Mojo.Log.error("downloading:", target);
-	return sceneController.serviceRequest(this.URI, {
+	if (subscribe === undefined) { subscribe = true;}
+	return this._serviceRequest(sceneController, this.URI, {
 		method: "download",
 		onSuccess: callback,
 		onFailure: callback,
-		parameters: {target: target, subscribe: true}});
+		parameters: {"target": target, "subscribe": subscribe}});
 	//} else {
 	//return this.downloadWhenEmpty(sceneController, target, callback);
 	//}
@@ -44,7 +55,7 @@ DownloadService.prototype.downloadWhenEmpty = function(sceneController, target, 
 };
 
 DownloadService.prototype.downloadStatus = function(sceneController, ticket, callback) {
-	return sceneController.serviceRequest(this.URI, {
+	return this._serviceRequest(sceneController, this.URI, {
 		method: "downloadStatusQuery",
 		onSuccess: callback,
 		onFailure: callback,
@@ -52,7 +63,7 @@ DownloadService.prototype.downloadStatus = function(sceneController, ticket, cal
 };
 
 DownloadService.prototype.cancelDownload = function(sceneController, ticket, callback) {
-	return sceneController.serviceRequest(this.URI, {
+	return this._serviceRequest(sceneController, this.URI, {
 		method: "cancelDownload",
 		onSuccess: callback,
 		onFailure: callback,

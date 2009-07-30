@@ -129,10 +129,20 @@
 	background: center center no-repeat;
 }
 
+.episodeLine {
+	height: 50px;
+}
+
 .episodeTitle {
 	margin-left: 10px;
-	margin-top: 10px;
+	margin-top: 4px;
 	/*height: 52px;*/
+	color: gray;
+}
+
+.episodeDetails {
+	margin-left: 20px;
+	font-size: 75%;
 	color: gray;
 }
 
@@ -148,8 +158,8 @@
 	position: absolute;
 	left: 0px;
 	width: 0%;
-	height: 58px;
-	margin-top: -36px;
+	height: 52px;
+	margin-top: -4px;
 	display: inline-block;
 	float: left;
 }
@@ -160,8 +170,8 @@
 	position: absolute;
 	left: 0px;
 	width: 0%;
-	height: 58px;
-	margin-top: -36px;
+	height: 52px;
+	margin-top: -4px;
 	display: inline-block;
 	float: left;
 }

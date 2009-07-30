@@ -1,14 +1,84 @@
 function DBClass() {
-	this.initDB(this.loadFeeds.bind(this));
+	var currentVerIndex = 0;
+
+	/*
+	 // CRAP.  All that and it doesn't look like palm has implemented the changeVersion method
+	 // for db objects yet.  Which means, I have to manage my schema changes manually.  BOOO.
+	do {
+		var ver = this.dbVersions[currentVerIndex];
+		try {
+			this.db = openDatabase(this.dbName, ver.version);
+		} catch (e) {
+			if (e.code === e.INVALID_STATE_ERR) {
+				currentVerIndex++;
+			} else {
+				Mojo.Log.error("Exception opening db: %s", e.message);
+				setTimeout("Util.showError('Exception opening db', '"+e.message+"');", 1000);
+				currentVerIndex = 99;
+			}
+		}
+	} while (!this.db && currentVerIndex <= this.dbVersions.length);
+
+	Mojo.Log.error("db:%j", this.db);
+
+	if (currentVerIndex > 0) {
+		ver = this.dbVersions[currentVerIndex];
+		var latestVersion = this.dbVersions[0].version;
+
+		Mojo.Log.error("We need to upgrade from v%s using [%s]", ver.version, ver.migrationSql);
+		Mojo.Log.error("version:%s, latestVersion:%s", ver.version, latestVersion);
+		Mojo.Log.error("migrationSql.length: %s", ver.migrationSql.length);
+		this.db.changeVersion(ver.version, latestVersion,
+			// callback
+			function(transaction) {
+				Mojo.Log.error("Upgrading db");
+				for (var i=0; i<ver.migrationSql.length; i++) {
+					transaction.executeSql(ver.migrationSql[i], [],
+						function(transaction, results) {
+							Mojo.Log.error("Successfully executed migration statement %d", i);
+						},
+						function(transaction, error) {
+							Mojo.Log.error("Error executing migration statement %d: %j", i, error);
+						});
+				}
+				Mojo.Log.error("Finished upgrading db");
+			},
+			//errorCallback
+			function(transaction, error) {
+				Mojo.Log.error("Error upgrading db: %j", error);
+			},
+			// successCallback
+			function() {
+				Mojo.Log.info("Migration complete!");
+				this.loadFeeds();
+			}.bind(this)
+		);
+		Mojo.Log.error("changeVersion done");
+	} else {
+		this.initDB(this.loadFeeds.bind(this));
+	}
+	*/
+
+
+	this.db = openDatabase(this.dbName, this.dbVersions[0].version);
+	if (!this.db) {
+		setTimeout("Util.showError('Error opening db', 'There was an unknown error opening the feed db');", 1000);
+	} else {
+		this.initDB(this.loadFeeds.bind(this));
+	}
 }
 
 //DBClass.prototype.depotOptions = { name: "feed", replace: false };
 
 DBClass.prototype.dbName = "ext:PrePodFeeds";
-DBClass.prototype.dbVersion = "0.2";
 DBClass.prototype.feedsReady = false;
 
-DBClass.prototype.db = openDatabase(DBClass.prototype.dbName, DBClass.prototype.dbVersion);
+// db version number, followed by the sql statements required to bring it up to the latest version
+DBClass.prototype.dbVersions = [
+	{version: "0.2", migrationSql: []}
+	//{version: "0.2", migrationSql: ["ALTER TABLE feed ADD COLUMN replacements TEXT"]}
+];
+
 
 // need a conversion method that converts the old depot db to the new one and
 // then calls demoDepot.removeAll();
@@ -63,7 +133,8 @@ DBClass.prototype.initDB = function(callback) {
 	                      "autoDownload BOOLEAN, " +
 	                      "maxDownloads INTEGER, " +
 	                      "interval INTEGER, " +
-	                      "lastModified TEXT)";
+	                      "lastModified TEXT, " +
+						  "replacements TEXT)";
 	var createEpisodeTable = "CREATE TABLE IF NOT EXISTS 'episode' " +
 	                         "(id INTEGER PRIMARY KEY, " +
 							 "feedId INTEGER, " +
@@ -80,18 +151,31 @@ DBClass.prototype.initDB = function(callback) {
 	                         "listened BOOLEAN, " +
 	                         "file TEXT, " +
 	                         "length REAL)";
+	var alterFeedTable = "ALTER TABLE feed ADD COLUMN replacements TEXT";
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
 			function(transaction, results) {
 				Mojo.Log.info("Feed table created");
-				transaction.executeSql(createEpisodeTable, [],
-					function(transaction, results) {
-						Mojo.Log.info("Episode table created");
-						callback();
-					},
-					function(transaction, error) {Mojo.Log.error("Error creating episode table: %j", error);});
 			},
 			function(transaction, error) {Mojo.Log.error("Error creating feed table: %j", error);});
+		transaction.executeSql(createEpisodeTable, [],
+			function(transaction, results) {
+				Mojo.Log.info("Episode table created");
+			},
+			function(transaction, error) {Mojo.Log.error("Error creating episode table: %j", error);});
+		transaction.executeSql(alterFeedTable, [],
+			function(transaction, results) {
+				Mojo.Log.info("Feed table altered");
+				callback();
+			},
+			function(transaction, error) {
+				if (error.message === "duplicate column name: replacements") {
+					Mojo.Log.info("Feed table previously altered");
+					callback();
+				} else {
+					Mojo.Log.error("Error altering feed table: %j", error);
+				}
+			});
 	});
 };
 
@@ -127,8 +211,7 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 			f.numStarted = 0;
 			f.episodes = [];
 			f.guid = [];
-			feedModel.items.push(f);
-			feedModel.ids[f.id] = f;
+			feedModel.add(f);
 		}
 		this.loadEpisodes();
 	} else {
@@ -150,7 +233,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	if (results.rows.length > 0) {
 		for (var i=0; i<results.rows.length; i++) {
 			var e = new Episode(results.rows.item(i));
-			var f = feedModel.ids[e.feedId];
+			var f = feedModel.getFeedById(e.feedId);
 			if (f.details === undefined) {f.details = e.title;}
 			f.episodes.push(e);
 			f.guid[e.guid] = e;
@@ -172,8 +255,8 @@ DBClass.prototype.saveFeeds = function() {
 
 DBClass.prototype.saveFeed = function(f, displayOrder) {
 	var saveFeedSQL = "INSERT OR REPLACE INTO feed (id, displayOrder, title, url, albumArt, " +
-	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified) " +
-					  "VALUES (?,?,?,?,?,?,?,?,?,?)";
+	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements) " +
+					  "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
 	if (displayOrder !== undefined) {
 		f.displayOrder = displayOrder;
@@ -182,7 +265,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	this.db.transaction(function(transaction) {
 		if (f.id === undefined) {f.id = null;}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
-											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified],
+											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements],
 			function(transaction, results) {
 				Mojo.Log.error("Feed saved: %s", f.title);
 				if (f.id === null) {
@@ -253,47 +336,53 @@ DBClass.prototype.defaultFeeds = function() {
 	feed.url = "http://leo.am/podcasts/twit";
 	feed.title = "TWiT";
 	feed.interval = 30000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://feeds.feedburner.com/TreocentralTreoCast";
 	feed.title = "PalmCast";
 	feed.interval = 45000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
+
+	feed = new Feed();
+	feed.url = "http://podcasts.engadget.com/rss.xml";
+	feed.title = "Engadget";
+	feed.interval = 60000;
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://feeds.gdgt.com/gdgt/podcast-mp3/";
 	feed.title = "gdgt weekly";
 	feed.interval = 60000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://feeds.feedburner.com/cnet/buzzoutloud";
 	feed.title = "Buzz Out Loud";
 	feed.interval = 60000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://feeds2.feedburner.com/javaposse";
 	feed.title = "The Java Posse";
 	feed.interval = 60000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://blog.stackoverflow.com/index.php?feed=podcast";
 	feed.title = "Stack Overflow";
 	feed.interval = 60000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://feeds.feedburner.com/podictionary";
 	feed.interval = 60000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	feed = new Feed();
 	feed.url = "http://www.merriam-webster.com/word/index.xml";
 	feed.interval = 60000;
-	feedModel.items.push(feed);
+	feedModel.add(feed);
 
 	this.feedsReady = true;
 	this.saveFeeds();
