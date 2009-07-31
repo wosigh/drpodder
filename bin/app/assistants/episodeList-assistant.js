@@ -381,15 +381,15 @@ EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
 			DB.saveFeed(this.feedObject);
 		}
 	} else if (event.completed === false) {
-		Mojo.Log.error("Download error=%j", event);
-		// if the user didn't do this, let them know what happened
 		episode.downloadTicket = 0;
 		episode.downloadingPercent = 0;
 		episode.downloading = false;
 		this.updateStatusIcon(episode);
 		this.refresh();
 		DB.saveFeed(this.feedObject);
+		// if the user didn't do this, let them know what happened
 		if (!event.aborted) {
+			Mojo.Log.error("Download error=%j", event);
 			Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
 		}
 	} else if (event.completed && event.completionStatusCode === 200) {

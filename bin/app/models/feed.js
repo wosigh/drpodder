@@ -44,7 +44,7 @@ function Feed(init) {
 	}
 }
 
-Feed.prototype.update = function(assistant) {
+Feed.prototype.update = function(callback) {
 	/*
 	if (Mojo.Host.current === Mojo.Host.mojoHost) {
 		// same original policy means we need to use the proxy on mojo-host
@@ -56,19 +56,12 @@ Feed.prototype.update = function(assistant) {
 		method: 'get',
 		onFailure: function() {
 			Mojo.Log.error("Failed to request feed:", this.title, "(", this.url, ")");
-			this.updating = false;
-			assistant.refresh();
-			assistant.updating = false;
+			callback();
 		},
 		onComplete: function(transport) {
 			// could check return value here and indicate that the feed update failed
-
-			this.updateCheck(transport, assistant);
-
-			this.updating = false;
-			assistant.refresh();
-			DB.saveFeed(this);
-			assistant.updating = false;
+			this.updateCheck(transport);
+			callback();
 		}.bind(this)
 	});
 };
@@ -125,13 +118,15 @@ Feed.prototype.getAlbumArt = function(transport) {
 	return imageUrl;
 };
 
-Feed.prototype.updateCheck = function(transport) {
+Feed.prototype.updateCheck = function(transport, callback) {
 	var lastModified = transport.getHeader("Last-Modified");
 	var updateCheckStatus = UPDATECHECK_NOUPDATES;
 
+	/*
 	if (lastModified !== null && this.lastModified === lastModified) {
 		return updateCheckStatus;
 	}
+	*/
 
 	this.lastModified = lastModified;
 	var itemPath = "/rss/channel/item";
@@ -200,6 +195,8 @@ Feed.prototype.updateCheck = function(transport) {
 			}
 		}
 
+		Mojo.Log.error("autoDownload=%d, listened=%d, downloaded=%d, downloadTicket=%d, enclosure=%s, maxDownloads=%d, downloaded=%d",
+					   this.autoDownload, episode.listened, episode.downloaded, episode.downloadTicket, episode.enclosure,this.maxDownloads, downloaded);
 		if (this.autoDownload &&
 			!episode.listened && !episode.downloaded && !episode.downloadTicket && episode.enclosure &&
 			(this.maxDownloads === 0 || downloaded < this.maxDownloads)) {
@@ -277,6 +274,11 @@ function FeedModel(init) {
 FeedModel.prototype.items = [];
 FeedModel.prototype.ids = [];
 
+// feeds_update
+// feed_update
+// episode_download
+FeedModel.prototype.listeners = {};
+
 FeedModel.prototype.add = function(feed) {
 	this.items.push(feed);
 	this.ids[feed.id] = feed;
@@ -285,6 +287,12 @@ FeedModel.prototype.add = function(feed) {
 
 FeedModel.prototype.getFeedById = function(id) {
 	return this.ids[id];
+};
+
+FeedModel.prototype.listen = function(type, id, func) {
+};
+
+FeedModel.prototype.unlisten = function(type, id, func) {
 };
 
 //var feedModel = {items: [], ids: []};

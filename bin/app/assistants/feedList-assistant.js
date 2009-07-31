@@ -49,7 +49,6 @@ FeedListAssistant.prototype.activate = function() {
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
 		this._refresh();
-		//this.updateFeeds();
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
 			if (feedModel.items[i].episodes.length > 0) {
@@ -65,6 +64,29 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 	}
 };
 
+FeedListAssistant.prototype.updateFeedInit = function() {
+	feedModel.items[0].updating = true;
+};
+
+FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
+	if (!feedIndex) {feedIndex = 0;}
+	if (feedIndex < feedModel.items.length) {
+		var feed = feedModel.items[feedIndex];
+		feed.updating = true;
+		this._refresh();
+		feed.update(function() {
+			feed.updating = false;
+			this.updateFeeds(feedIndex+1);
+		}.bind(this));
+	} else {
+		DB.saveFeeds();
+		this._refresh();
+	}
+};
+
+FeedListAssistant.prototype.checkForDownloads = function(feedIndex) {
+};
+
 FeedListAssistant.prototype.cleanup = function() {
 	// this doesn't seem to actually save the feeds.  db has gone away maybe?
 	//DB.saveFeeds();
@@ -78,14 +100,13 @@ FeedListAssistant.prototype.setInterval = function(feed) {
 			clearInterval(feed.intervalID);
 			feed.intervalID = 0;
 		} else {
-			this.updating = true;
-			feed.updating = true;
-			this._refresh();
-			feed.update(this);
 		}
 		// TODO: uncomment
 		// if (feed.interval) {feed.intervalID = setInterval(feed.update.bind(feed, this), feed.interval);}
 	}
+};
+
+FeedListAssistant.prototype.clearIntervals = function() {
 };
 
 FeedListAssistant.prototype.clearIntervals = function() {
@@ -163,13 +184,6 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 				this.updateFeeds();
 				break;
 		}
-	}
-};
-
-FeedListAssistant.prototype.updateFeeds = function(event) {
-	this.clearIntervals();
-	for (var i=0; i<feedModel.items.length; i++) {
-		this.setInterval(feedModel.items[i]);
 	}
 };
 
