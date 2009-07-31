@@ -150,8 +150,10 @@ DBClass.prototype.initDB = function(callback) {
 	                         "downloaded BOOLEAN, " +
 	                         "listened BOOLEAN, " +
 	                         "file TEXT, " +
-	                         "length REAL)";
+	                         "length REAL, " +
+							 "type TEXT)";
 	var alterFeedTable = "ALTER TABLE feed ADD COLUMN replacements TEXT";
+	var alterEpisodeTable = "ALTER TABLE episode ADD COLUMN type TEXT";
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
 			function(transaction, results) {
@@ -163,6 +165,17 @@ DBClass.prototype.initDB = function(callback) {
 				Mojo.Log.info("Episode table created");
 			},
 			function(transaction, error) {Mojo.Log.error("Error creating episode table: %j", error);});
+		transaction.executeSql(alterEpisodeTable, [],
+			function(transaction, results) {
+				Mojo.Log.info("Episode table altered");
+			},
+			function(transaction, error) {
+				if (error.message === "duplicate column name: type") {
+					Mojo.Log.info("Feed table previously altered");
+				} else {
+					Mojo.Log.error("Error altering episode table: %j", error);
+				}
+			});
 		transaction.executeSql(alterFeedTable, [],
 			function(transaction, results) {
 				Mojo.Log.info("Feed table altered");
@@ -176,6 +189,11 @@ DBClass.prototype.initDB = function(callback) {
 					Mojo.Log.error("Error altering feed table: %j", error);
 				}
 			});
+		transaction.executeSql("UPDATE feed SET maxDownloads=1", [],
+			function(transaction, results) {
+				Mojo.Log.info("Updating maxDownloads=1");
+			},
+			function(transaction, error) {Mojo.Log.error("Error updating maxDownloads: %j", error);});
 	});
 };
 
@@ -206,6 +224,8 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 		// load the rows into the feedModel
 		for (var i=0; i<results.rows.length; i++) {
 			var f = new Feed(results.rows.item(i));
+			f.downloading = false;
+			f.downloadCount = 0;
 			f.numNew = 0;
 			f.numDownloaded = 0;
 			f.numStarted = 0;
@@ -240,7 +260,24 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 			f.numEpisodes++;
 			if (!e.listened) {f.numNew++;}
 			if (e.downloaded) {f.numDownloaded++;}
-			if (e.position !== 0) {f.numStarted++;}
+			if (e.position !== 0) {
+				f.numStarted++;
+				if (e.length) {
+					e.bookmarkPercent = 100*e.position/e.length;
+				}
+			}
+
+			e.listen(f.episodeUpdate.bind(f));
+
+			if (e.downloadTicket) {
+				e.downloading = true;
+				f.downloading = true;
+				f.downloadCount++;
+				e.downloadRequest = AppAssistant.downloadService.downloadStatus(null, e.downloadTicket,
+					e.downloadingCallback.bind(e));
+			}
+
+			e.updateUIElements();
 		}
 
 		this.feedsReady = true;
@@ -276,7 +313,8 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 					}
 				}
 				for (var i=0; i<f.episodes.length; i++) {
-					this.saveEpisode(f.episodes[i], i);
+					f.episodes[i].displayOrder = i;
+					this.saveEpisodeTransaction(f.episodes[i], transaction);
 				}
 			}.bind(this),
 			function(transaction, error) {
@@ -286,31 +324,34 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	}.bind(this));
 };
 
-DBClass.prototype.saveEpisode = function(e, displayOrder) {
-	var saveEpisodeSQL = "INSERT OR REPLACE INTO episode (id, feedId, displayOrder, title, description, " +
+DBClass.prototype.saveEpisodeSQL = "INSERT OR REPLACE INTO episode (id, feedId, displayOrder, title, description, " +
 	                     "enclosure, guid, link, pubDate, position, " +
-					     "downloadTicket, downloaded, listened, file, length) " +
-					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					     "downloadTicket, downloaded, listened, file, length, type) " +
+					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+DBClass.prototype.saveEpisode = function(e, displayOrder) {
 
 	if (displayOrder !== undefined) {
 		e.displayOrder = displayOrder;
 	}
 
-	this.db.transaction(function(transaction) {
-		if (e.id === undefined) {e.id = null;}
-		transaction.executeSql(saveEpisodeSQL, [e.id, e.feedId, e.displayOrder, e.title, e.description,
-											    e.enclosure, e.guid, e.link, e.pubDate, e.position,
-												e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length],
-			function(transaction, results) {
-				Mojo.Log.info("Episode saved: %s, %d", e.title, e.listened);
-				if (e.id === null) {
-					e.id = results.insertId;
-				}
-			},
-			function(transaction, error) {
-				Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);
-			});
-	}.bind(this));
+	this.db.transaction(this.saveEpisodeTransaction.bind(this, e));
+};
+
+DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
+	if (e.id === undefined) {e.id = null;}
+	transaction.executeSql(this.saveEpisodeSQL, [e.id, e.feedId, e.displayOrder, e.title, e.description,
+										    e.enclosure, e.guid, e.link, e.pubDate, e.position,
+											e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type],
+		function(transaction, results) {
+			Mojo.Log.info("Episode saved: %s, %d", e.title, e.listened);
+			if (e.id === null) {
+				e.id = results.insertId;
+			}
+		},
+		function(transaction, error) {
+			Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);
+		});
 };
 
 DBClass.prototype.removeFeed = function(f) {
@@ -320,7 +361,7 @@ DBClass.prototype.removeFeed = function(f) {
 	for (var i=0; i<f.episodes.length; i++) {
 		var episode = f.episodes[i];
 		if (episode.downloaded) {
-			AppAssistant.mediaService.deleteFile(this.controller, episode.file, null);
+			AppAssistant.mediaService.deleteFile(null, episode.file, null);
 		}
 	}
 

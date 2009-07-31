@@ -42,7 +42,6 @@ StageAssistant.prototype.handleCommand = function(event) {
 					},
 					onSuccess: function(transport) {
 						try {
-							Mojo.Log.error("transport=%j", transport);
 							var doc = transport.responseXML = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
 							var nodes = document.evaluate("//outline", doc, null, XPathResult.ANY_TYPE, null);
 							var node = nodes.iterateNext();

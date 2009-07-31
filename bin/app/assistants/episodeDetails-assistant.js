@@ -29,8 +29,7 @@ EpisodeDetailsAssistant.prototype.menuCommandItems = {
 	skipForward: {iconPath: "images/menu-icon-music-forward.png", command: "skipForward-cmd"},
 	skipBack:    {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack-cmd"},
 	skipForward2:{iconPath: "images/menu-icon-music-forward.png", command: "skipForward2-cmd"},
-	skipBack2:   {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack2-cmd"},
-	nil:         {icon: "", command: "", label: " "}
+	skipBack2:   {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack2-cmd"}
 };
 
 EpisodeDetailsAssistant.prototype.cmdMenuModel = {
@@ -103,42 +102,28 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 EpisodeDetailsAssistant.prototype.deactivate = function() {
 	// save current player position
 	this.bookmark();
+	this.updateTimer = false;
 };
 
 EpisodeDetailsAssistant.prototype.bookmark = function() {
 	var cur = this.audioObject.currentTime;
 	if (cur !== undefined && cur !== null && cur > 15) {
-		Mojo.Log.error("Saving episode position:", cur);
-		if (this.episodeObject.position === 0) {
-			feedModel.ids[this.episodeObject.feedId].numStarted++;
-		}
-		this.episodeObject.position = cur;
 		this.episodeObject.length = this.audioObject.duration;
+		this.episodeObject.bookmark(cur);
 	}
-	DB.saveFeed(feedModel.ids[this.episodeObject.feedId]);
 };
 
-EpisodeDetailsAssistant.prototype.clearBookmark = function() {
-	Mojo.Log.error("Clearing bookmark");
+EpisodeDetailsAssistant.prototype.backToList = function() {
 	var feed = feedModel.getFeedById(this.episodeObject.feedId);
+
 	this.audioObject.currentTime = 0;
-	if (this.episodeObject.position) {
-		this.episodeObject.position = 0;
-		feed.numStarted--;
-	}
-	if (!this.episodeObject.listened) {
-		this.episodeObject.listened = true;
-		feed.numNew--;
-	}
+
+	this.episodeObject.setListened();
 
 	if (feed.autoDelete && this.episodeObject.downloaded) {
-		this.episodeObject.file = null;
-		this.episodeObject.downloaded = false;
-		feed.numDownloaded--;
-		AppAssistant.mediaService.deleteFile(null, this.episodeObject.file, function() {});
+		this.episodeObject.deleteFile();
 	}
 
-	DB.saveFeed(feed);
 	this.controller.stageController.popScene(true);
 };
 
@@ -163,10 +148,10 @@ EpisodeDetailsAssistant.prototype.keyDownHandler = function(event) {
 		}
 	} else if (key === 190) {
 		// ff1
-		this.doSkip(15);
+		this.doSkip(20);
 	} else if (key === 48) {
 		// fr1
-		this.doSkip(-15);
+		this.doSkip(-20);
 	} else if (key === 17) {
 		// ff2
 		this.doSkip(60);
@@ -179,11 +164,11 @@ EpisodeDetailsAssistant.prototype.keyDownHandler = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
-	this.cmdMenuModel.items[2] = {items: [this.menuCommandItems.nil,
-										  this.menuCommandItems.nil,
+	this.cmdMenuModel.items[2] = {items: [{},
+										  {},
 										  this.menuCommandItems.play,
-										  this.menuCommandItems.nil,
-										  this.menuCommandItems.nil]};
+										  {},
+										  {}]};
 	/*
 	if (this.episodeObject.downloaded) {
 		this.cmdMenuModel.items[4] = this.menuCommandItems.deleteFile;
@@ -203,6 +188,9 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	try {
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %o", event);
+	} catch (e) {
+	}
+	try {
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
 	} catch (e) {
 	}
@@ -211,7 +199,7 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	Mojo.Log.error("AudioEvent: %j", event);
+	Mojo.Log.info("AudioEvent: %j", event);
 	switch (event.type) {
 		case "play":
 			this.doPlay();
@@ -221,7 +209,8 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			break;
 		case "ended":
 			this.doPause();
-			this.clearBookmark();
+			this.episodeObject.clearBookmark();
+			this.backToList();
 			break;
 	}
 };
@@ -242,21 +231,21 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 				this.doPause();
 				break;
             case "delete-cmd":
-				this.cmdMenuModel.items[2].items[0] = this.menuCommandItems.nil;
-				this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.nil;
+				this.cmdMenuModel.items[2].items[0] = {};
+				this.cmdMenuModel.items[2].items[1] = {};
 				this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.play;
+				this.cmdMenuModel.items[2].items[3] = {};
+				this.cmdMenuModel.items[2].items[4] = {};
 				//this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.streamPlay;
-				this.cmdMenuModel.items[2].items[3] = this.menuCommandItems.nil;
-				this.cmdMenuModel.items[2].items[4] = this.menuCommandItems.nil;
 				//this.cmdMenuModel.items[4] = this.menuCommandItems.download;
 				this.controller.modelChanged(this.cmdMenuModel);
 				this.deleteFile();
 				break;
             case "skipForward-cmd":
-				this.doSkip(15);
+				this.doSkip(20);
 				break;
             case "skipBack-cmd":
-				this.doSkip(-15);
+				this.doSkip(-20);
 				break;
             case "skipForward2-cmd":
 				this.doSkip(60);
@@ -279,7 +268,6 @@ EpisodeDetailsAssistant.prototype.doPlay = function() {
 	this.setTimer(true);
 	if (this.resume) {
 		this.audioObject.currentTime = this.episodeObject.position;
-		Mojo.Log.error("loading resume position:", this.episodeObject.position);
 		this.resume = false;
 	}
 	this.bookmark();

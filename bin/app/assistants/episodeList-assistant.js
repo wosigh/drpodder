@@ -1,6 +1,9 @@
 function EpisodeListAssistant(feedObject) {
 	this.feedObject = feedObject;
 	this.episodeModel = {items: feedObject.episodes};
+
+	this.feedUpdateHandler = this.feedUpdate.bind(this);
+	this.episodeUpdateHandler = this.episodeUpdate.bind(this);
 }
 
 EpisodeListAssistant.prototype.items = [];
@@ -24,8 +27,6 @@ EpisodeListAssistant.menuModel = {
 	]
 };
 
-EpisodeListAssistant.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^\\s<>'\"]*");
-
 EpisodeListAssistant.prototype.setup = function() {
 	this.episodeAttr = {
 		itemTemplate: "episodeList/episodeRowTemplate",
@@ -37,54 +38,21 @@ EpisodeListAssistant.prototype.setup = function() {
 		// doesn't exist yet preventDeleteProperty: "downloaded",
 		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this)}};
 
-	// probably would be good to go ahead and go through the episode list here
-	// check if we have any tickets for downloads, and see if they're done.
-	// if not, start the download watcher
-	//this.feedObject.numNew = 0;
-	//this.feedObject.numDownloaded = 0;
-	//this.feedObject.numEpisodes = 0;
-	this.feedObject.numStarted = 0;
 
-	for (var i=0; i<this.episodeModel.items.length; i++) {
-		var episode = this.episodeModel.items[i];
-		if (episode.downloadTicket) {
-			Mojo.Log.error("Resuming download of:", episode.title, " ticket:", episode.downloadTicket);
-			episode.downloading = true;
-			episode.downloadingPercent = 0;
-			episode.downloadingIndex = i;
-			this.refresh();
-			AppAssistant.downloadService.downloadStatus(this.controller, episode.downloadTicket,
-				this.downloading.bind(this, episode, i));
-		} else {
-			episode.downloading = false;
-		}
 
-		// check to see that episode.file exists and wasn't deleted...
-		// http://developer.palm.com/distribution/viewtopic.php?f=16&t=133
-		if (episode.listened) {
-			episode.indicatorColor = "gray";
-		} else {
-			episode.indicatorColor = "black";
-			//this.feedObject.numNew++;
-		}
-		//this.feedObject.numEpisodes++;
 
-		if (episode.position) {
-			this.feedObject.numStarted++;
-		}
-		this.updateStatusIcon(episode);
 
-		if (episode.length) {
-			episode.bookmarkPercent = 100*episode.position/episode.length;
-		} else {
-			episode.bookmarkPercent = 0;
-		}
-	}
+
+
+
+	// things to move somewhere else...
+	// check to see that episode.file exists and wasn't deleted...
+	// http://developer.palm.com/distribution/viewtopic.php?f=16&t=133
 
 	this.controller.get("episodeListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
 	this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
 	//this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
-	//this.controller.get("episodeListWgt").observe(Mojo.Event.hold, this.handleHold.bindAsEventListener(this));
+	this.controller.get("episodeListWgt").observe(Mojo.Event.hold, this.handleHold.bindAsEventListener(this));
 	// might be better to do the holdEnd...
 	// this.controller.get("episodeListWgt").observe(Mojo.Event.holdEnd, this.handleHold.bindAsEventListener(this));
 
@@ -94,6 +62,9 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, EpisodeListAssistant.menuAttr, EpisodeListAssistant.menuModel);
+
+	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 1);
+	this.needRefresh = false;
 };
 
 EpisodeListAssistant.prototype.handleCommand = function(event) {
@@ -101,26 +72,10 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 	if (event.type === Mojo.Event.command) {
 		switch (event.command) {
 			case "unlistened-cmd":
-				for (i=0; i<this.feedObject.episodes.length; i++) {
-					episode = this.feedObject.episodes[i];
-					episode.listened = false;
-					episode.indicatorColor = "black";
-					this.updateStatusIcon(episode);
-				}
-				this.feedObject.numNew = this.feedObject.episodes.length;
-				DB.saveFeed(this.feedObject);
-				this.refresh();
+				this.feedObject.unlistened();
 				break;
 			case "listened-cmd":
-				for (i=0; i<this.feedObject.episodes.length; i++) {
-					episode = this.feedObject.episodes[i];
-					episode.listened = true;
-					episode.indicatorColor = "gray";
-					this.updateStatusIcon(episode);
-				}
-				this.feedObject.numNew = 0;
-				DB.saveFeed(this.feedObject);
-				this.refresh();
+				this.feedObject.listened();
 				break;
 		}
 	}
@@ -141,136 +96,166 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		var y = d.getFullYear();
 		var m = (d.getMonth()+1);
 		var dom=d.getDate();
-		var h=d.getHours();
+		var h=d.getHours()%12;
 		var min=d.getMinutes();
+		var pm = (d.getHours >= 12)?"pm":"am";
 		if (m<10) {m="0"+m;}
 		if (dom<10) {dom="0"+dom;}
-		if (h<10) {h="0"+h;}
 		if (min<10) {min="0"+min;}
-		formatted = y+"/"+m+"/"+dom+" "+h+":"+min;
+		formatted = y+"/"+m+"/"+dom+" "+h+":"+min+" "+pm;
 	}
 	return formatted;
 };
 
 EpisodeListAssistant.prototype.activate = function(changes) {
-	for (var i=0; i<this.episodeModel.items.length; i++) {
-		var episode = this.episodeModel.items[i];
-		if (episode.listened) {
-			episode.indicatorColor = "gray";
-		} else {
-			episode.indicatorColor = "black";
-		}
-		this.updateStatusIcon(episode);
-		if (episode.length) {
-			episode.bookmarkPercent = 100*episode.position/episode.length;
-		}
+	this.refreshNow();
+	this.feedObject.listen(this.feedUpdateHandler);
+
+	for (var i=0; i<this.feedObject.episodes.length; i++) {
+		this.feedObject.episodes[i].listen(this.episodeUpdateHandler);
 	}
-	this.refresh();
 };
 
-EpisodeListAssistant.prototype.refresh = function() {
-	this.controller.modelChanged(this.episodeModel);
+EpisodeListAssistant.prototype.deactivate = function(changes) {
+	this.feedObject.unlisten(this.feedUpdateHandler);
+
+	for (var i=0; i<this.feedObject.episodes.length; i++) {
+		this.feedObject.episodes[i].unlisten(this.episodeUpdateHandler);
+	}
 };
 
-/*
-EpisodeListAssistant.prototype.handleHold = function(event) {
-	// we could popup a dialog here to delete the downloaded song or stream a song if not downloaded?
-	event.stop();
-
-	this.controller.popupSubmenu({
-		onChoose: this.holdSelection.bind(this),
-		placeNear: event.target,
-		items: [
-			{label: "Play", command: "play-cmd"},
-			{label: "Delete", command: "delete-cmd"},
-			{label: "Download", command: "download-cmd"},
-			{label: "Mark Listened", command: "listen-cmd"}
-		]
-	});
-	Mojo.Log.error("Hold stopped?");
+EpisodeListAssistant.prototype.cleanup = function(changes) {
 };
-*/
+
+EpisodeListAssistant.prototype._refreshDebounced = function() {
+	this.needRefresh = true;
+};
+
+EpisodeListAssistant.prototype.refreshNow = function() {
+	this.needRefresh = true;
+	this._refresh();
+};
+
+EpisodeListAssistant.prototype._refresh = function() {
+	if (this.needRefresh) {
+		Mojo.Log.error("refresh");
+		this.controller.modelChanged(this.episodeModel);
+		this.needRefresh = false;
+	}
+};
 
 EpisodeListAssistant.prototype.handleDelete = function(event) {
 	event.stop();
-	if (event.item.downloaded) {
-		this.listened(event.item);
-		this.deleteFile(event.item);
-	}
+	event.item.deleteFile();
+};
+
+EpisodeListAssistant.prototype.cmdItems = {
+	deleteCmd     : {label: "Delete", command: "delete-cmd"},
+	downloadCmd   : {label: "Download", command: "download-cmd"},
+	playCmd       : {label: "Play", command: "resume-cmd"},
+	resumeCmd     : {label: "Resume", command: "resume-cmd"},
+	restartCmd    : {label: "Restart", command: "restart-cmd"},
+	listenedCmd   : {label: "Mark Listened", command: "listen-cmd"},
+	unlistenedCmd : {label: "Mark Unlistened", command: "unlisten-cmd"},
+	clearCmd      : {label: "Clear Bookmark", command: "clear-cmd"},
+	detailsCmd    : {label: "Episode Details", command: "details-cmd"}
+};
+
+EpisodeListAssistant.prototype.clearPopupMenuOnSelection = function(event) {
+	this.popupMenuOnSelection = false;
+};
+
+EpisodeListAssistant.prototype.handleHold = function(event) {
+	this.popupMenuOnSelection = true;
+	setTimeout(this.clearPopupMenuOnSelection.bind(this), 5000);
+	var episode = event.item;
+
 };
 
 EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
 	var episode = event.item;
 	var items = [];
-	var deleteCmd     = {label: "Delete", command: "delete-cmd"};
-	var downloadCmd   = {label: "Download", command: "download-cmd"};
-	var playCmd       = {label: "Play", command: "resume-cmd"};
-	var resumeCmd     = {label: "Resume", command: "resume-cmd"};
-	var restartCmd    = {label: "Restart", command: "restart-cmd"};
-	var listenedCmd   = {label: "Mark Listened", command: "listen-cmd"};
-	var unlistenedCmd = {label: "Mark Unlistened", command: "unlisten-cmd"};
-	var clearCmd      = {label: "Clear Bookmark", command: "clear-cmd"};
-	var detailsCmd    = {label: "Episode Details", command: "details-cmd"};
 
-	if (targetClass.indexOf("episodeStatus") === -1) {
-		// we clicked on the row, just push the scene
-		this.play(episode, false, true);
-	} else {
-		// we clicked on the icon, do something different
-		var index = event.index;
+	if (this.popupMenuOnSelection
+		|| (targetClass.indexOf("episodeStatus") !== -1 &&
+			!episode.downloading && episode.enclosure &&
+			episode.listened && !episode.downloaded)) {
 		if (episode.downloading) {
 			// if we're downloading, just cancel the download
-			this.cancelDownload(episode);
+			items.push(this.cmdItems.playCmd);
+			items.push(this.cmdItems.detailsCmd);
 		} else {
 			if (episode.enclosure) {
 				if (!episode.downloaded) {
-					items.push(downloadCmd);
+					items.push(this.cmdItems.downloadCmd);
 				}
 				if (episode.position) {
-					items.push(resumeCmd);
-					items.push(clearCmd);
-					items.push(restartCmd);
+					items.push(this.cmdItems.resumeCmd);
+					items.push(this.cmdItems.clearCmd);
+					items.push(this.cmdItems.restartCmd);
 				} else {
-					items.push(playCmd);
+					items.push(this.cmdItems.playCmd);
 				}
 				if (episode.downloaded) {
-					items.push(deleteCmd);
+					items.push(this.cmdItems.deleteCmd);
 				}
 				if (episode.listened) {
-					items.push(unlistenedCmd);
+					items.push(this.cmdItems.unlistenedCmd);
 				} else {
-					items.push(listenedCmd);
+					items.push(this.cmdItems.listenedCmd);
 				}
 			}
-			items.push(detailsCmd);
+			items.push(this.cmdItems.detailsCmd);
 		}
-
-		if (items.length > 0) {
-			this.controller.popupSubmenu({
-				onChoose: this.menuSelection.bind(this, episode, index),
-				placeNear: event.originalEvent.target,
-				items: items
-			});
+	} else {
+		if (targetClass.indexOf("episodeStatus") === -1) {
+			// we clicked on the row, just push the scene
+			this.play(episode, false, true);
+		} else {
+			// we clicked on the icon, do something different
+			if (episode.downloading) {
+				// if we're downloading, just cancel the download
+				episode.cancelDownload();
+			} else {
+				if (episode.enclosure) {
+					if (episode.listened) {
+						if (episode.downloaded) {
+							episode.deleteFile();
+						} else {
+							this.handleHold(event);
+						}
+					} else {
+						if (episode.downloaded) {
+							this.play(episode, true, true);
+						} else {
+							episode.download();
+						}
+					}
+				}
+			}
 		}
+	}
+	if (items.length > 0) {
+		this.controller.popupSubmenu({
+			onChoose: this.menuSelection.bind(this, episode),
+			placeNear: event.originalEvent.target,
+			items: items
+		});
 	}
 };
 
-EpisodeListAssistant.prototype.menuSelection = function(episode, index, command) {
+EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 	//Mojo.Log.error("we tried to do:", command, "to", episode.title);
 	switch (command) {
 		case "listen-cmd":
-			this.listened(episode);
-			this.refresh();
-			DB.saveFeed(this.feedObject);
+			episode.setListened();
 			break;
 		case "unlisten-cmd":
-			this.unlistened(episode);
-			this.refresh();
-			DB.saveFeed(this.feedObject);
+			episode.setUnlistened();
 			break;
 		case "download-cmd":
-			this.download(episode, index);
+			episode.download();
 			break;
 		case "stream-cmd":
 			this.play(episode, true, true);
@@ -288,214 +273,43 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, index, command)
 			this.play(episode, true, true);
 			break;
 		case "clear-cmd":
-			episode.position = 0;
-			episode.bookmarkPercent = 0;
-			this.refresh();
-			this.feedObject.numStarted--;
-			DB.saveFeed(this.feedObject);
+			episode.clearBookmark();
 			break;
 		case "delete-cmd":
-			this.deleteFile(episode);
-			this.listened(episode);
-			this.refresh();
-			DB.saveFeed(this.feedObject);
+			episode.deleteFile();
 			break;
 	}
-};
-
-
-EpisodeListAssistant.prototype.download = function(episode, index) {
-	if (episode.downloaded) {
-		Mojo.Log.error("We're trying to delete: ["+episode.file+"]");
-		this.deleteFile(episode);
-	}
-
-	AppAssistant.downloadService.download(this.controller, episode.enclosure,
-		this.downloading.bind(this, episode, index));
-};
-
-EpisodeListAssistant.prototype.cancelDownload = function(episode) {
-	Mojo.Log.error("attempting to cancel download:", episode.downloadTicket);
-	AppAssistant.downloadService.cancelDownload(this.controller, episode.downloadTicket,
-		function(event) {
-			Mojo.Log.error("Canceling download");
-			episode.downloadTicket = 0;
-			episode.downloadingPercent = 0;
-			episode.downloading = false;
-			this.updateStatusIcon(episode);
-			this.refresh();
-			DB.saveFeed(this.feedObject);
-		}.bind(this)
-	);
-};
-
-EpisodeListAssistant.prototype.deleteFile = function(episode) {
-	episode.file = null;
-	episode.downloaded = false;
-	this.updateStatusIcon(episode);
-	this.feedObject.numDownloaded--;
-	this.refresh();
-	DB.saveFeed(this.feedObject);
-	AppAssistant.mediaService.deleteFile(this.controller, episode.file, function() {});
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
 	this.controller.stageController.pushScene("episodeDetails", episode, autoPlay, resume);
 };
 
-EpisodeListAssistant.prototype.listened = function(episode) {
-	if (!episode.listened) {
-		episode.indicatorColor = "gray";
-		episode.listened = true;
-		this.feedObject.numNew--;
-	}
-	this.updateStatusIcon(episode);
-};
-
-EpisodeListAssistant.prototype.unlistened = function(episode) {
-	if (episode.listened) {
-		episode.indicatorColor = "black";
-		episode.listened = false;
-		this.feedObject.numNew++;
-	}
-	this.updateStatusIcon(episode);
-};
-
-EpisodeListAssistant.prototype.downloaded = function(episode){
-	if (!episode.downloaded) {
-		episode.downloaded = true;
-		this.feedObject.numDownloaded++;
-	}
-	this.updateStatusIcon(episode);
-};
-
-EpisodeListAssistant.prototype.downloading = function(episode, index, event) {
-	if (event.returnValue) {
-		episode.downloadTicket = event.ticket;
-		episode.downloadingPercent = 0;
-		episode.downloadingIndex = index;
-		if (!episode.downloading) {
-			episode.downloading = true;
-			this.updateStatusIcon(episode);
-			this.refresh();
-			DB.saveFeed(this.feedObject);
-		}
-	} else if (event.completed === false) {
-		episode.downloadTicket = 0;
-		episode.downloadingPercent = 0;
-		episode.downloading = false;
-		this.updateStatusIcon(episode);
-		this.refresh();
-		DB.saveFeed(this.feedObject);
-		// if the user didn't do this, let them know what happened
-		if (!event.aborted) {
-			Mojo.Log.error("Download error=%j", event);
-			Util.showError("Download aborted", "There was an error downloading url:"+episode.enclosure);
-		}
-	} else if (event.completed && event.completionStatusCode === 200) {
-		//success!
-		Mojo.Log.error("Download complete!", episode.title);
-		episode.downloadTicket = 0;
-		episode.downloading = false;
-		episode.downloadingPercent = 0;
-		this.unlistened(episode);
-
-		episode.file = event.target;
-		this.downloaded(episode);
-		this.refresh();
-		DB.saveFeed(this.feedObject);
-	} else if (event.completed && event.completionStatusCode === 302) {
-		Mojo.Log.error("Redirecting...", episode.title);
-		episode.downloadTicket = 0;
-		episode.downloading = false;
-		episode.downloadingPercent = 0;
-		this.refresh();
-		var req = new Ajax.Request(event.target, {
-			method: 'get',
-			onFailure: function() {
-				Mojo.Log.error("Couldn't find %s... strange", event.target);
-			},
-			onComplete: function(transport) {
-				var redirect;
-				try {
-					var matches = this.findLinks.exec(transport.responseText);
-					if (matches) {
-						redirect = matches[0];
-					}
-				} catch (e){
-					Mojo.Log.error("error with regex: (%s)", e);
-					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
-				}
-				AppAssistant.mediaService.deleteFile(this.controller, event.target, function(event) {});
-				if (redirect !== undefined) {
-					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
-					AppAssistant.downloadService.download(this.controller, redirect,
-						this.downloading.bind(this, episode, episode.downloadingIndex));
-				}
-			}.bind(this)
-		});
-	} else if (episode.downloading) {
-		var per = 0;
-		// if amountTotal is < 2048 or so, we'll assume it's a redirect
-		if (event.amountTotal > 0 && event.amountReceived > 0 && event.amountTotal > 2048) {
-			per = Math.floor(1000*event.amountReceived/event.amountTotal)/10;
-		}
-		if (episode.downloadingPercent !== per) {
-			episode.downloadingPercent = per;
-			this.updatePercent(episode);
-		}
-	} else {
-		Util.showError("Error downloading "+episode.title, "There was an error downloading url:"+episode.enclosure);
-		Mojo.Log.error("Error handling downloading of %s (%j)", episode.title, event);
-		episode.downloadTicket = 0;
-		episode.downloading = false;
-		episode.downloadingPercent = 0;
-		episode.downloadingIndex = index;
-		this.updateStatusIcon(episode);
-		this.refresh();
-		DB.saveFeed(this.feedObject);
-	}
-};
-
 EpisodeListAssistant.prototype.updatePercent = function(episode) {
 	//Mojo.Log.error("Setting percent to:", episode.downloadingPercent);
-	var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episode.downloadingIndex);
+	var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episode.displayOrder);
 	var nodes = node.getElementsByClassName("progressDone");
 	nodes[0].style.width = episode.downloadingPercent + "%";
 };
 
-EpisodeListAssistant.prototype.updateBookmark = function(episode) {
-	/*
-	// might not be good to rely on displayOrder...
-	var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episode.displayOrder);
-	var nodes = node.getElementsByClassName("bookmarkDone");
-	if (episode.length) {
-		episode.bookmarkPercent = episode.position/episode.length;
-		Mojo.Log.error("Setting bookmark to:", episode.bookmarkPercent);
-		nodes[0].style.width = episode.bookmarkPercent + "%";
+EpisodeListAssistant.prototype.feedUpdate = function(action, feed) {
+	//Mojo.Log.error("EpisodeLA: feed [%s] said: %s", feed.title, action);
+	switch (action) {
+		case "REFRESH":
+			this.refreshNow();
+			break;
+		case "ACTION":
+			break;
 	}
-	*/
 };
 
-EpisodeListAssistant.prototype.updateStatusIcon = function(episode) {
-	if (episode.downloading) {
-		episode.statusIcon = "Knob Cancel.png";
-	} else {
-		if (episode.listened) {
-			if (episode.downloaded) {
-				episode.statusIcon = "Knob Remove Red.png";
-			} else {
-				episode.statusIcon = "Knob Grey.png";
-			}
-		} else {
-			if (episode.downloaded) {
-				episode.statusIcon = "Knob Play.png";
-			} else {
-				episode.statusIcon = "Knob Download.png";
-			}
-		}
-		if (!episode.enclosure) {
-			episode.statusIcon = "Knob Grey.png";
-		}
+EpisodeListAssistant.prototype.episodeUpdate = function(action, episode) {
+	//Mojo.Log.error("EpisodeLA: episode [%s] said: %s", episode.title, action);
+	switch (action) {
+		case "DOWNLOADPROGRESS":
+			this.updatePercent(episode);
+			break;
+		case "ACTION":
+			break;
 	}
 };

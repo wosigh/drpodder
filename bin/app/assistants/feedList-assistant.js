@@ -12,7 +12,7 @@ FeedListAssistant.prototype.feedAttr = {
 FeedListAssistant.prototype.cmdMenuModel = {
 	items: [
 		{icon: "new", command: "add-cmd"},
-		{icon: "refresh", command: "refresh-cmd"}
+		{icon: "refresh", command: "refresh-cmd", disabled: true}
 	]
 };
 
@@ -30,25 +30,32 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("feedListWgt", this.feedAttr, feedModel);
 
-	this.controller.setupWidget("feedSpinner", {property: "updating"});
+	this.controller.setupWidget("refreshSpinner", {property: "updating"});
+	this.controller.setupWidget("downloadSpinner", {property: "downloading"});
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, StageAssistant.appMenuAttr, StageAssistant.appMenuModel);
 
+	this.feedUpdateHandler = this.feedUpdate.bind(this);
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 1);
+	this.needRefresh = false;
 };
 
 FeedListAssistant.prototype.activate = function() {
-	/*
-	for (var i=0; i<feedModel.items.length; i++) {
-		this.setInterval(feedModel.items[i]);
-	}
-	*/
 	this.waitForFeedsReady();
+	for (var i=0; i<feedModel.items.length; i++) {
+		feedModel.items[i].listen(this.feedUpdateHandler);
+	}
+};
+
+FeedListAssistant.prototype.deactivate = function() {
+	for (var i=0; i<feedModel.items.length; i++) {
+		feedModel.items[i].unlisten(this.feedUpdateHandler);
+	}
 };
 
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
-		this._refresh();
+		this.refreshNow();
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
 			if (feedModel.items[i].episodes.length > 0) {
@@ -58,33 +65,40 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 		}
 		if (firstLoad) {
 			this.updateFeeds();
+		} else {
+			this.cmdMenuModel.items[1].disabled = false;
+			this.controller.modelChanged(this.cmdMenuModel);
 		}
 	} else {
 		setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
 };
 
-FeedListAssistant.prototype.updateFeedInit = function() {
-	feedModel.items[0].updating = true;
-};
-
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
-	if (!feedIndex) {feedIndex = 0;}
+	if (!feedIndex) {
+		// first time through
+		this.cmdMenuModel.items[1].disabled = true;
+		this.controller.modelChanged(this.cmdMenuModel);
+		feedIndex = 0;
+	}
 	if (feedIndex < feedModel.items.length) {
 		var feed = feedModel.items[feedIndex];
 		feed.updating = true;
-		this._refresh();
+		this.refreshNow();
 		feed.update(function() {
 			feed.updating = false;
 			this.updateFeeds(feedIndex+1);
 		}.bind(this));
 	} else {
 		DB.saveFeeds();
-		this._refresh();
+		this.refreshNow();
+		this.checkForDownloads();
 	}
 };
 
-FeedListAssistant.prototype.checkForDownloads = function(feedIndex) {
+FeedListAssistant.prototype.checkForDownloads = function(feedIndex, episodeIndex) {
+	this.cmdMenuModel.items[1].disabled = false;
+	this.controller.modelChanged(this.cmdMenuModel);
 };
 
 FeedListAssistant.prototype.cleanup = function() {
@@ -92,42 +106,27 @@ FeedListAssistant.prototype.cleanup = function() {
 	//DB.saveFeeds();
 };
 
-FeedListAssistant.prototype.setInterval = function(feed) {
-	if (this.updating) {
-		setTimeout(this.setInterval.bind(this, feed), 500);
-	} else {
-		if (feed.intervalID) {
-			clearInterval(feed.intervalID);
-			feed.intervalID = 0;
-		} else {
-		}
-		// TODO: uncomment
-		// if (feed.interval) {feed.intervalID = setInterval(feed.update.bind(feed, this), feed.interval);}
-	}
-};
-
-FeedListAssistant.prototype.clearIntervals = function() {
-};
-
-FeedListAssistant.prototype.clearIntervals = function() {
-	for (var i=0; i<feedModel.items.length; i++) {
-		var feed = feedModel.items[i];
-		if (feed.intervalID) {clearInterval(feed.intervalID);}
-		feed.intervalID = 0;
-	}
-};
-
 FeedListAssistant.prototype._refreshDebounced = function() {
+	this.needRefresh = true;
+};
+
+FeedListAssistant.prototype.refreshNow = function() {
+	this.needRefresh = true;
+	this._refresh();
 };
 
 FeedListAssistant.prototype._refresh = function() {
-	Mojo.Log.error("refresh");
-	this.controller.modelChanged(feedModel);
+	if (this.needRefresh) {
+		Mojo.Log.error("refresh");
+		this.controller.modelChanged(feedModel);
+		this.needRefresh = false;
+	}
 };
 
 FeedListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
-	var feed = event.item;
+	//var feed = event.item;
+	var feed = feedModel.items[event.index];
 	if (targetClass.indexOf("feedStats") === 0) {
 		// popup menu:
 		// last update date/time
@@ -149,7 +148,6 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        {label: "Edit Feed", command: 'edit-cmd'}
 			]});
 	} else {
-		this.clearIntervals();
 		this.controller.stageController.pushScene("episodeList", feed);
 	}
 };
@@ -157,7 +155,6 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 FeedListAssistant.prototype.popupHandler = function(feed, command) {
 	switch(command) {
 		case "edit-cmd":
-			this.clearIntervals();
 			this.controller.stageController.pushScene("addFeed", this, feed);
 			break;
 		case "listened-cmd":
@@ -177,7 +174,6 @@ FeedListAssistant.prototype.handleCommand = function(event) {
     if (event.type == Mojo.Event.command) {
         switch (event.command) {
 			case "add-cmd":
-				this.clearIntervals();
 				this.controller.stageController.pushScene("addFeed", this, null);
 				break;
 			case "refresh-cmd":
@@ -201,4 +197,15 @@ FeedListAssistant.prototype.handleReorder = function(event) {
 	}
 	event.model.items.splice(event.toIndex, 0, event.item);
 	DB.saveFeeds();
+};
+
+FeedListAssistant.prototype.feedUpdate = function(action, feed) {
+	//Mojo.Log.error("EpisodeLA: feed [%s] said: %s", feed.title, action);
+	switch (action) {
+		case "REFRESH":
+			this.refreshNow();
+			break;
+		case "ACTION":
+			break;
+	}
 };

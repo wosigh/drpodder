@@ -18,6 +18,8 @@ function Feed(init) {
 		this.lastModified = init.lastModified;
 		this.details = init.details;
 		this.replacements = init.replacements;
+		this.downloading = init.downloading;
+		this.downloadCount = init.downloadCount;
 
 		this.numEpisodes = init.numEpisodes;
 		this.numNew = init.numNew;
@@ -36,12 +38,15 @@ function Feed(init) {
 		this.lastModified = null;
 		this.details = null;
 		this.replacements = null;
+		this.downloading = false;
+		this.downloadCount = 0;
 
 		this.numEpisodes = 0;
 		this.numNew = 0;
 		this.numDownloaded = 0;
 		this.numStarted = 0;
 	}
+	this.listeners = [];
 }
 
 Feed.prototype.update = function(callback) {
@@ -179,6 +184,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			// insert the new episodes at the head of the list
 			this.episodes.splice(newEpisodeCount, 0, episode);
 			this.guid[episode.guid] = episode;
+			episode.listen(this.episodeUpdate.bind(this));
 			newEpisodeCount++;
 			updateCheckStatus = UPDATECHECK_UPDATES;
 		} else {
@@ -188,6 +194,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			e.description = episode.description;
 			e.link = episode.link;
 			e.enclosure = episode.enclosure;
+			e.type = episode.type;
 
 			episode = e;
 			if (episode.downloaded || episode.downloadTicket) {
@@ -195,14 +202,10 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			}
 		}
 
-		Mojo.Log.error("autoDownload=%d, listened=%d, downloaded=%d, downloadTicket=%d, enclosure=%s, maxDownloads=%d, downloaded=%d",
-					   this.autoDownload, episode.listened, episode.downloaded, episode.downloadTicket, episode.enclosure,this.maxDownloads, downloaded);
 		if (this.autoDownload &&
 			!episode.listened && !episode.downloaded && !episode.downloadTicket && episode.enclosure &&
 			(this.maxDownloads === 0 || downloaded < this.maxDownloads)) {
-			AppAssistant.downloadService.download(null, episode.enclosure,
-				this.downloadCallback.bind(this, episode),
-				false);
+			episode.download();
 			downloaded++;
 		}
 		result = nodes.iterateNext();
@@ -263,7 +266,73 @@ Feed.prototype.setReplacements = function(arr) {
 	}
 };
 
+Feed.prototype.listen = function(callback) {
+	this.listeners.push(callback);
+};
 
+Feed.prototype.unlisten = function(callback) {
+	for (var i=0; i<this.listeners.length; i++) {
+		if (callback === this.listeners[i]) {
+			this.listeners.splice(i, 1);
+		}
+	}
+};
+
+Feed.prototype.notify = function(action, extra) {
+	for (var i=0; i<this.listeners.length; i++) {
+		//Mojo.Log.error("Feed.notify %d", i);
+		this.listeners[i](action, this, extra);
+		//Mojo.Log.error("Feed.notify %d done", i);
+	}
+};
+
+Feed.prototype.listened = function() {
+	for (var i=0; i<this.episodes.length; i++) {
+		this.episodes[i].setListened();
+	}
+};
+
+Feed.prototype.unlistened = function() {
+	for (var i=0; i<this.episodes.length; i++) {
+		this.episodes[i].setUnlistened();
+	}
+};
+
+Feed.prototype.episodeUpdate = function(action, episode, extra) {
+	var changes = true;
+	//Mojo.Log.error("Feed: episode [%s] said: %s", episode.title, action);
+	switch (action) {
+		case "LISTENED":
+			if (episode.listened) { this.numNew--; }
+			else                  { this.numNew++; }
+			break;
+		case "DOWNLOADED":
+			if (episode.downloaded) { this.numDownloaded++;}
+			else                    { this.numDownloaded--; }
+			break;
+		case "BOOKMARK":
+			if (episode.position) { this.numStarted++; }
+			else                  { this.numStarted--; }
+			break;
+		case "DOWNLOADSTART":
+			this.downloadCount++;
+			this.downloading = true;
+			break;
+		case "DOWNLOADABORT":
+		case "DOWNLOADCANCEL":
+		case "DOWNLOADCOMPLETE":
+			this.downloadCount--;
+			this.downloading = (this.downloadCount > 0);
+			break;
+		default:
+			changes = false;
+
+	}
+	if (changes) {
+		this.notify("REFRESH");
+		DB.saveFeed(this);
+	}
+};
 
 
 var FeedUtil = new Feed();

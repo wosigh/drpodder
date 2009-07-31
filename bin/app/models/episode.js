@@ -15,6 +15,7 @@ function Episode(init) {
 		this.listened = init.listened;
 		this.length = init.length;
 		this.position = init.position;
+		this.type = init.type;
 	} else {
 		this.title = null;
 		this.link = null;
@@ -28,9 +29,14 @@ function Episode(init) {
 		this.listened = false;
 		this.length = 0;
 		this.position = 0;
+		this.type = null;
 	}
+	this.listeners = [];
+	this.downloading = false;
 
 }
+
+Episode.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^\\s<>'\"]*");
 
 Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
@@ -43,6 +49,232 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	}
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
+	this.type = Util.xmlTagAttributeValue(xmlObject, "enclosure", "type");
+	Mojo.Log.error("type: ", this.type);
 };
+
+Episode.prototype.listen = function(callback) {
+	this.listeners.unshift(callback);
+};
+
+Episode.prototype.unlisten = function(callback) {
+	for (var i=0; i<this.listeners.length; i++) {
+		if (callback === this.listeners[i]) {
+			this.listeners.splice(i, 1);
+		}
+	}
+};
+
+Episode.prototype.notify = function(action, extra) {
+	for (var i=0; i<this.listeners.length; i++) {
+		//Mojo.Log.error("episode.notify %d", i);
+		this.listeners[i](action, this, extra);
+		//Mojo.Log.error("episode.notify %d done", i);
+	}
+};
+
+Episode.prototype.updateUIElements = function() {
+	if (this.downloading) {
+		if (this.listened) {
+			this.indicatorColor = "gray";
+		} else {
+			this.indicatorColor = "black";
+		}
+		this.statusIcon = "Knob Cancel.png";
+	} else {
+		if (this.listened) {
+			this.indicatorColor = "gray";
+			if (this.downloaded) {
+				this.statusIcon = "Knob Remove Red.png";
+			} else {
+				this.statusIcon = "Knob Grey.png";
+			}
+		} else {
+			this.indicatorColor = "black";
+			if (this.downloaded) {
+				this.statusIcon = "Knob Play.png";
+			} else {
+				this.statusIcon = "Knob Download.png";
+			}
+		}
+		if (!this.enclosure) {
+			this.statusIcon = "Knob Grey.png";
+		}
+	}
+};
+
+Episode.prototype.setListened = function() {
+	if (!this.listened) {
+		this.listened = true;
+		this.updateUIElements();
+		this.notify("LISTENED");
+	}
+};
+
+Episode.prototype.setUnlistened = function() {
+	if (this.listened) {
+		this.listened = false;
+		this.updateUIElements();
+		this.notify("LISTENED");
+	}
+};
+
+Episode.prototype.setDownloaded = function() {
+	if (!this.downloaded) {
+		this.downloaded = true;
+		this.updateUIElements();
+		this.notify("DOWNLOADED");
+	}
+};
+
+Episode.prototype.bookmark = function(pos) {
+	var newBookmark = (this.position === 0);
+
+	this.position = pos;
+	if (this.length) {
+		this.bookmarkPercent = 100*this.position/this.length;
+	} else {
+		this.bookmarkPercent = 0;
+	}
+
+	if (newBookmark) {
+		this.notify("BOOKMARK");
+	} else {
+		this.notify("BOOKMARKUPDATE");
+	}
+};
+
+Episode.prototype.clearBookmark = function() {
+	if (this.position) {
+		this.position = 0;
+		this.bookmarkPercent = 0;
+		this.notify("BOOKMARK");
+	}
+};
+
+Episode.prototype.download = function() {
+	this.deleteFile();
+
+	if (this.enclosure) {
+		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure, this.downloadingCallback.bind(this));
+	}
+};
+
+Episode.prototype.downloadingCallback = function(event) {
+	//Mojo.Log.error("downloadingCallback: %j", event);
+	if (event.returnValue) {
+		this.downloadTicket = event.ticket;
+		this.downloadingPercent = 0;
+		if (!this.downloading) {
+			this.downloading = true;
+			this.updateUIElements(this);
+			this.notify("DOWNLOADSTART");
+		}
+	} else if (this.downloading && event.completed === false) {
+		this.downloading = false;
+		this.downloadTicket = 0;
+		this.downloadingPercent = 0;
+		this.updateUIElements(this);
+		// if the user didn't do this, let them know what happened
+		if (!event.aborted) {
+			Mojo.Log.error("Download error=%j", event);
+			Util.showError("Download aborted", "There was an error downloading url:"+this.enclosure);
+			this.notify("DOWNLOADABORT");
+		} else {
+			this.notify("DOWNLOADCANCEL");
+		}
+	} else if (this.downloading && event.completed && event.completionStatusCode === 200) {
+		//success!
+		Mojo.Log.error("Download complete!", this.title);
+		this.downloadTicket = 0;
+		this.downloading = false;
+		this.downloadingPercent = 0;
+
+		this.file = event.target;
+
+		this.setDownloaded();
+		this.setUnlistened();
+
+		this.notify("DOWNLOADCOMPLETE");
+
+	} else if (this.downloading && event.completed && event.completionStatusCode === 302) {
+		Mojo.Log.error("Redirecting...", this.title);
+		this.downloadTicket = 0;
+		this.downloading = false;
+		this.downloadingPercent = 0;
+
+		var req = new Ajax.Request(event.target, {
+			method: 'get',
+			onFailure: function() {
+				Mojo.Log.error("Couldn't find %s... strange", event.target);
+			},
+			onComplete: function(transport) {
+				var redirect;
+				try {
+					var matches = this.findLinks.exec(transport.responseText);
+					if (matches) {
+						redirect = matches[0];
+					}
+				} catch (e){
+					Mojo.Log.error("error with regex: (%s)", e);
+					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
+				}
+				AppAssistant.mediaService.deleteFile(this.controller, event.target, function(event) {});
+				if (redirect !== undefined) {
+					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
+					this.downloadRequest = AppAssistant.downloadService.download(null, redirect,
+						this.downloadingCallback.bind(this));
+				} else {
+					Mojo.Log.error("No download link found! [%s]", transport.responseText);
+					this.updateUIElements(this);
+					this.notify("DOWNLOADABORT");
+				}
+			}.bind(this)
+		});
+	} else if (event.returnValue === false) {
+		this.downloadTicket = 0;
+		this.downloading = false;
+		this.downloadingPercent = 0;
+		this.updateUIElements(this);
+		this.notify("DOWNLOADABORT");
+	} else if (this.downloading) {
+		var per = 0;
+		// if amountTotal is < 2048 or so, we'll assume it's a redirect
+		if (event.amountTotal > 0 && event.amountReceived > 0 && event.amountTotal > 2048) {
+			per = Math.floor(1000*event.amountReceived/event.amountTotal)/10;
+		}
+		if (this.downloadingPercent !== per) {
+			this.downloadingPercent = per;
+			this.notify("DOWNLOADPROGRESS");
+		}
+	} else {
+		Mojo.Log.error("Error handling downloading of %s (%j)", this.title, event);
+		Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
+		this.downloadTicket = 0;
+		// this.downloading = false; // must already be false
+		this.downloadingPercent = 0;
+		this.updateUIElements(this);
+		// this.notify("DOWNLOADABORT"); // can't notify, or count would be messed up
+	}
+};
+
+Episode.prototype.deleteFile = function() {
+	if (this.downloaded) {
+		AppAssistant.mediaService.deleteFile(null, this.file, function() {});
+		this.setListened();
+		this.downloaded = false;
+		this.file = null;
+		this.updateUIElements();
+		this.notify("DOWNLOADED");
+	}
+};
+
+Episode.prototype.cancelDownload = function() {
+	if (this.downloading) {
+		Mojo.Log.error("Canceling download");
+		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
+	}
+};
+
 
 var EpisodeUtil = new Episode();
