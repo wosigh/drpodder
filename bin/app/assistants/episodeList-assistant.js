@@ -65,7 +65,7 @@ EpisodeListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, EpisodeListAssistant.menuAttr, EpisodeListAssistant.menuModel);
 
-	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 1);
+	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
 };
 
@@ -101,6 +101,7 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		var h=d.getHours()%12;
 		var min=d.getMinutes();
 		var pm = (d.getHours >= 12)?"pm":"am";
+		if (h===0) {h=12;}
 		if (m<10) {m="0"+m;}
 		if (dom<10) {dom="0"+dom;}
 		if (min<10) {min="0"+min;}
@@ -131,19 +132,28 @@ EpisodeListAssistant.prototype.cleanup = function(changes) {
 
 EpisodeListAssistant.prototype._refreshDebounced = function() {
 	this.needRefresh = true;
+	if (!this.refreshedOnce) {
+		this._doRefresh();
+		this.refreshedOnce = true;
+	}
+};
+
+EpisodeListAssistant.prototype._refreshDelayed = function() {
+	this.refreshedOnce = false;
+	this._doRefresh();
+};
+
+EpisodeListAssistant.prototype._doRefresh = function() {
+	if (this.needRefresh) {
+		Mojo.Log.error("ela refresh");
+		this.controller.modelChanged(this.episodeModel);
+		this.needRefresh = false;
+	}
 };
 
 EpisodeListAssistant.prototype.refreshNow = function() {
 	this.needRefresh = true;
-	this._refresh();
-};
-
-EpisodeListAssistant.prototype._refresh = function() {
-	if (this.needRefresh) {
-		Mojo.Log.error("refresh");
-		this.controller.modelChanged(this.episodeModel);
-		this.needRefresh = false;
-	}
+	this._doRefresh();
 };
 
 EpisodeListAssistant.prototype.handleDelete = function(event) {

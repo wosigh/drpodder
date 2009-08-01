@@ -40,15 +40,14 @@ FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.appMenu, StageAssistant.appMenuAttr, StageAssistant.appMenuModel);
 
 	this.feedUpdateHandler = this.feedUpdate.bind(this);
-	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refresh.bind(this), 1);
+	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
+	this.refreshedOnce = false;
 };
 
 FeedListAssistant.prototype.activate = function() {
+	//this.controller.get("downloadSpinner").up.style.background = "images/saving-indicator-32x32.png";
 	this.waitForFeedsReady();
-	for (var i=0; i<feedModel.items.length; i++) {
-		feedModel.items[i].listen(this.feedUpdateHandler);
-	}
 };
 
 FeedListAssistant.prototype.deactivate = function() {
@@ -59,15 +58,15 @@ FeedListAssistant.prototype.deactivate = function() {
 
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
-		this.refreshNow();
+		this.refresh();
 		this.spinnerScrim.hide();
 		this.spinnerModel.spinning = false;
 		this.controller.modelChanged(this.spinnerModel);
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
+			feedModel.items[i].listen(this.feedUpdateHandler);
 			if (feedModel.items[i].episodes.length > 0) {
 				firstLoad = false;
-				break;
 			}
 		}
 		if (firstLoad) {
@@ -98,7 +97,7 @@ FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
 		}.bind(this));
 	} else {
 		DB.saveFeeds();
-		this.refreshNow();
+		this.refresh();
 		this.checkForDownloads();
 	}
 };
@@ -115,25 +114,35 @@ FeedListAssistant.prototype.cleanup = function() {
 
 FeedListAssistant.prototype._refreshDebounced = function() {
 	this.needRefresh = true;
+	if (!this.refreshedOnce) {
+		this._doRefresh();
+		this.refreshedOnce = true;
+	}
+};
+
+FeedListAssistant.prototype._refreshDelayed = function() {
+	this.refreshedOnce = false;
+	this._doRefresh();
+};
+
+FeedListAssistant.prototype._doRefresh = function() {
+	if (this.needRefresh) {
+		Mojo.Log.error("fla refresh");
+		this.controller.modelChanged(feedModel);
+		this.needRefresh = false;
+	}
 };
 
 FeedListAssistant.prototype.refreshNow = function() {
 	this.needRefresh = true;
-	this._refresh();
-};
-
-FeedListAssistant.prototype._refresh = function() {
-	if (this.needRefresh) {
-		//Mojo.Log.error("fla refresh");
-		this.controller.modelChanged(feedModel);
-		this.needRefresh = false;
-	}
+	this._doRefresh();
 };
 
 FeedListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
 	//var feed = event.item;
 	var feed = feedModel.items[event.index];
+	Mojo.Log.error("targetClass=%s", targetClass);
 	if (targetClass.indexOf("feedStats") === 0) {
 		// popup menu:
 		// last update date/time
@@ -154,6 +163,13 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        {label: "Mark Listened", command: 'listened-cmd'},
 			        {label: "Edit Feed", command: 'edit-cmd'}
 			]});
+	} else if (targetClass.indexOf("download") === 0) {
+		this.controller.popupSubmenu({
+			onChoose: this.popupHandler.bind(this, feed),
+			placeNear: event.originalEvent.target,
+			items: [
+			        {label: "Cancel Downloads", command: 'cancelDownloads-cmd'}
+			]});
 	} else {
 		this.controller.stageController.pushScene("episodeList", feed);
 	}
@@ -165,13 +181,13 @@ FeedListAssistant.prototype.popupHandler = function(feed, command) {
 			this.controller.stageController.pushScene("addFeed", this, feed);
 			break;
 		case "listened-cmd":
+			feed.listened();
+			break;
+		case "cancelDownloads-cmd":
 			for (var i=0; i<feed.episodes.length; i++) {
 				var episode = feed.episodes[i];
-				episode.listened = true;
+				episode.cancelDownload();
 			}
-			feed.numNew = 0;
-			this.refresh();
-			DB.saveFeed(feed);
 			break;
 	}
 
@@ -210,7 +226,7 @@ FeedListAssistant.prototype.feedUpdate = function(action, feed) {
 	//Mojo.Log.error("EpisodeLA: feed [%s] said: %s", feed.title, action);
 	switch (action) {
 		case "REFRESH":
-			this.refreshNow();
+			this.refresh();
 			break;
 		case "ACTION":
 			break;
