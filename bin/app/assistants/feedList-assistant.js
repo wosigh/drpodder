@@ -117,7 +117,7 @@ FeedListAssistant.prototype.refreshNow = function() {
 
 FeedListAssistant.prototype._refresh = function() {
 	if (this.needRefresh) {
-		Mojo.Log.error("refresh");
+		//Mojo.Log.error("fla refresh");
 		this.controller.modelChanged(feedModel);
 		this.needRefresh = false;
 	}

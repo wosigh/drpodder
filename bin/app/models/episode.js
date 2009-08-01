@@ -49,8 +49,8 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	}
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
+	if (this.guid === undefined) {this.guid = this.link;}
 	this.type = Util.xmlTagAttributeValue(xmlObject, "enclosure", "type");
-	Mojo.Log.error("type: ", this.type);
 };
 
 Episode.prototype.listen = function(callback) {
@@ -103,27 +103,27 @@ Episode.prototype.updateUIElements = function() {
 	}
 };
 
-Episode.prototype.setListened = function() {
+Episode.prototype.setListened = function(needRefresh) {
 	if (!this.listened) {
 		this.listened = true;
 		this.updateUIElements();
-		this.notify("LISTENED");
+		this.notify("LISTENED", {needRefresh: needRefresh, needSave: needRefresh});
 	}
 };
 
-Episode.prototype.setUnlistened = function() {
+Episode.prototype.setUnlistened = function(needRefresh) {
 	if (this.listened) {
 		this.listened = false;
 		this.updateUIElements();
-		this.notify("LISTENED");
+		this.notify("LISTENED", {needRefresh: needRefresh, needSave: needRefresh});
 	}
 };
 
-Episode.prototype.setDownloaded = function() {
+Episode.prototype.setDownloaded = function(needRefresh) {
 	if (!this.downloaded) {
 		this.downloaded = true;
 		this.updateUIElements();
-		this.notify("DOWNLOADED");
+		this.notify("DOWNLOADED", {needRefresh: needRefresh, needSave: needRefresh});
 	}
 };
 
@@ -192,8 +192,8 @@ Episode.prototype.downloadingCallback = function(event) {
 
 		this.file = event.target;
 
-		this.setDownloaded();
-		this.setUnlistened();
+		this.setDownloaded(false);
+		this.setUnlistened(false);
 
 		this.notify("DOWNLOADCOMPLETE");
 
@@ -261,7 +261,6 @@ Episode.prototype.downloadingCallback = function(event) {
 Episode.prototype.deleteFile = function() {
 	if (this.downloaded) {
 		AppAssistant.mediaService.deleteFile(null, this.file, function() {});
-		this.setListened();
 		this.downloaded = false;
 		this.file = null;
 		this.updateUIElements();

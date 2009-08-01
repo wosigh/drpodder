@@ -192,7 +192,7 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	}
 	try {
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
-	} catch (e) {
+	} catch (f) {
 	}
 	this.stop();
 	this.readyToPlay();

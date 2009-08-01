@@ -260,7 +260,6 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 		if (this.newFeed) {
 			feedModel.items.push(this.feed);
 		}
-		this.sceneAssistant.setInterval(this.feed);
 		this.sceneAssistant.refresh();
 		DB.saveFeeds();
 		this.controller.stageController.popScene();

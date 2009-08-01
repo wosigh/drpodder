@@ -180,6 +180,11 @@ DBClass.prototype.initDB = function(callback) {
 			function(transaction, results) {
 				Mojo.Log.info("Feed table altered");
 				callback();
+				transaction.executeSql("UPDATE feed SET maxDownloads=1", [],
+					function(transaction, results) {
+						Mojo.Log.info("Updating maxDownloads=1");
+					},
+					function(transaction, error) {Mojo.Log.error("Error updating maxDownloads: %j", error);});
 			},
 			function(transaction, error) {
 				if (error.message === "duplicate column name: replacements") {
@@ -189,11 +194,6 @@ DBClass.prototype.initDB = function(callback) {
 					Mojo.Log.error("Error altering feed table: %j", error);
 				}
 			});
-		transaction.executeSql("UPDATE feed SET maxDownloads=1", [],
-			function(transaction, results) {
-				Mojo.Log.info("Updating maxDownloads=1");
-			},
-			function(transaction, error) {Mojo.Log.error("Error updating maxDownloads: %j", error);});
 	});
 };
 
@@ -360,8 +360,11 @@ DBClass.prototype.removeFeed = function(f) {
 
 	for (var i=0; i<f.episodes.length; i++) {
 		var episode = f.episodes[i];
+		if (episode.downloading) {
+			episode.cancelDownload();
+		}
 		if (episode.downloaded) {
-			AppAssistant.mediaService.deleteFile(null, episode.file, null);
+			episode.deleteFile();
 		}
 	}
 

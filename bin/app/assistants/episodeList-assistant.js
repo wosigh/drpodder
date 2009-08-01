@@ -53,6 +53,8 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
 	//this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
 	this.controller.get("episodeListWgt").observe(Mojo.Event.hold, this.handleHold.bindAsEventListener(this));
+	this.controller.get("episodeListWgt").observe(Mojo.Event.dragStart, this.clearPopupMenuOnSelection.bindAsEventListener(this));
+	//this.controller.get("episodeListWgt").observe(Mojo.Event.holdEnd, this.handleHoldUp.bindAsEventListener(this));
 	// might be better to do the holdEnd...
 	// this.controller.get("episodeListWgt").observe(Mojo.Event.holdEnd, this.handleHold.bindAsEventListener(this));
 
@@ -167,9 +169,6 @@ EpisodeListAssistant.prototype.clearPopupMenuOnSelection = function(event) {
 
 EpisodeListAssistant.prototype.handleHold = function(event) {
 	this.popupMenuOnSelection = true;
-	setTimeout(this.clearPopupMenuOnSelection.bind(this), 5000);
-	var episode = event.item;
-
 };
 
 EpisodeListAssistant.prototype.handleSelection = function(event) {
@@ -177,10 +176,11 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var episode = event.item;
 	var items = [];
 
-	if (this.popupMenuOnSelection
-		|| (targetClass.indexOf("episodeStatus") !== -1 &&
+	if (this.popupMenuOnSelection ||
+		(targetClass.indexOf("episodeStatus") !== -1 &&
 			!episode.downloading && episode.enclosure &&
 			episode.listened && !episode.downloaded)) {
+		this.popupMenuOnSelection = false;
 		if (episode.downloading) {
 			// if we're downloading, just cancel the download
 			items.push(this.cmdItems.playCmd);
@@ -211,7 +211,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	} else {
 		if (targetClass.indexOf("episodeStatus") === -1) {
 			// we clicked on the row, just push the scene
-			this.play(episode, false, true);
+			this.play(episode, true, true);
 		} else {
 			// we clicked on the icon, do something different
 			if (episode.downloading) {
@@ -221,6 +221,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 				if (episode.enclosure) {
 					if (episode.listened) {
 						if (episode.downloaded) {
+							episode.setListened(false);
 							episode.deleteFile();
 						} else {
 							this.handleHold(event);
@@ -276,6 +277,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 			episode.clearBookmark();
 			break;
 		case "delete-cmd":
+			episode.setListened(false);
 			episode.deleteFile();
 			break;
 	}

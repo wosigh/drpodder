@@ -184,8 +184,9 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			// insert the new episodes at the head of the list
 			this.episodes.splice(newEpisodeCount, 0, episode);
 			this.guid[episode.guid] = episode;
-			episode.listen(this.episodeUpdate.bind(this));
+			episode.updateUIElements();
 			newEpisodeCount++;
+			episode.listen(this.episodeUpdate.bind(this));
 			updateCheckStatus = UPDATECHECK_UPDATES;
 		} else {
 			// it already exists, check that the enclosure url is up to date
@@ -197,14 +198,18 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			e.type = episode.type;
 
 			episode = e;
-			if (episode.downloaded || episode.downloadTicket) {
+			if (this.autoDownload &&
+				this.maxDownloads > 0 && downloaded >= this.maxDownloads &&
+				e.downloaded) {
+				e.deleteFile();
+			} else if (episode.downloaded || episode.downloadTicket) {
 				downloaded++;
 			}
 		}
 
 		if (this.autoDownload &&
 			!episode.listened && !episode.downloaded && !episode.downloadTicket && episode.enclosure &&
-			(this.maxDownloads === 0 || downloaded < this.maxDownloads)) {
+			(this.maxDownloads == "0" || downloaded < this.maxDownloads)) {
 			episode.download();
 			downloaded++;
 		}
@@ -299,7 +304,9 @@ Feed.prototype.unlistened = function() {
 };
 
 Feed.prototype.episodeUpdate = function(action, episode, extra) {
-	var changes = true;
+	if (extra === undefined) {extra = {};}
+	if (extra.needRefresh === undefined) {extra.needRefresh = true;}
+	if (extra.needSave === undefined) {extra.needSave = true;}
 	//Mojo.Log.error("Feed: episode [%s] said: %s", episode.title, action);
 	switch (action) {
 		case "LISTENED":
@@ -325,11 +332,14 @@ Feed.prototype.episodeUpdate = function(action, episode, extra) {
 			this.downloading = (this.downloadCount > 0);
 			break;
 		default:
-			changes = false;
-
+			extra.needRefresh = false;
+			extra.needSave = false;
 	}
-	if (changes) {
+
+	if (extra.needRefresh) {
 		this.notify("REFRESH");
+	}
+	if (extra.needSave) {
 		DB.saveFeed(this);
 	}
 };
