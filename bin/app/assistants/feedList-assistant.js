@@ -22,13 +22,17 @@ initialize = function() {
 };
 
 FeedListAssistant.prototype.setup = function() {
-	this.controller.get("feedListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
-	this.controller.get("feedListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
-	this.controller.get("feedListWgt").observe(Mojo.Event.listReorder, this.handleReorder.bindAsEventListener(this));
+	this.spinnerModel = {spinning: true};
+	this.controller.setupWidget("loadingSpinner", {spinnerSize: "large"}, this.spinnerModel);
+	this.spinnerScrim = this.controller.get("spinnerScrim");
 
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
 	this.controller.setupWidget("feedListWgt", this.feedAttr, feedModel);
+
+	this.controller.get("feedListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
+	this.controller.get("feedListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
+	this.controller.get("feedListWgt").observe(Mojo.Event.listReorder, this.handleReorder.bindAsEventListener(this));
 
 	this.controller.setupWidget("refreshSpinner", {property: "updating"});
 	this.controller.setupWidget("downloadSpinner", {property: "downloading"});
@@ -56,6 +60,9 @@ FeedListAssistant.prototype.deactivate = function() {
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
 		this.refreshNow();
+		this.spinnerScrim.hide();
+		this.spinnerModel.spinning = false;
+		this.controller.modelChanged(this.spinnerModel);
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
 			if (feedModel.items[i].episodes.length > 0) {

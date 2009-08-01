@@ -21,8 +21,8 @@ EpisodeListAssistant.menuAttr = {omitDefaultItems: true};
 EpisodeListAssistant.menuModel = {
 	visible: true,
 	items: [
-		{label: "Mark all Listened...", command: "listened-cmd"},
 		{label: "Mark all Unlistened...", command: "unlistened-cmd"},
+		{label: "Mark all Listened...", command: "listened-cmd"},
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -148,6 +148,7 @@ EpisodeListAssistant.prototype._refresh = function() {
 
 EpisodeListAssistant.prototype.handleDelete = function(event) {
 	event.stop();
+	event.item.setListened();
 	event.item.deleteFile();
 };
 
@@ -160,7 +161,8 @@ EpisodeListAssistant.prototype.cmdItems = {
 	listenedCmd   : {label: "Mark Listened", command: "listen-cmd"},
 	unlistenedCmd : {label: "Mark Unlistened", command: "unlisten-cmd"},
 	clearCmd      : {label: "Clear Bookmark", command: "clear-cmd"},
-	detailsCmd    : {label: "Episode Details", command: "details-cmd"}
+	detailsCmd    : {label: "Episode Details", command: "details-cmd"},
+	noEnclosureCmd: {label: "No enclosure found", command: "noenclosure-cmd", disabled: true}
 };
 
 EpisodeListAssistant.prototype.clearPopupMenuOnSelection = function(event) {
@@ -176,7 +178,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var episode = event.item;
 	var items = [];
 
-	if (this.popupMenuOnSelection ||
+	if (this.popupMenuOnSelection || (!episode.enclosure) ||
 		(targetClass.indexOf("episodeStatus") !== -1 &&
 			!episode.downloading && episode.enclosure &&
 			episode.listened && !episode.downloaded)) {
@@ -205,13 +207,19 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 				} else {
 					items.push(this.cmdItems.listenedCmd);
 				}
+			} else {
+				items.push(this.cmdItems.noEnclosureCmd);
 			}
 			items.push(this.cmdItems.detailsCmd);
 		}
 	} else {
 		if (targetClass.indexOf("episodeStatus") === -1) {
 			// we clicked on the row, just push the scene
-			this.play(episode, true, true);
+			if (episode.position || (episode.downloaded && !episode.listened)) {
+				this.play(episode, true, true);
+			} else {
+				this.play(episode, false, true);
+			}
 		} else {
 			// we clicked on the icon, do something different
 			if (episode.downloading) {
@@ -221,7 +229,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 				if (episode.enclosure) {
 					if (episode.listened) {
 						if (episode.downloaded) {
-							episode.setListened(false);
+							episode.setListened();
 							episode.deleteFile();
 						} else {
 							this.handleHold(event);
@@ -277,7 +285,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 			episode.clearBookmark();
 			break;
 		case "delete-cmd":
-			episode.setListened(false);
+			episode.setListened();
 			episode.deleteFile();
 			break;
 	}

@@ -179,7 +179,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 	*/
 
 	if (this.autoPlay) {
-		this.doPlay();
+		this.play();
 	}
 
 	this.controller.modelChanged(this.cmdMenuModel);
@@ -199,7 +199,7 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	Mojo.Log.info("AudioEvent: %j", event);
+	//Mojo.Log.error("AudioEvent: %j", event);
 	switch (event.type) {
 		case "play":
 			this.doPlay();
@@ -225,10 +225,10 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 				this.download();
 				break;
             case "play-cmd":
-				this.doPlay();
+				this.play();
 				break;
             case "pause-cmd":
-				this.doPause();
+				this.pause();
 				break;
             case "delete-cmd":
 				this.cmdMenuModel.items[2].items[0] = {};
@@ -370,25 +370,35 @@ EpisodeDetailsAssistant.prototype.play = function() {
 };
 
 EpisodeDetailsAssistant.prototype.streamPlay = function() {
-	if (this.audioObject.src === null || this.audioObject.src === undefined) {
-		Mojo.Log.error("Setting stream src to:", this.episodeObject.enclosure);
-		this.audioObject.src = this.episodeObject.enclosure;
-	}
-	if (this.audioObject.paused) {
-		this.audioObject.play();
+	if (this.episodeObject.type !== undefined && this.episodeObject.type !== null &&
+		this.episodeObject.type.indexOf("video") !== -1) {
+		AppAssistant.applicationManagerService.play(this.controller, this.episodeObject.enclosure, function(){});
+	} else {
+		if (this.audioObject.src === null || this.audioObject.src === undefined) {
+			Mojo.Log.error("Setting stream src to:", this.episodeObject.enclosure);
+			this.audioObject.src = this.episodeObject.enclosure;
+		}
+		if (this.audioObject.paused) {
+			this.audioObject.play();
+		}
 	}
 };
 
 EpisodeDetailsAssistant.prototype.filePlay = function() {
-	if (this.audioObject.src === null || this.audioObject.src === undefined) {
-		Mojo.Log.error("Setting file src to:", this.episodeObject.file);
-		this.audioObject.src = this.episodeObject.file;
-		this.progressModel.progressStart = 0;
-		this.progressModel.progressEnd = 1;
-		this.controller.modelChanged(this.progressModel);
-	}
-	if (this.audioObject.paused) {
-		this.audioObject.play();
+	if (this.episodeObject.type !== undefined && this.episodeObject.type !== null &&
+		this.episodeObject.type.indexOf("video") !== -1) {
+		AppAssistant.applicationManagerService.play(this.controller, this.episodeObject.file, function(){});
+	} else {
+		if (this.audioObject.src === null || this.audioObject.src === undefined) {
+			Mojo.Log.error("Setting file src to:", this.episodeObject.file);
+			this.audioObject.src = this.episodeObject.file;
+			this.progressModel.progressStart = 0;
+			this.progressModel.progressEnd = 1;
+			this.controller.modelChanged(this.progressModel);
+		}
+		if (this.audioObject.paused) {
+			this.audioObject.play();
+		}
 	}
 };
 

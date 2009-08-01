@@ -68,7 +68,7 @@ Episode.prototype.unlisten = function(callback) {
 Episode.prototype.notify = function(action, extra) {
 	for (var i=0; i<this.listeners.length; i++) {
 		//Mojo.Log.error("episode.notify %d", i);
-		this.listeners[i](action, this, extra);
+		setTimeout(this.listeners[i].bind(this, action, this, extra), 10*i);
 		//Mojo.Log.error("episode.notify %d done", i);
 	}
 };
@@ -98,13 +98,13 @@ Episode.prototype.updateUIElements = function() {
 			}
 		}
 		if (!this.enclosure) {
-			this.statusIcon = "Knob Grey.png";
+			this.statusIcon = "Knob Help.png";
 		}
 	}
 };
 
 Episode.prototype.setListened = function(needRefresh) {
-	if (!this.listened) {
+	if (!this.listened && this.enclosure) {
 		this.listened = true;
 		this.updateUIElements();
 		this.notify("LISTENED", {needRefresh: needRefresh, needSave: needRefresh});
@@ -112,7 +112,7 @@ Episode.prototype.setListened = function(needRefresh) {
 };
 
 Episode.prototype.setUnlistened = function(needRefresh) {
-	if (this.listened) {
+	if (this.listened && this.enclosure) {
 		this.listened = false;
 		this.updateUIElements();
 		this.notify("LISTENED", {needRefresh: needRefresh, needSave: needRefresh});

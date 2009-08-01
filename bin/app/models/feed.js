@@ -162,6 +162,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 
 	var result = nodes.iterateNext();
 	var newEpisodeCount = 0;
+	var noEnclosureCount = 0;
 	var downloaded = 0;
 	// debugging, we only want to update 5 or so at a time, so that we can watch the list grow
 	//var newToKeep = Math.floor(Math.random()*4+1);
@@ -184,6 +185,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			// insert the new episodes at the head of the list
 			this.episodes.splice(newEpisodeCount, 0, episode);
 			this.guid[episode.guid] = episode;
+			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
 			episode.updateUIElements();
 			newEpisodeCount++;
 			episode.listen(this.episodeUpdate.bind(this));
@@ -225,6 +227,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	// end debugging
 
 	this.numNew += newEpisodeCount;
+	this.numNew -= noEnclosureCount;
 
 	return updateCheckStatus;
 };
@@ -286,28 +289,32 @@ Feed.prototype.unlisten = function(callback) {
 Feed.prototype.notify = function(action, extra) {
 	for (var i=0; i<this.listeners.length; i++) {
 		//Mojo.Log.error("Feed.notify %d", i);
-		this.listeners[i](action, this, extra);
+		setTimeout(this.listeners[i].bind(this, action, this, extra), 10*i);
 		//Mojo.Log.error("Feed.notify %d done", i);
 	}
 };
 
 Feed.prototype.listened = function() {
 	for (var i=0; i<this.episodes.length; i++) {
-		this.episodes[i].setListened();
+		this.episodes[i].setListened(false);
 	}
+	this.notify("REFRESH");
+	DB.saveFeed(this);
 };
 
 Feed.prototype.unlistened = function() {
 	for (var i=0; i<this.episodes.length; i++) {
-		this.episodes[i].setUnlistened();
+		this.episodes[i].setUnlistened(false);
 	}
+	this.notify("REFRESH");
+	DB.saveFeed(this);
 };
 
 Feed.prototype.episodeUpdate = function(action, episode, extra) {
 	if (extra === undefined) {extra = {};}
 	if (extra.needRefresh === undefined) {extra.needRefresh = true;}
 	if (extra.needSave === undefined) {extra.needSave = true;}
-	//Mojo.Log.error("Feed: episode [%s] said: %s", episode.title, action);
+	//Mojo.Log.error("Feed: episode [%s] said: %s, needRefresh=%d", episode.title, action, extra.needRefresh);
 	switch (action) {
 		case "LISTENED":
 			if (episode.listened) { this.numNew--; }

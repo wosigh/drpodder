@@ -175,3 +175,9 @@
 	display: inline-block;
 	float: left;
 }
+
+.loadingSpinner .message {
+  position: absolute;
+  left: 30%;
+  top: 65%;
+}

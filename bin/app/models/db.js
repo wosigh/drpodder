@@ -253,6 +253,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	if (results.rows.length > 0) {
 		for (var i=0; i<results.rows.length; i++) {
 			var e = new Episode(results.rows.item(i));
+			if (e.enclosure === "undefined") {e.enclosure = null;}
 			var f = feedModel.getFeedById(e.feedId);
 			if (f.details === undefined) {f.details = e.title;}
 			f.episodes.push(e);
