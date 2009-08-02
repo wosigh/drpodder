@@ -208,7 +208,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			this.doPause();
 			break;
 		case "ended":
-			this.doPause();
+			//this.doPause();
 			this.episodeObject.clearBookmark();
 			this.backToList();
 			break;

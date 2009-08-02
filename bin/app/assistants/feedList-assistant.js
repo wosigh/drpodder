@@ -142,7 +142,6 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
 	//var feed = event.item;
 	var feed = feedModel.items[event.index];
-	Mojo.Log.error("targetClass=%s", targetClass);
 	if (targetClass.indexOf("feedStats") === 0) {
 		// popup menu:
 		// last update date/time
