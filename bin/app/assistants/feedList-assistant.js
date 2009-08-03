@@ -24,6 +24,20 @@ initialize = function() {
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
+	if (Prefs.albumArt) {
+		if (Prefs.simple) {
+			this.feedAttr.itemTemplate = "feedList/feedRowTemplate-simple";
+		} else {
+			this.feedAttr.itemTemplate = "feedList/feedRowTemplate";
+		}
+	} else {
+		if (Prefs.simple) {
+			this.feedAttr.itemTemplate = "feedList/feedRowTemplate-simpleNoAlbumArt";
+		} else {
+			this.feedAttr.itemTemplate = "feedList/feedRowTemplate-noAlbumArt";
+		}
+	}
+
 	this.controller.setupWidget("feedListWgt", this.feedAttr, feedModel);
 
 	this.controller.get("feedListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
@@ -42,8 +56,15 @@ FeedListAssistant.prototype.setup = function() {
 };
 
 FeedListAssistant.prototype.activate = function() {
-	//this.controller.get("downloadSpinner").up.style.background = "images/saving-indicator-32x32.png";
 	this.waitForFeedsReady();
+	if (Prefs.updated) {
+		if (Prefs.reload) {
+			delete Prefs.reload;
+			this.controller.stageController.swapScene("feedList");
+		}
+		delete Prefs.updated;
+		DB.writePrefs();
+	}
 };
 
 FeedListAssistant.prototype.deactivate = function() {

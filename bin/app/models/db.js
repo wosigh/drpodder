@@ -1,3 +1,5 @@
+var Prefs = {};
+
 function DBClass() {
 	var currentVerIndex = 0;
 
@@ -59,6 +61,7 @@ function DBClass() {
 	}
 	*/
 
+	this.readPrefs();
 
 	this.db = openDatabase(this.dbName, this.dbVersions[0].version);
 	if (!this.db) {
@@ -78,48 +81,6 @@ DBClass.prototype.dbVersions = [
 	{version: "0.2", migrationSql: []}
 	//{version: "0.2", migrationSql: ["ALTER TABLE feed ADD COLUMN replacements TEXT"]}
 ];
-
-
-// need a conversion method that converts the old depot db to the new one and
-// then calls demoDepot.removeAll();
-
-// should have array and hash based access to these:
-// array for display
-// hash for lookups
-
-/*
-feed.title
-feed.url
-feed.albumArt
-feed.autoDelete
-feed.autoDownload
-feed.maxDownloads
-feed.interval
-feed.lastModified
-###feed.numDownloaded
-###feed.numEpisodes
-###feed.numNew
-###feed.numStarted
-###feed.details
-###feed.episodes
-###feed.updating
-*/
-/*
-episode.title
-episode.description
-episode.enclosure
-episode.guid
-episode.link
-episode.position
-episode.pubDate
-episode.downloadTicket
-episode.downloaded
-episode.listened
-episode.file
-episode.length
-###episode.feedObject
-
-*/
 
 
 DBClass.prototype.initDB = function(callback) {
@@ -384,6 +345,21 @@ DBClass.prototype.removeEpisode = function(episode) {
 	// this functionality doesn't exist (doesn't need to either)
 };
 
+DBClass.prototype.readPrefs = function() {
+	var prefsCookie = new Mojo.Model.Cookie("Prefs");
+	if (prefsCookie) {
+		Prefs = prefsCookie.get();
+	}
+	if (!Prefs || Prefs.albumArt === undefined) {
+		Prefs = {albumArt: true, simple: false, singleTap: true};
+	}
+};
+
+DBClass.prototype.writePrefs = function() {
+	var prefsCookie = new Mojo.Model.Cookie("Prefs");
+	prefsCookie.put(Prefs);
+};
+
 DBClass.prototype.defaultFeeds = function() {
 	var feed = new Feed();
 	feed.url = "http://leo.am/podcasts/twit";
@@ -440,4 +416,5 @@ DBClass.prototype.defaultFeeds = function() {
 	this.feedsReady = true;
 	this.saveFeeds();
 };
+
 var DB = new DBClass();

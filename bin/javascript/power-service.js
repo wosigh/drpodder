@@ -17,7 +17,7 @@ PowerService.prototype.activityStart = function(sceneController, id, duration) {
 		method: "activityStart",
 		onSuccess: function() {},
 		onFailure: function() {},
-		parameters: {"id": id, "duration_ms": duration}});
+		parameters: {"id": Mojo.Controller.appInfo.id+"."+id, "duration_ms": duration}});
 };
 
 PowerService.prototype.activityEnd = function(sceneController, id) {
@@ -25,5 +25,5 @@ PowerService.prototype.activityEnd = function(sceneController, id) {
 		method: "activityEnd",
 		onSuccess: function() {},
 		onFailure: function() {},
-		parameters: {"id": id}});
+		parameters: {"id": Mojo.Controller.appInfo.id+"."+id}});
 };

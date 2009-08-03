@@ -36,7 +36,7 @@ function Episode(init) {
 
 }
 
-Episode.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^\\s<>'\"]*");
+Episode.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^<>'\"]*");
 
 Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
@@ -44,9 +44,11 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	this.description = Util.xmlTagValue(xmlObject, "description");
 	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
 	// fix stupid redirect url's BOL has started to use
+	/*
 	if (this.enclosure !== undefined && this.enclosure !== null) {
 		this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
 	}
+	*/
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
 	if (this.guid === undefined) {this.guid = this.link;}
@@ -156,9 +158,59 @@ Episode.prototype.download = function() {
 	this.deleteFile();
 
 	Mojo.Log.error("Downloading %s", this.enclosure);
+	Mojo.Log.error("We will call it %s", this.getDownloadFilename());
 	if (this.enclosure) {
-		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure, this.downloadingCallback.bind(this));
+		AppAssistant.powerService.activityStart(null, this.id);
+		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
+																	 feedModel.getFeedById(this.feedId).title,
+																	 this.getDownloadFilename(),
+																	 this.downloadingCallback.bind(this));
 	}
+};
+
+Episode.prototype.getDateString = function() {
+	var date = new Date(this.pubDate);
+	if (date === undefined || date === null || isNaN(date)) {
+		date = new Date();
+	}
+	var y = date.getFullYear();
+	var m = (date.getMonth()+1);
+	var d=date.getDate();
+	if (m<10) {m="0"+m;}
+	if (d<10) {d="0"+d;}
+	return y+m+d;
+};
+
+Episode.prototype.getDownloadFilename = function() {
+	var ext="mp3";
+	switch (this.type) {
+		case "audio/mpeg":
+			ext = "mp3";
+			break;
+		case "audio/x-m4a":
+			ext = "m4a";
+			break;
+		case "video/x-msvideo":
+			ext = "avi";
+			break;
+		case "video/x-ms-asf":
+			ext = "asf";
+			break;
+		case "video/quicktime":
+			ext = "mov";
+			break;
+		case "video/mpeg":
+			ext = "mpg";
+			break;
+		case "video/mp4":
+			ext = "mp4";
+			break;
+		case "video/x-m4v":
+			ext = "m4v";
+			break;
+	}
+
+	return this.title + "-" + this.getDateString() + "." + ext;
 };
 
 Episode.prototype.downloadingCallback = function(event) {
@@ -172,6 +224,7 @@ Episode.prototype.downloadingCallback = function(event) {
 			this.notify("DOWNLOADSTART");
 		}
 	} else if (this.downloading && event.completed === false) {
+		AppAssistant.powerService.activityEnd(null, this.id);
 		this.downloading = false;
 		this.downloadTicket = 0;
 		this.downloadingPercent = 0;
@@ -186,6 +239,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		}
 	} else if (this.downloading && event.completed && event.completionStatusCode === 200) {
 		//success!
+		AppAssistant.powerService.activityEnd(null, this.id);
 		Mojo.Log.error("Download complete!", this.title);
 		this.downloadTicket = 0;
 		this.downloading = false;
@@ -209,8 +263,10 @@ Episode.prototype.downloadingCallback = function(event) {
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
 			onFailure: function() {
+				AppAssistant.powerService.activityEnd(null, this.id);
+				Util.showError("Error downloading " + this.title, "The redirection link could not be found.");
 				Mojo.Log.error("Couldn't find %s... strange", event.target);
-			},
+			}.bind(this),
 			onComplete: function(transport) {
 				var redirect;
 				try {
@@ -219,22 +275,27 @@ Episode.prototype.downloadingCallback = function(event) {
 						redirect = matches[0];
 					}
 				} catch (e){
+					AppAssistant.powerService.activityEnd(null, this.id);
 					Mojo.Log.error("error with regex: (%s)", e);
 					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
 				}
-				AppAssistant.mediaService.deleteFile(this.controller, event.target, function(event) {});
+				AppAssistant.mediaService.deleteFile(null, event.target, function(event) {});
 				if (redirect !== undefined) {
 					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
+					AppAssistant.powerService.activityStart(null, this.id);
 					this.downloadRequest = AppAssistant.downloadService.download(null, redirect,
+						feedModel.getFeedById(this.feedId).title,
+						this.getDownloadFilename(),
 						this.downloadingCallback.bind(this));
 				} else {
+					AppAssistant.powerService.activityEnd(null, this.id);
 					Mojo.Log.error("No download link found! [%s]", transport.responseText);
 					this.updateUIElements(this);
-					this.notify("DOWNLOADABORT");
 				}
 			}.bind(this)
 		});
 	} else if (event.returnValue === false) {
+		AppAssistant.powerService.activityEnd(null, this.id);
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
@@ -252,7 +313,9 @@ Episode.prototype.downloadingCallback = function(event) {
 		}
 	} else if (event.aborted) {
 		Mojo.Log.error("Got the cancel event, but it has already been handled");
+		AppAssistant.powerService.activityEnd(null, this.id);
 	} else {
+		AppAssistant.powerService.activityEnd(null, this.id);
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
 		Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
 		this.downloadTicket = 0;
@@ -276,12 +339,12 @@ Episode.prototype.deleteFile = function(refresh) {
 Episode.prototype.cancelDownload = function() {
 	if (this.downloading) {
 		Mojo.Log.error("Canceling download");
-		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.updateUIElements(this);
 		this.notify("DOWNLOADCANCEL");
+		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
 	}
 };
 

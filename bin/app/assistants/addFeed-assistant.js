@@ -10,6 +10,7 @@ function AddFeedAssistant(sceneAssistant, feed) {
 		this.dialogTitle = "Edit Podcast XML Feed";
 		this.title = this.feed.title;
 		this.url = this.feed.url;
+		this.albumArt = this.feed.albumArt;
 		this.autoDownload = this.feed.autoDownload;
 		this.autoDelete = this.feed.autoDelete;
 		this.maxDownloads = this.feed.maxDownloads;
@@ -20,6 +21,7 @@ function AddFeedAssistant(sceneAssistant, feed) {
 		this.dialogTitle = "Add Podcast XML Feed";
 		this.title = null;
 		this.url = null;
+		this.albumArt = null;
 		this.autoDownload = false;
 		this.autoDelete = true;
 		this.maxDownloads = 1;
@@ -48,6 +50,15 @@ AddFeedAssistant.prototype.setup = function() {
 			enterSubmits : false
 		},
 		this.nameModel = { value : this.title });
+
+	this.controller.setupWidget("albumArt", {
+			hintText : $L("Album Art (space clears)"),
+			limitResize : true,
+			autoReplace : false,
+			textCase : Mojo.Widget.steModeLowerCase,
+			enterSubmits : false
+		},
+		this.albumArtModel = { value : this.albumArt });
 
 	this.controller.setupWidget("autoDeleteToggle",
 		{},
@@ -128,6 +139,11 @@ AddFeedAssistant.prototype.setup = function() {
 		this.controller.get("autoDownloadRow").addClassName("last");
 	}
 
+	if (this.newFeed) {
+		this.controller.get("newFeedDiv").addClassName("last");
+		this.controller.get("albumArtDiv").hide();
+	}
+
 	this.autoDownloadHandler = this.autoDownloadChanged.bindAsEventListener(this);
 	Mojo.Event.listen(this.controller.get('autoDownloadToggle'),Mojo.Event.propertyChange,this.autoDownloadHandler);
 
@@ -161,6 +177,7 @@ AddFeedAssistant.prototype.autoDownloadChanged = function(event) {
 
 AddFeedAssistant.prototype.updateFields = function() {
 	this.feed.title = this.nameModel.value;
+	this.feed.albumArt = this.albumArtModel.value;
 	this.feed.autoDownload = this.autoDownloadModel.value;
 	this.feed.autoDelete = this.autoDeleteModel.value;
 	this.feed.maxDownloads = this.maxDownloadsModel.value;

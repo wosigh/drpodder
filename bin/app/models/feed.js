@@ -206,7 +206,11 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			if (this.autoDownload &&
 				this.maxDownloads > 0 && downloaded >= this.maxDownloads &&
 				e.downloaded) {
-				e.deleteFile();
+				if (!e.position) {
+					e.deleteFile();
+				} else {
+					downloaded++;
+				}
 			} else if (episode.downloaded || episode.downloadTicket) {
 				downloaded++;
 			}

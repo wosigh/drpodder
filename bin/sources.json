@@ -1,5 +1,9 @@
 [
 	{
+		"source": "app\/assistants\/loading-assistant.js",
+		"scenes": "loading"
+	},
+	{
 		"source": "app\/assistants\/app-assistant.js"
 	},
 	{
@@ -12,6 +16,9 @@
 		"source": "javascript\/download-service.js"
 	},
 	{
+		"source": "javascript\/mediaevents-service.js"
+	},
+	{
 		"source": "javascript\/utilities.js"
 	},
 	{
@@ -19,19 +26,6 @@
 	},
 	{
 		"source": "javascript\/power-service.js"
-	},
-	{
-		"source": "app\/models\/db.js"
-	},
-	{
-		"source": "app\/models\/feed.js"
-	},
-	{
-		"source": "app\/models\/episode.js"
-	},
-	{
-		"source": "app\/assistants\/loading-assistant.js",
-		"scenes": "loading"
 	},
 	{
 		"source": "app\/assistants\/feedList-assistant.js",
@@ -48,5 +42,18 @@
 	{
 		"source": "app\/assistants\/episodeDetails-assistant.js",
 		"scenes": "episodeDetails"
+	},
+	{
+		"source": "app\/assistants\/preferences-assistant.js",
+		"scenes": "preferences"
+	},
+	{
+		"source": "app\/models\/db.js"
+	},
+	{
+		"source": "app\/models\/feed.js"
+	},
+	{
+		"source": "app\/models\/episode.js"
 	},
 ]

@@ -9,6 +9,7 @@ StageAssistant.appMenuModel = {
 		 items: [{label: "Import from prepod.xml", command: "import-cmd"},
 				 {label: "Export via email", command: "export-cmd"}]
 		},
+		{label: "Preferences", command: "prefs-cmd"},
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -21,6 +22,9 @@ StageAssistant.prototype.handleCommand = function(event) {
 	var currentScene = this.controller.activeScene();
 	if (event.type === Mojo.Event.command) {
 		switch (event.command) {
+			case "prefs-cmd":
+				this.controller.pushScene("preferences");
+				break;
 			case "about-cmd":
 				currentScene.showAlertDialog({
 					onChoose: function(value) {},

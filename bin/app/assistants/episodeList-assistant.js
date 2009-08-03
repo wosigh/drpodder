@@ -21,6 +21,7 @@ EpisodeListAssistant.menuAttr = {omitDefaultItems: true};
 EpisodeListAssistant.menuModel = {
 	visible: true,
 	items: [
+		{label: "Edit Feed", command: "edit-cmd"},
 		{label: "Mark all Unlistened...", command: "unlistened-cmd"},
 		{label: "Mark all Listened...", command: "listened-cmd"},
 		{label: "About...", command: "about-cmd"}
@@ -79,6 +80,9 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 			case "listened-cmd":
 				this.feedObject.listened();
 				break;
+			case "edit-cmd":
+				this.controller.stageController.pushScene("addFeed", this, this.feedObject);
+				break;
 		}
 	}
 };
@@ -93,19 +97,24 @@ EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 
 EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var formatted = pubDate;
+	var d_names = new Array("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
+	var m_names = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 	if (pubDate) {
 		var d = new Date(pubDate);
 		var y = d.getFullYear();
-		var m = (d.getMonth()+1);
+		var m = d.getMonth();
 		var dom=d.getDate();
+		var dow=d.getDay();
 		var h=d.getHours()%12;
 		var min=d.getMinutes();
 		var pm = (d.getHours >= 12)?"pm":"am";
 		if (h===0) {h=12;}
-		if (m<10) {m="0"+m;}
+		//if (m<10) {m="0"+m;}
 		if (dom<10) {dom="0"+dom;}
 		if (min<10) {min="0"+min;}
-		formatted = y+"/"+m+"/"+dom+" "+h+":"+min+" "+pm;
+		//formatted = y+"/"+m+"/"+dom+" "+h+":"+min+" "+pm;
+		formatted = d_names[dow] + " " + m_names[m] + " " + dom + ", " + y +
+		            " " + h + ":" + min + " " + pm;
 	}
 	return formatted;
 };
@@ -192,7 +201,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var episode = event.item;
 	var items = [];
 
-	if (this.popupMenuOnSelection || (!episode.enclosure) ||
+	if (!Prefs.singleTap || this.popupMenuOnSelection || (!episode.enclosure) ||
 		(targetClass.indexOf("episodeStatus") !== -1 &&
 			!episode.downloading && episode.enclosure &&
 			episode.listened && !episode.downloaded)) {
