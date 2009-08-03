@@ -48,7 +48,7 @@ DownloadService.prototype.download = function(sceneController, target, dir, file
 		parameters: {"target": target,
 		             "targetDir": "/media/internal/PrePod/" + this.escapeSpecial(dir),
 		             "targetFilename": this.escapeSpecial(filename),
-		             "keepFilenameOnRedirect": true,
+		             "keepFilenameOnRedirect": false,
 		             "subscribe": subscribe}});
 	//} else {
 	//return this.downloadWhenEmpty(sceneController, target, callback);

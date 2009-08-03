@@ -36,7 +36,7 @@ function Episode(init) {
 
 }
 
-Episode.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^<>'\"]*");
+Episode.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^ \\n<>'\"]*");
 
 Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
@@ -49,6 +49,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 		this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
 	}
 	*/
+	this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
 	if (this.guid === undefined) {this.guid = this.link;}
@@ -216,6 +217,7 @@ Episode.prototype.getDownloadFilename = function() {
 Episode.prototype.downloadingCallback = function(event) {
 	//Mojo.Log.error("downloadingCallback: %j", event);
 	if (event.returnValue) {
+		this.downloadCanceled = false;
 		this.downloadTicket = event.ticket;
 		this.downloadingPercent = 0;
 		if (!this.downloading) {
@@ -252,7 +254,7 @@ Episode.prototype.downloadingCallback = function(event) {
 
 		this.notify("DOWNLOADCOMPLETE");
 
-	} else if (this.downloading && event.completed && event.completionStatusCode === 302) {
+	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.error("Redirecting...", event.target);
 		this.downloadTicket = 0;
 		this.downloading = false;
@@ -263,6 +265,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
 			onFailure: function() {
+				AppAssistant.mediaService.deleteFile(null, event.target, function(event) {});
 				AppAssistant.powerService.activityEnd(null, this.id);
 				Util.showError("Error downloading " + this.title, "The redirection link could not be found.");
 				Mojo.Log.error("Couldn't find %s... strange", event.target);
@@ -311,7 +314,7 @@ Episode.prototype.downloadingCallback = function(event) {
 			this.downloadingPercent = per;
 			this.notify("DOWNLOADPROGRESS");
 		}
-	} else if (event.aborted) {
+	} else if (event.aborted || this.downloadCanceled) {
 		Mojo.Log.error("Got the cancel event, but it has already been handled");
 		AppAssistant.powerService.activityEnd(null, this.id);
 	} else {
@@ -338,12 +341,12 @@ Episode.prototype.deleteFile = function(refresh) {
 
 Episode.prototype.cancelDownload = function() {
 	if (this.downloading) {
-		Mojo.Log.error("Canceling download");
-		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.updateUIElements(this);
+		this.downloadCanceled = true;
 		this.notify("DOWNLOADCANCEL");
+		Mojo.Log.error("Canceling download");
 		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
 	}
 };

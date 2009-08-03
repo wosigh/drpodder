@@ -97,8 +97,8 @@ EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 
 EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var formatted = pubDate;
-	var d_names = new Array("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
-	var m_names = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+	var d_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+	var m_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	if (pubDate) {
 		var d = new Date(pubDate);
 		var y = d.getFullYear();
