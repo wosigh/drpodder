@@ -145,7 +145,7 @@ EpisodeListAssistant.prototype._refreshDelayed = function() {
 
 EpisodeListAssistant.prototype._doRefresh = function() {
 	if (this.needRefresh) {
-		Mojo.Log.error("ela refresh");
+		//Mojo.Log.error("ela refresh");
 		this.controller.modelChanged(this.episodeModel);
 		this.needRefresh = false;
 	}
@@ -158,8 +158,12 @@ EpisodeListAssistant.prototype.refreshNow = function() {
 
 EpisodeListAssistant.prototype.handleDelete = function(event) {
 	event.stop();
-	event.item.setListened();
-	event.item.deleteFile();
+	if (event.item.downloading) {
+		event.item.cancelDownload();
+	} else {
+		event.item.setListened();
+		event.item.deleteFile();
+	}
 };
 
 EpisodeListAssistant.prototype.cmdItems = {

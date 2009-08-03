@@ -14,7 +14,7 @@ StageAssistant.appMenuModel = {
 };
 
 StageAssistant.prototype.setup = function() {
-	this.controller.pushScene("feedList");
+	this.controller.pushScene("loading");
 };
 
 StageAssistant.prototype.handleCommand = function(event) {

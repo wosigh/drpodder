@@ -192,7 +192,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
-	if (this.feed !== null && this.feed.url === this.urlModel.value) {
+	if (!this.newFeed && this.feed !== null && this.feed.url === this.urlModel.value) {
 		this.updateFields();
 		this.sceneAssistant.refresh();
 		DB.saveFeeds();
@@ -246,7 +246,9 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	this.feed.interval = 60000;
 	this.updateFields();
 
+	this.feed.gui = true;
 	feedSuccess = this.feed.updateCheck(transport, this.sceneAssistant);
+	this.feed.gui = false;
 
 	if (feedSuccess <= 0) {
 		// Feed can't be processed - remove it but keep the dialog open

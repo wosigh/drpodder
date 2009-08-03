@@ -254,6 +254,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 		for (var i=0; i<results.rows.length; i++) {
 			var e = new Episode(results.rows.item(i));
 			if (e.enclosure === "undefined") {e.enclosure = null;}
+			if (e.pubDate === "undefined") {e.pubDate = null;}
 			var f = feedModel.getFeedById(e.feedId);
 			if (f.details === undefined) {f.details = e.title;}
 			f.episodes.push(e);
@@ -365,7 +366,7 @@ DBClass.prototype.removeFeed = function(f) {
 			episode.cancelDownload();
 		}
 		if (episode.downloaded) {
-			episode.deleteFile();
+			episode.deleteFile(false);
 		}
 	}
 

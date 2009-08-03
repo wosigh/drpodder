@@ -155,6 +155,7 @@ Episode.prototype.clearBookmark = function() {
 Episode.prototype.download = function() {
 	this.deleteFile();
 
+	Mojo.Log.error("Downloading %s", this.enclosure);
 	if (this.enclosure) {
 		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure, this.downloadingCallback.bind(this));
 	}
@@ -198,10 +199,12 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.notify("DOWNLOADCOMPLETE");
 
 	} else if (this.downloading && event.completed && event.completionStatusCode === 302) {
-		Mojo.Log.error("Redirecting...", this.title);
+		Mojo.Log.error("Redirecting...", event.target);
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
+
+		this.notify("DOWNLOADCOMPLETE");
 
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
@@ -247,8 +250,10 @@ Episode.prototype.downloadingCallback = function(event) {
 			this.downloadingPercent = per;
 			this.notify("DOWNLOADPROGRESS");
 		}
+	} else if (event.aborted) {
+		Mojo.Log.error("Got the cancel event, but it has already been handled");
 	} else {
-		Mojo.Log.error("Error handling downloading of %s (%j)", this.title, event);
+		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
 		Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
 		this.downloadTicket = 0;
 		// this.downloading = false; // must already be false
@@ -258,13 +263,13 @@ Episode.prototype.downloadingCallback = function(event) {
 	}
 };
 
-Episode.prototype.deleteFile = function() {
+Episode.prototype.deleteFile = function(refresh) {
 	if (this.downloaded) {
 		AppAssistant.mediaService.deleteFile(null, this.file, function() {});
 		this.downloaded = false;
 		this.file = null;
 		this.updateUIElements();
-		this.notify("DOWNLOADED");
+		this.notify("DOWNLOADED", {needRefresh: refresh, needSave: refresh});
 	}
 };
 
@@ -272,6 +277,11 @@ Episode.prototype.cancelDownload = function() {
 	if (this.downloading) {
 		Mojo.Log.error("Canceling download");
 		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
+		this.downloadTicket = 0;
+		this.downloading = false;
+		this.downloadingPercent = 0;
+		this.updateUIElements(this);
+		this.notify("DOWNLOADCANCEL");
 	}
 };
 

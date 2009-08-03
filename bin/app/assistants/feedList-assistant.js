@@ -22,10 +22,6 @@ initialize = function() {
 };
 
 FeedListAssistant.prototype.setup = function() {
-	this.spinnerModel = {spinning: true};
-	this.controller.setupWidget("loadingSpinner", {spinnerSize: "large"}, this.spinnerModel);
-	this.spinnerScrim = this.controller.get("spinnerScrim");
-
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
 	this.controller.setupWidget("feedListWgt", this.feedAttr, feedModel);
@@ -59,9 +55,6 @@ FeedListAssistant.prototype.deactivate = function() {
 FeedListAssistant.prototype.waitForFeedsReady = function() {
 	if (DB.feedsReady) {
 		this.refresh();
-		this.spinnerScrim.hide();
-		this.spinnerModel.spinning = false;
-		this.controller.modelChanged(this.spinnerModel);
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
 			feedModel.items[i].listen(this.feedUpdateHandler);
@@ -127,7 +120,7 @@ FeedListAssistant.prototype._refreshDelayed = function() {
 
 FeedListAssistant.prototype._doRefresh = function() {
 	if (this.needRefresh) {
-		Mojo.Log.error("fla refresh");
+		//Mojo.Log.error("fla refresh");
 		this.controller.modelChanged(feedModel);
 		this.needRefresh = false;
 	}

@@ -88,7 +88,9 @@ Feed.prototype.getTitle = function(transport) {
 		title = nodes.iterateNext().firstChild.nodeValue;
 	} catch (e) {
 		// bring this back once feed add dialog is its own page
-		//Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
+		if (this.gui) {
+			Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
+		}
 		Mojo.Log.error("Error finding feed title: %o", e);
 	}
 	return title;
@@ -106,6 +108,7 @@ Feed.prototype.getAlbumArt = function(transport) {
 			// ugh, nonstandard rss, try to find the itunes image
 			var xpe = transport.responseXML.ownerDocument || transport.responseXML;
 			var nsResolver = xpe.createNSResolver(xpe.documentElement);
+			//var nsResolver = document.createNSResolver( transport.responseXML.ownerDocument === null ? transport.responseXML.documentElement : transport.responseXML.ownerDocument.documentElement );
 			imagePath = "/rss/channel/itunes:image/@href";
 			nodes = document.evaluate(imagePath, transport.responseXML, nsResolver, XPathResult.ANY_TYPE, null);
 			node = nodes.iterateNext();
@@ -142,11 +145,11 @@ Feed.prototype.updateCheck = function(transport, callback) {
 
 	this.validateXML(transport);
 
-	if (this.title === null || this.title === "") {
+	if (this.title === undefined || this.title === null || this.title === "") {
 		this.title = this.getTitle(transport);
 	}
 
-	if (this.albumArt === null || this.albumArt === "") {
+	if (this.albumArt === undefined || this.albumArt === null || this.albumArt === "") {
 		this.albumArt = this.getAlbumArt(transport);
 	}
 

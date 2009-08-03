@@ -30,6 +30,10 @@
 		"source": "app\/models\/episode.js"
 	},
 	{
+		"source": "app\/assistants\/loading-assistant.js",
+		"scenes": "loading"
+	},
+	{
 		"source": "app\/assistants\/feedList-assistant.js",
 		"scenes": "feedList"
 	},
