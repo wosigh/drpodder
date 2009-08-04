@@ -169,7 +169,17 @@ EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
 				this.pause();
 			}
 			break;
-		case "somethingElse":
+		case "pause":
+			this.pause();
+			break;
+		case "play":
+			this.play();
+			break;
+		case "next":
+			this.doSkip(20);
+			break;
+		case "prev":
+			this.doSkip(-20);
 			break;
 		default:
 			Mojo.Log.error("Ignoring mediaKeyPress: %j", event);
