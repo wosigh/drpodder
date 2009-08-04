@@ -43,13 +43,12 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	this.link = Util.xmlTagValue(xmlObject, "link");
 	this.description = Util.xmlTagValue(xmlObject, "description");
 	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
-	// fix stupid redirect url's BOL has started to use
-	/*
 	if (this.enclosure !== undefined && this.enclosure !== null) {
-		this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
+		// fix stupid redirect url's BOL has started to use
+		//this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
+		// fix error with
+		this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
 	}
-	*/
-	this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
 	if (this.guid === undefined) {this.guid = this.link;}
@@ -311,6 +310,7 @@ Episode.prototype.downloadingCallback = function(event) {
 			per = Math.floor(1000*event.amountReceived/event.amountTotal)/10;
 		}
 		if (this.downloadingPercent !== per) {
+			//AppAssistant.powerService.activityStart(null, this.id);
 			this.downloadingPercent = per;
 			this.notify("DOWNLOADPROGRESS");
 		}

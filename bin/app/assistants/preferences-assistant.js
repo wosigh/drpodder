@@ -2,7 +2,6 @@ function PreferencesAssistant() {
 }
 
 PreferencesAssistant.prototype.setup = function() {
-	Mojo.Log.error("albumArt=%d, simple=%d", Prefs.albumArt, Prefs.simple);
 	this.controller.setupWidget("albumArtToggle",
 		{},
 		{ value : Prefs.albumArt });
