@@ -52,7 +52,7 @@ StageAssistant.prototype.handleCommand = function(event) {
 							var imported = 0;
 							while (node) {
 								var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
-								var url   = Util.xmlGetAttributeValue(node, "xmlUrl");
+								var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
 								if (title !== undefined && url !== undefined) {
 									Mojo.Log.error("Importing feed: (%s)-[%s]", title, url);
 									feed = new Feed();
@@ -84,7 +84,12 @@ StageAssistant.prototype.handleCommand = function(event) {
 							  "<br><br>&lt;opml version='1.1'>&lt;body><br>";
 				for (var i=0; i<feedModel.items.length; i++) {
 					var feed = feedModel.items[i];
-					message += "&lt;outline text='" + feed.title.replace("'", "''") + "' type='rss' xmlUrl='" + feed.url +"'/><br>";
+					message += "&lt;outline text='" + feed.title.replace("'", "''") + "' type='rss' xmlUrl='" + feed.url +"'";
+					message += " autoDownload='" + feed.autoDownload + "'";
+					message += " autoDelete='" + feed.autoDelete + "'";
+					message += " maxDownloads='" + feed.maxDownloads + "'";
+					message += " replacements='" + feed.replacements.replace("'","''") + "'";
+					message += "/><br>";
 				}
 				message += "&lt;/body>&lt;/opml>";
 				Mojo.Log.error("message=[%s]", message);

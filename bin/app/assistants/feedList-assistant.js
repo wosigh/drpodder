@@ -56,7 +56,6 @@ FeedListAssistant.prototype.setup = function() {
 };
 
 FeedListAssistant.prototype.activate = function() {
-	this.waitForFeedsReady();
 	if (Prefs.updated) {
 		if (Prefs.reload) {
 			delete Prefs.reload;
@@ -64,6 +63,8 @@ FeedListAssistant.prototype.activate = function() {
 		}
 		delete Prefs.updated;
 		DB.writePrefs();
+	} else {
+		this.waitForFeedsReady();
 	}
 };
 

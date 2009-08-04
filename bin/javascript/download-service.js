@@ -19,24 +19,6 @@ DownloadService.prototype._serviceRequest = function(sceneController, uri, param
 	//  hold the download call until there are no downloads pending, thus never calling
 	//   callback until we are ready?
 	//  in downloadStatus, capture the 0 amountTotal error and restart the download? (ugh)
-
-DownloadService.prototype.escapeSpecial = function(file) {
-    file = file.toString().replace(/\//g,'_').replace(/\\/g,'_').replace(/\:/g,'_').
-							replace(/\*/g,'_').replace(/\?/g,'_').replace(/\"/g,'_').
-							replace(/</g, '_').replace(/\>/g, '_').replace(/\|/g, '_');
-
-	// don't allow filenames longer than 200 chars
-	if (file.length > 200) {
-		file = file.slice(200);
-	}
-
-	if (file.length === 0) {
-		file = "Unknown";
-	}
-
-	return file;
-};
-
 DownloadService.prototype.download = function(sceneController, target, dir, filename, callback, subscribe) {
 	//if (force) { // has palm fixed the downloadmanager bug yet?
 	//Mojo.Log.error("downloading:", target);
@@ -46,8 +28,8 @@ DownloadService.prototype.download = function(sceneController, target, dir, file
 		onSuccess: callback,
 		onFailure: callback,
 		parameters: {"target": target,
-		             "targetDir": "/media/internal/PrePod/" + this.escapeSpecial(dir),
-		             "targetFilename": this.escapeSpecial(filename),
+		             "targetDir": "/media/internal/PrePod/" + dir,
+		             "targetFilename": filename,
 		             "keepFilenameOnRedirect": false,
 		             "subscribe": subscribe}});
 	//} else {

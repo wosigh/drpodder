@@ -215,6 +215,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 		for (var i=0; i<results.rows.length; i++) {
 			var e = new Episode(results.rows.item(i));
 			if (e.enclosure === "undefined") {e.enclosure = null;}
+			if (e.type === "undefined") {e.type = null;}
 			if (e.pubDate === "undefined") {e.pubDate = null;}
 			var f = feedModel.getFeedById(e.feedId);
 			if (f.details === undefined) {f.details = e.title;}
@@ -234,6 +235,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 
 			if (e.downloadTicket) {
 				e.downloading = true;
+				e.downloadActivity();
 				f.downloading = true;
 				f.downloadCount++;
 				e.downloadRequest = AppAssistant.downloadService.downloadStatus(null, e.downloadTicket,

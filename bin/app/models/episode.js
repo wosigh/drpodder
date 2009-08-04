@@ -157,13 +157,11 @@ Episode.prototype.clearBookmark = function() {
 Episode.prototype.download = function() {
 	if (this.feedId) {
 		this.deleteFile();
-
 		Mojo.Log.error("Downloading %s", this.enclosure);
 		Mojo.Log.error("We will call it %s", this.getDownloadFilename());
 		if (this.enclosure) {
-			AppAssistant.powerService.activityStart(null, this.id);
 			this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
-																		feedModel.getFeedById(this.feedId).title,
+																		this.escapeSpecial(feedModel.getFeedById(this.feedId).title),
 																		this.getDownloadFilename(),
 																		this.downloadingCallback.bind(this));
 		}
@@ -182,7 +180,7 @@ Episode.prototype.getDateString = function() {
 	var d=date.getDate();
 	if (m<10) {m="0"+m;}
 	if (d<10) {d="0"+d;}
-	return y+m+d;
+	return ""+y+""+m+""+d;
 };
 
 Episode.prototype.getDownloadFilename = function() {
@@ -212,12 +210,34 @@ Episode.prototype.getDownloadFilename = function() {
 		case "video/mp4":
 			ext = "mp4";
 			break;
+		case "video/x-mp4":
+			ext = "mp4";
+			break;
 		case "video/x-m4v":
 			ext = "m4v";
 			break;
+		case "video/m4v":
+			ext = "m4v";
+			break;
+		case "video/flv":
+			ext = "flv";
+			break;
+		case "video/wmv":
+			ext = "wmv";
+			break;
+		case "application/x-shockwave-flash":
+			ext = "flv";
+			break;
 	}
 
-	return this.title + "-" + this.getDateString() + "." + ext;
+	return this.escapeSpecial(this.title) + "-" + this.getDateString() + "." + ext;
+};
+
+Episode.prototype.deleteTempFile = function() {
+	var filename = "/media/internal/PrePod/" + this.escapeSpecial(feedModel.getFeedById(this.feedId).title);
+	filename += "/." + this.getDownloadFilename();
+	Mojo.Log.error("deleting temp file: %s", filename);
+	AppAssistant.mediaService.deleteFile(null, filename, function(event) {});
 };
 
 Episode.prototype.downloadingCallback = function(event) {
@@ -228,11 +248,12 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadingPercent = 0;
 		if (!this.downloading) {
 			this.downloading = true;
+			this.downloadActivity();
 			this.updateUIElements(this);
 			this.notify("DOWNLOADSTART");
 		}
 	} else if (this.downloading && event.completed === false) {
-		AppAssistant.powerService.activityEnd(null, this.id);
+		this.deleteTempFile();
 		this.downloading = false;
 		this.downloadTicket = 0;
 		this.downloadingPercent = 0;
@@ -247,7 +268,6 @@ Episode.prototype.downloadingCallback = function(event) {
 		}
 	} else if (this.downloading && event.completed && event.completionStatusCode === 200) {
 		//success!
-		AppAssistant.powerService.activityEnd(null, this.id);
 		Mojo.Log.error("Download complete!", this.title);
 		this.downloadTicket = 0;
 		this.downloading = false;
@@ -271,8 +291,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
 			onFailure: function() {
-				AppAssistant.mediaService.deleteFile(null, event.target, function(event) {});
-				AppAssistant.powerService.activityEnd(null, this.id);
+				this.deleteTempFile();
 				Util.showError("Error downloading " + this.title, "The redirection link could not be found.");
 				Mojo.Log.error("Couldn't find %s... strange", event.target);
 			}.bind(this),
@@ -284,27 +303,24 @@ Episode.prototype.downloadingCallback = function(event) {
 						redirect = matches[0];
 					}
 				} catch (e){
-					AppAssistant.powerService.activityEnd(null, this.id);
 					Mojo.Log.error("error with regex: (%s)", e);
 					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
 				}
 				AppAssistant.mediaService.deleteFile(null, event.target, function(event) {});
 				if (redirect !== undefined) {
 					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
-					AppAssistant.powerService.activityStart(null, this.id);
 					this.downloadRequest = AppAssistant.downloadService.download(null, redirect,
-						feedModel.getFeedById(this.feedId).title,
+						this.escapeSpecial(feedModel.getFeedById(this.feedId).title),
 						this.getDownloadFilename(),
 						this.downloadingCallback.bind(this));
 				} else {
-					AppAssistant.powerService.activityEnd(null, this.id);
 					Mojo.Log.error("No download link found! [%s]", transport.responseText);
 					this.updateUIElements(this);
 				}
 			}.bind(this)
 		});
 	} else if (event.returnValue === false) {
-		AppAssistant.powerService.activityEnd(null, this.id);
+		this.deleteTempFile();
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
@@ -317,15 +333,15 @@ Episode.prototype.downloadingCallback = function(event) {
 			per = Math.floor(1000*event.amountReceived/event.amountTotal)/10;
 		}
 		if (this.downloadingPercent !== per) {
-			//AppAssistant.powerService.activityStart(null, this.id);
 			this.downloadingPercent = per;
 			this.notify("DOWNLOADPROGRESS");
 		}
 	} else if (event.aborted || this.downloadCanceled) {
+		this.deleteTempFile();
+		this.downloadCanceled = false;
 		Mojo.Log.error("Got the cancel event, but it has already been handled");
-		AppAssistant.powerService.activityEnd(null, this.id);
 	} else {
-		AppAssistant.powerService.activityEnd(null, this.id);
+		this.deleteTempFile();
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
 		Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
 		this.downloadTicket = 0;
@@ -335,6 +351,34 @@ Episode.prototype.downloadingCallback = function(event) {
 		// this.notify("DOWNLOADABORT"); // can't notify, or count would be messed up
 	}
 };
+
+Episode.prototype.downloadActivity = function() {
+	// every 5 minutes, if we are still downloading we start an activity
+	if (this.downloading) {
+		AppAssistant.powerService.activityStart(null, this.id);
+		setTimeout(this.downloadActivity.bind(this), 300000);
+	} else {
+		AppAssistant.powerService.activityEnd(null, this.id);
+	}
+};
+
+Episode.prototype.escapeSpecial = function(file) {
+    file = file.toString().replace(/\//g,'_').replace(/\\/g,'_').replace(/\:/g,'_').
+							replace(/\*/g,'_').replace(/\?/g,'_').replace(/\"/g,'_').
+							replace(/</g, '_').replace(/\>/g, '_').replace(/\|/g, '_');
+
+	// don't allow filenames longer than 200 chars
+	if (file.length > 200) {
+		file = file.slice(200);
+	}
+
+	if (file.length === 0) {
+		file = "Unknown";
+	}
+
+	return file;
+};
+
 
 Episode.prototype.deleteFile = function(refresh) {
 	if (this.downloaded) {
@@ -348,13 +392,14 @@ Episode.prototype.deleteFile = function(refresh) {
 
 Episode.prototype.cancelDownload = function() {
 	if (this.downloading) {
+		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
+		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.updateUIElements(this);
 		this.downloadCanceled = true;
 		this.notify("DOWNLOADCANCEL");
 		Mojo.Log.error("Canceling download");
-		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
 	}
 };
 
