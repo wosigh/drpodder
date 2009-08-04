@@ -178,6 +178,7 @@ EpisodeListAssistant.prototype.handleDelete = function(event) {
 EpisodeListAssistant.prototype.cmdItems = {
 	deleteCmd     : {label: "Delete", command: "delete-cmd"},
 	downloadCmd   : {label: "Download", command: "download-cmd"},
+	cancelCmd     : {label: "Cancel", command: "cancel-cmd"},
 	playCmd       : {label: "Play", command: "resume-cmd"},
 	resumeCmd     : {label: "Resume", command: "resume-cmd"},
 	restartCmd    : {label: "Restart", command: "restart-cmd"},
@@ -207,7 +208,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 			episode.listened && !episode.downloaded)) {
 		this.popupMenuOnSelection = false;
 		if (episode.downloading) {
-			// if we're downloading, just cancel the download
+			items.push(this.cmdItems.cancelCmd);
 			items.push(this.cmdItems.playCmd);
 			items.push(this.cmdItems.detailsCmd);
 		} else {
@@ -285,6 +286,9 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 			break;
 		case "unlisten-cmd":
 			episode.setUnlistened();
+			break;
+		case "cancel-cmd":
+			episode.cancelDownload();
 			break;
 		case "download-cmd":
 			episode.download();
