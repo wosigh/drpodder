@@ -155,16 +155,20 @@ Episode.prototype.clearBookmark = function() {
 };
 
 Episode.prototype.download = function() {
-	this.deleteFile();
+	if (this.feedId) {
+		this.deleteFile();
 
-	Mojo.Log.error("Downloading %s", this.enclosure);
-	Mojo.Log.error("We will call it %s", this.getDownloadFilename());
-	if (this.enclosure) {
-		AppAssistant.powerService.activityStart(null, this.id);
-		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
-																	 feedModel.getFeedById(this.feedId).title,
-																	 this.getDownloadFilename(),
-																	 this.downloadingCallback.bind(this));
+		Mojo.Log.error("Downloading %s", this.enclosure);
+		Mojo.Log.error("We will call it %s", this.getDownloadFilename());
+		if (this.enclosure) {
+			AppAssistant.powerService.activityStart(null, this.id);
+			this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
+																		feedModel.getFeedById(this.feedId).title,
+																		this.getDownloadFilename(),
+																		this.downloadingCallback.bind(this));
+		}
+	} else {
+		setTimeout(this.download.bind(this), 5000);
 	}
 };
 
@@ -188,6 +192,9 @@ Episode.prototype.getDownloadFilename = function() {
 			ext = "mp3";
 			break;
 		case "audio/x-m4a":
+			ext = "m4a";
+			break;
+		case "audio/mp4":
 			ext = "m4a";
 			break;
 		case "video/x-msvideo":
