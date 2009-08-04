@@ -36,7 +36,7 @@ function Episode(init) {
 
 }
 
-Episode.prototype.findLinks = new RegExp("http://[^'\"<>]*\\.mp3[^ \\n<>'\"]*");
+Episode.prototype.findLinks = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
 
 Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");

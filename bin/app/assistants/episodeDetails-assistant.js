@@ -246,7 +246,6 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	try {
-		Util.showError("Error Playing audio", "Unknown error playing audio");
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
 	} catch (f) {
 	}
