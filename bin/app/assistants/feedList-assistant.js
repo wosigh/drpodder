@@ -202,6 +202,7 @@ FeedListAssistant.prototype.popupHandler = function(feed, command) {
 				var episode = feed.episodes[i];
 				episode.cancelDownload();
 			}
+			this.refresh();
 			break;
 	}
 

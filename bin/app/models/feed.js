@@ -49,26 +49,39 @@ function Feed(init) {
 	this.listeners = [];
 }
 
-Feed.prototype.update = function(callback) {
+Feed.prototype.update = function(callback, url) {
 	/*
 	if (Mojo.Host.current === Mojo.Host.mojoHost) {
 		// same original policy means we need to use the proxy on mojo-host
 		this.url = "/proxy?url=" + encodeURIComponent(this.url);
 	}
 	*/
+	if (url) {
+		this.url = url;
+	}
 
 	var req = new Ajax.Request(this.url, {
 		method: 'get',
-		onFailure: function() {
-			Mojo.Log.error("Failed to request feed:", this.title, "(", this.url, ")");
-			callback();
-		},
-		onComplete: function(transport) {
-			// could check return value here and indicate that the feed update failed
-			this.updateCheck(transport);
-			callback();
-		}.bind(this)
+		evalJSON : "false",
+		onFailure: this.checkFailure.bind(this, callback),
+		onSuccess: this.checkSuccess.bind(this, callback)
 	});
+};
+
+Feed.prototype.checkFailure = function(callback, transport) {
+	Mojo.Log.error("Failed to request feed:", this.title, "(", this.url, ")");
+	callback();
+};
+
+Feed.prototype.checkSuccess = function(callback, transport) {
+	var location = transport.getHeader("Location");
+	if (location) {
+		Mojo.Log.error("Redirection location=%s", location);
+		this.update(callback, location);
+	} else {
+		this.updateCheck(transport);
+		callback();
+	}
 };
 
 Feed.prototype.validateXML = function(transport){
@@ -166,7 +179,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	var result = nodes.iterateNext();
 	var newEpisodeCount = 0;
 	var noEnclosureCount = 0;
-	var downloaded = 0;
 	// debugging, we only want to update 5 or so at a time, so that we can watch the list grow
 	//var newToKeep = Math.floor(Math.random()*4+1);
 	// end debugging
@@ -201,28 +213,27 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			e.link = episode.link;
 			e.enclosure = episode.enclosure;
 			e.type = episode.type;
+		}
+		result = nodes.iterateNext();
+	}
 
-			episode = e;
-			if (this.autoDownload &&
-				this.maxDownloads > 0 && downloaded >= this.maxDownloads &&
-				e.downloaded) {
-				if (!e.position) {
+	if (this.autoDownload) {
+		var downloaded = 0;
+		for (var i=0; i<this.episodes.length; i++) {
+			e = this.episodes[i];
+			if (e.downloaded) {
+				if (this.maxDownloads > 0 && downloaded >= this.maxDownloads &&
+					!e.position) {
 					e.deleteFile();
 				} else {
 					downloaded++;
 				}
-			} else if (episode.downloaded || episode.downloadTicket) {
+			} else if ((this.maxDownloads == "0" || downloaded < this.maxDownloads) &&
+					   !e.listened && !e.downloadTicket && e.enclosure) {
+				e.download();
 				downloaded++;
 			}
 		}
-
-		if (this.autoDownload &&
-			!episode.listened && !episode.downloaded && !episode.downloadTicket && episode.enclosure &&
-			(this.maxDownloads == "0" || downloaded < this.maxDownloads)) {
-			episode.download();
-			downloaded++;
-		}
-		result = nodes.iterateNext();
 	}
 
 	// debugging
@@ -248,7 +259,10 @@ Feed.prototype.downloadCallback = function(episode, event) {
 Feed.prototype.replace = function(title) {
 	var arr = this.getReplacementsArray();
 	for (var i=0; i<arr.length; i++) {
-		title = title.replace(arr[i].from, arr[i].to);
+		if (!arr[i].fromRegexp) {
+			arr[i].fromRegexp = new RegExp(arr[i].from, "g");
+		}
+		title = title.replace(arr[i].fromRegexp, arr[i].to);
 	}
 	return title;
 };
@@ -261,7 +275,7 @@ Feed.prototype.getReplacementsArray = function() {
 			Mojo.Log.error("error parsing replacements string: %s", this.replacements);
 		} else {
 			for (var i=0; i<spl.length; i+=2) {
-				arr.push({from: spl[i].replace("#COMMA#", ","), to: spl[i+1].replace("#COMMA#", ",")});
+				arr.push({from: spl[i].replace(/#COMMA#/g, ","), to: spl[i+1].replace(/#COMMA#/g, ",")});
 			}
 		}
 	}
@@ -275,8 +289,8 @@ Feed.prototype.setReplacements = function(arr) {
 	for (var i=0; i<arr.length; i++) {
 		if (arr[i].from.length > 0) {
 			if (this.replacements.length > 0) { this.replacements += ",";}
-			this.replacements += arr[i].from.replace(",","#COMMA#") + "," +
-			                     arr[i].to.replace(",","#COMMA#");
+			this.replacements += arr[i].from.replace(/,/g,"#COMMA#") + "," +
+			                     arr[i].to.replace(/,/g,"#COMMA#");
 		}
 	}
 };

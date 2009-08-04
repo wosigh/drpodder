@@ -194,17 +194,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	// Check entered URL and name to confirm that it is a valid feedlist
 	Mojo.Log.error("New Feed URL Request: ", this.urlModel.value);
 
-	// Check for "http://" on front or other legal prefix; any string of
-	// 1 to 5 alpha characters followed by ":" is ok, else prepend "http://"
-	var url = this.urlModel.value;
-	if (/^[A-Za-z]{1,5}:/.test(url) === false) {
-		// Strip any leading slashes
-		url = url.replace(/^\/{1,2}/, "");
-		url = "http://" + url;
-	}
-
 	// Update the entered URL & model
-	this.urlModel.value = url;
 	this.controller.modelChanged(this.urlModel);
 
 	// If the url is the same, then assume that it's just a title change,
@@ -221,16 +211,38 @@ AddFeedAssistant.prototype.checkFeed = function() {
 		this.okButtonModel.disabled = true;
 		this.controller.modelChanged(this.okButtonModel);
 
-		var request = new Ajax.Request(url, {
-			method : "get",
-			evalJSON : "false",
-			onSuccess : this.checkSuccess.bind(this),
-			onFailure : this.checkFailure.bind(this)
-		});
+		// Check for "http://" on front or other legal prefix; any string of
+		// 1 to 5 alpha characters followed by ":" is ok, else prepend "http://"
+		var url = this.urlModel.value;
+		if (/^[A-Za-z]{1,5}:/.test(url) === false) {
+			// Strip any leading slashes
+			url = url.replace(/^\/{1,2}/, "");
+			url = "http://" + url;
+		}
+
+		this.check(url);
 	}
 };
 
+AddFeedAssistant.prototype.check = function(url) {
+	if (url) {
+		this.urlModel.value = url;
+	}
+	var request = new Ajax.Request(this.urlModel.value, {
+		method : "get",
+		evalJSON : "false",
+		onSuccess : this.checkSuccess.bind(this),
+		onFailure : this.checkFailure.bind(this)
+	});
+};
+
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
+	var location = transport.getHeader("Location");
+	if (location) {
+		Mojo.Log.error("Redirection location=%s", location);
+		this.check(location);
+		return;
+	}
 	var feedStatus = UPDATECHECK_INVALID;
 	// Prototype template object generates a string from return status
 	var t = new Template($L("#{status}"));

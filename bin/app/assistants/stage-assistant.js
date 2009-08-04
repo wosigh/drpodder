@@ -53,11 +53,19 @@ StageAssistant.prototype.handleCommand = function(event) {
 							while (node) {
 								var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
 								var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
+								var autoDownload = Util.xmlGetAttributeValue(node, "autoDownload");
+								var autoDelete = Util.xmlGetAttributeValue(node, "autoDelete");
+								var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
+								var replacements = Util.xmlGetAttributeValue(node, "replacements");
 								if (title !== undefined && url !== undefined) {
 									Mojo.Log.error("Importing feed: (%s)-[%s]", title, url);
 									feed = new Feed();
 									feed.url = url;
 									feed.title = title;
+									if (autoDownload !== undefined) {feed.autoDownload = (autoDownload==='1');}
+									if (autoDelete !== undefined) {feed.autoDelete = (autoDelete==='1');}
+									if (maxDownloads !== undefined) {feed.maxDownloads = maxDownloads;}
+									if (replacements !== undefined) {feed.replacements = replacements;}
 									feedModel.items.push(feed);
 									imported++;
 								} else {
@@ -84,15 +92,15 @@ StageAssistant.prototype.handleCommand = function(event) {
 							  "<br><br>&lt;opml version='1.1'>&lt;body><br>";
 				for (var i=0; i<feedModel.items.length; i++) {
 					var feed = feedModel.items[i];
-					message += "&lt;outline text='" + feed.title.replace("'", "''") + "' type='rss' xmlUrl='" + feed.url +"'";
+					message += "&lt;outline text='" + feed.title.replace(/&/g, "&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
+					message += " type='rss' xmlUrl='" + feed.url.replace(/&/g, "&amp;amp;") + "'";
 					message += " autoDownload='" + feed.autoDownload + "'";
 					message += " autoDelete='" + feed.autoDelete + "'";
 					message += " maxDownloads='" + feed.maxDownloads + "'";
-					message += " replacements='" + feed.replacements.replace("'","''") + "'";
+					message += " replacements='" + feed.replacements.replace(/&/g,"&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
 					message += "/><br>";
 				}
 				message += "&lt;/body>&lt;/opml>";
-				Mojo.Log.error("message=[%s]", message);
 				AppAssistant.applicationManagerService.email("PrePod OPML Export", message);
 				break;
 		}

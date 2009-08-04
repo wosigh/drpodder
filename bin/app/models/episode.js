@@ -46,8 +46,8 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	if (this.enclosure !== undefined && this.enclosure !== null) {
 		// fix stupid redirect url's BOL has started to use
 		//this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
-		// fix error with
-		this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
+		// fix error with 60sec podcast
+		//this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
 	}
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
