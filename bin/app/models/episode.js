@@ -41,7 +41,7 @@ Episode.prototype.findLinks = /(\b(https?|ftp|file):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,
 Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
 	this.link = Util.xmlTagValue(xmlObject, "link");
-	this.description = Util.xmlTagValue(xmlObject, "description");
+	this.description = Util.xmlTagValue(xmlObject, "encoded") || Util.xmlTagValue(xmlObject, "description");
 	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
 	if (this.enclosure !== undefined && this.enclosure !== null) {
 		// fix stupid redirect url's BOL has started to use
