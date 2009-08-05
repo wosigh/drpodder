@@ -107,7 +107,7 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		var dow=d.getDay();
 		var h=d.getHours()%12;
 		var min=d.getMinutes();
-		var pm = (d.getHours >= 12)?"pm":"am";
+		var pm = (d.getHours() >= 12)?"pm":"am";
 		if (h===0) {h=12;}
 		//if (m<10) {m="0"+m;}
 		if (dom<10) {dom="0"+dom;}
