@@ -37,7 +37,7 @@ function Feed(init) {
 		this.interval = 60000;
 		this.lastModified = null;
 		this.details = null;
-		this.replacements = null;
+		this.replacements = "";
 		this.downloading = false;
 		this.downloadCount = 0;
 

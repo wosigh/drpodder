@@ -185,6 +185,9 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 		// load the rows into the feedModel
 		for (var i=0; i<results.rows.length; i++) {
 			var f = new Feed(results.rows.item(i));
+			if (f.replacements === null || f.replacements === undefined) {
+				f.replacements = "";
+			}
 			f.downloading = false;
 			f.downloadCount = 0;
 			f.numNew = 0;
