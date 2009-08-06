@@ -457,7 +457,7 @@ EpisodeDetailsAssistant.prototype.play = function() {
 EpisodeDetailsAssistant.prototype.streamPlay = function() {
 	if (this.episodeObject.type !== undefined && this.episodeObject.type !== null &&
 		this.episodeObject.type.indexOf("video") === 0) {
-		AppAssistant.applicationManagerService.play(this.controller, this.episodeObject.enclosure, function(){});
+		this.launchVideo(this.episodeObject.enclosure);
 		this.enablePlayPause();
 		setTimeout(this.refreshMenu.bind(this), 5000);
 	} else {
@@ -475,10 +475,26 @@ EpisodeDetailsAssistant.prototype.refreshMenu = function() {
 	this.controller.modelChanged(this.cmdMenuModel);
 };
 
+EpisodeDetailsAssistant.prototype.launchVideo = function(uri) {
+	var args = {
+		appId: "com.palm.app.videoplayer",
+		name: "nowplaying"
+	};
+
+	var params = {
+		target: uri,
+		title: this.episodeObject.title/*,
+		initialPos: 0,
+		videoID: undefined*/
+	};
+
+	this.controller.stageController.pushScene(args, params);
+};
+
 EpisodeDetailsAssistant.prototype.filePlay = function() {
 	if (this.episodeObject.type !== undefined && this.episodeObject.type !== null &&
 		this.episodeObject.type.indexOf("video") === 0) {
-		AppAssistant.applicationManagerService.play(this.controller, this.episodeObject.file, function(){});
+		this.launchVideo(this.episodeObject.file);
 		this.enablePlayPause();
 		setTimeout(this.refreshMenu.bind(this), 5000);
 	} else {
