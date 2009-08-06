@@ -1,14 +1,6 @@
 function FeedListAssistant() {
 }
 
-FeedListAssistant.prototype.feedAttr = {
-	itemTemplate: "feedList/feedRowTemplate",
-	listTemplate: "feedList/feedListTemplate",
-	swipeToDelete: true,
-	reorderable: true,
-	renderLimit: 40
-};
-
 FeedListAssistant.prototype.cmdMenuModel = {
 	items: [
 		{icon: "new", command: "add-cmd"},
@@ -23,6 +15,16 @@ initialize = function() {
 
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
+
+	this.feedAttr = {
+		itemTemplate: "feedList/feedRowTemplate",
+		listTemplate: "feedList/feedListTemplate",
+		swipeToDelete: true,
+		reorderable: true,
+		renderLimit: 40,
+		formatters: {"albumArt": this.albumArtFormatter.bind(this)}
+	};
+
 
 	if (Prefs.albumArt) {
 		if (Prefs.simple) {
@@ -40,9 +42,11 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("feedListWgt", this.feedAttr, feedModel);
 
-	this.controller.get("feedListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
-	this.controller.get("feedListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
-	this.controller.get("feedListWgt").observe(Mojo.Event.listReorder, this.handleReorder.bindAsEventListener(this));
+	this.feedList = this.controller.get("feedListWgt");
+
+	this.feedList.observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
+	this.feedList.observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
+	this.feedList.observe(Mojo.Event.listReorder, this.handleReorder.bindAsEventListener(this));
 
 	this.controller.setupWidget("refreshSpinner", {property: "updating"});
 	this.controller.setupWidget("downloadSpinner", {property: "downloading"});
@@ -105,21 +109,23 @@ FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
 	if (feedIndex < feedModel.items.length) {
 		var feed = feedModel.items[feedIndex];
 		feed.updating = true;
-		this.refreshNow();
+		this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
 		feed.update(function() {
 			feed.updating = false;
+			this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
 			this.updateFeeds(feedIndex+1);
 		}.bind(this));
 	} else {
 		DB.saveFeeds();
 		this.refresh();
+		this.cmdMenuModel.items[1].disabled = false;
+		this.controller.modelChanged(this.cmdMenuModel);
 		this.checkForDownloads();
 	}
 };
 
 FeedListAssistant.prototype.checkForDownloads = function(feedIndex, episodeIndex) {
-	this.cmdMenuModel.items[1].disabled = false;
-	this.controller.modelChanged(this.cmdMenuModel);
+	// this is currently done in the feed update
 };
 
 FeedListAssistant.prototype.cleanup = function() {
@@ -153,10 +159,23 @@ FeedListAssistant.prototype.refreshNow = function() {
 	this._doRefresh();
 };
 
+FeedListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
+	var formatted = albumArt;
+
+	if (albumArt) {
+		formatted = "/var/luna/data/extractfs" +
+						encodeURIComponent(albumArt) +
+						":0:0:58:58:3";
+	}
+
+	return formatted;
+};
+
 FeedListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
 	//var feed = event.item;
-	var feed = feedModel.items[event.index];
+	var feedIndex = event.index;
+	var feed = feedModel.items[feedIndex];
 	if (targetClass.indexOf("feedStats") === 0) {
 		// popup menu:
 		// last update date/time
@@ -166,7 +185,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 		// ## started
 		// edit feed
 		this.controller.popupSubmenu({
-			onChoose: this.popupHandler.bind(this, feed),
+			onChoose: this.popupHandler.bind(this, feed, feedIndex),
 			placeNear: event.originalEvent.target,
 			items: [
 			        //{label: "Last: "+feed.lastUpdate, command: 'dontwant-cmd', enabled: false},
@@ -179,7 +198,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			]});
 	} else if (targetClass.indexOf("download") === 0) {
 		this.controller.popupSubmenu({
-			onChoose: this.popupHandler.bind(this, feed),
+			onChoose: this.popupHandler.bind(this, feed, feedIndex),
 			placeNear: event.originalEvent.target,
 			items: [
 			        {label: "Cancel Downloads", command: 'cancelDownloads-cmd'}
@@ -189,7 +208,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 	}
 };
 
-FeedListAssistant.prototype.popupHandler = function(feed, command) {
+FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 	switch(command) {
 		case "edit-cmd":
 			this.controller.stageController.pushScene("addFeed", this, feed);
@@ -202,7 +221,8 @@ FeedListAssistant.prototype.popupHandler = function(feed, command) {
 				var episode = feed.episodes[i];
 				episode.cancelDownload();
 			}
-			this.refresh();
+			this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
+			DB.saveFeed(feed);
 			break;
 	}
 

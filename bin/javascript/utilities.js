@@ -79,4 +79,24 @@ Utilities.prototype.xmlGetAttributeValue = function(node, attr) {
 	return val;
 };
 
+
+Utilities.prototype.escapeSpecial = function(file) {
+    file = file.toString().replace(/\//g,'_').replace(/\\/g,'_').replace(/\:/g,'_').
+							replace(/\*/g,'_').replace(/\?/g,'_').replace(/\"/g,'_').
+							replace(/</g, '_').replace(/\>/g, '_').replace(/\|/g, '_');
+
+	// don't allow filenames longer than 200 chars
+	if (file.length > 200) {
+		file = file.slice(200);
+	}
+
+	if (file.length === 0) {
+		file = "Unknown";
+	}
+
+	return file;
+};
+
+
+
 Util = new Utilities();

@@ -166,6 +166,26 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		this.albumArt = this.getAlbumArt(transport);
 	}
 
+	if (this.albumArt !== undefined && this.albumArt !== null &&
+		this.albumArt.indexOf("http://") === 0) {
+		// if we currently point to a picture on the net, download it so we can resize on display
+		var ext = ".JPG";
+		if (this.albumArt.toLowerCase().indexOf(".jpg") > 0) {ext=".JPG";}
+		if (this.albumArt.toLowerCase().indexOf(".bmp") > 0) {ext=".BMP";}
+		if (this.albumArt.toLowerCase().indexOf(".png") > 0) {ext=".PNG";}
+		if (this.albumArt.toLowerCase().indexOf(".gif") > 0) {ext=".GIF";}
+		var newAlbumArt = Util.escapeSpecial(this.title) + ext;
+		this.downloadRequest = AppAssistant.downloadService.download(
+			null, this.albumArt, ".albumArt", newAlbumArt,
+			function(event) {
+				if (event.completed) {
+					this.notify("REFRESH");
+				}
+			}.bind(this));
+		this.albumArt = "/media/internal/PrePod/.albumArt/" + newAlbumArt;
+	}
+
+
 	Mojo.Log.error("Update: ", this.title, "(", this.url, ")");
 
 	nodes = document.evaluate(itemPath, transport.responseXML, null, XPathResult.ANY_TYPE, null);

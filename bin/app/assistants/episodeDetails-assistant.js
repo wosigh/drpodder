@@ -226,7 +226,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 										  this.menuCommandItems.play,
 										  {},
 										  {}]};
-	this.cmdMenuModel.items[2].items[2].disabled = false;
+	this.enablePlayPause();
 	/*
 	if (this.episodeObject.downloaded) {
 		this.cmdMenuModel.items[4] = this.menuCommandItems.deleteFile;
@@ -310,7 +310,7 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 				this.cmdMenuModel.items[2].items[4] = {};
 				//this.cmdMenuModel.items[2].items[1] = this.menuCommandItems.streamPlay;
 				//this.cmdMenuModel.items[4] = this.menuCommandItems.download;
-				this.cmdMenuModel.items[2].items[2].disabled = false;
+				this.enablePlayPause();
 				this.controller.modelChanged(this.cmdMenuModel);
 				this.deleteFile();
 				break;
@@ -336,14 +336,18 @@ EpisodeDetailsAssistant.prototype.playGUI = function() {
 	this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.pause;
 	this.cmdMenuModel.items[2].items[3] = this.menuCommandItems.skipForward;
 	this.cmdMenuModel.items[2].items[4] = this.menuCommandItems.skipForward2;
-	this.cmdMenuModel.items[2].items[2].disabled = false;
+	this.enablePlayPause();
 	this.controller.modelChanged(this.cmdMenuModel);
 };
 
 EpisodeDetailsAssistant.prototype.pauseGUI = function() {
 	this.cmdMenuModel.items[2].items[2] = this.menuCommandItems.play;
-	this.cmdMenuModel.items[2].items[2].disabled = false;
+	this.enablePlayPause();
 	this.controller.modelChanged(this.cmdMenuModel);
+};
+
+EpisodeDetailsAssistant.prototype.enablePlayPause = function() {
+	this.cmdMenuModel.items[2].items[2].disabled = false;
 };
 
 EpisodeDetailsAssistant.prototype.doSkip = function(secs) {
@@ -430,6 +434,7 @@ EpisodeDetailsAssistant.prototype.deleteFile = function() {
 
 EpisodeDetailsAssistant.prototype.pause = function() {
 	this.cmdMenuModel.items[2].items[2].disabled = true;
+	setTimeout(this.enablePlayPause.bind(this), 2000);
 	this.controller.modelChanged(this.cmdMenuModel);
 	this.audioObject.pause();
 	this.bookmark();
@@ -438,6 +443,7 @@ EpisodeDetailsAssistant.prototype.pause = function() {
 
 EpisodeDetailsAssistant.prototype.play = function() {
 	this.cmdMenuModel.items[2].items[2].disabled = true;
+	setTimeout(this.enablePlayPause.bind(this), 2000);
 	this.controller.modelChanged(this.cmdMenuModel);
 	if (this.episodeObject.file) {
 		this.filePlay();
@@ -452,7 +458,7 @@ EpisodeDetailsAssistant.prototype.streamPlay = function() {
 	if (this.episodeObject.type !== undefined && this.episodeObject.type !== null &&
 		this.episodeObject.type.indexOf("video") === 0) {
 		AppAssistant.applicationManagerService.play(this.controller, this.episodeObject.enclosure, function(){});
-		this.cmdMenuModel.items[2].items[2].disabled = false;
+		this.enablePlayPause();
 		setTimeout(this.refreshMenu.bind(this), 5000);
 	} else {
 		if (this.audioObject.src === null || this.audioObject.src === undefined) {
@@ -473,7 +479,7 @@ EpisodeDetailsAssistant.prototype.filePlay = function() {
 	if (this.episodeObject.type !== undefined && this.episodeObject.type !== null &&
 		this.episodeObject.type.indexOf("video") === 0) {
 		AppAssistant.applicationManagerService.play(this.controller, this.episodeObject.file, function(){});
-		this.cmdMenuModel.items[2].items[2].disabled = false;
+		this.enablePlayPause();
 		setTimeout(this.refreshMenu.bind(this), 5000);
 	} else {
 		if (this.audioObject.src === null || this.audioObject.src === undefined) {
