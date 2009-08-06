@@ -9,6 +9,7 @@ function Feed(init) {
 		this.url = init.url;
 		this.title = init.title;
 		this.albumArt = init.albumArt;
+		this.maxDisplay = init.maxDisplay;
 		this.autoDownload = init.autoDownload;
 		this.autoDelete = init.autoDelete;
 		this.maxDownloads = init.maxDownloads;
@@ -29,6 +30,7 @@ function Feed(init) {
 		this.url = null;
 		this.title = null;
 		this.albumArt = null;
+		this.maxDisplay = 20;
 		this.autoDownload = false;
 		this.autoDelete = true;
 		this.maxDownloads = 1;
@@ -202,6 +204,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	// debugging, we only want to update 5 or so at a time, so that we can watch the list grow
 	//var newToKeep = Math.floor(Math.random()*4+1);
 	// end debugging
+	//while (result && this.episodes.length < this.maxDisplay) {
 	while (result) {
 		// construct a new Episode based on the current item from XML
 		var episode = new Episode();
@@ -236,6 +239,8 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		}
 		result = nodes.iterateNext();
 	}
+
+	//this.episodes.splice(this.maxDisplay);
 
 	if (this.autoDownload) {
 		var downloaded = 0;

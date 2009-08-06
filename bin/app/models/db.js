@@ -95,7 +95,8 @@ DBClass.prototype.initDB = function(callback) {
 	                      "maxDownloads INTEGER, " +
 	                      "interval INTEGER, " +
 	                      "lastModified TEXT, " +
-						  "replacements TEXT)";
+						  "replacements TEXT, " +
+						  "maxDisplay INTEGER)";
 	var createEpisodeTable = "CREATE TABLE IF NOT EXISTS 'episode' " +
 	                         "(id INTEGER PRIMARY KEY, " +
 							 "feedId INTEGER, " +
@@ -115,6 +116,7 @@ DBClass.prototype.initDB = function(callback) {
 							 "type TEXT)";
 	var alterFeedTable = "ALTER TABLE feed ADD COLUMN replacements TEXT";
 	var alterEpisodeTable = "ALTER TABLE episode ADD COLUMN type TEXT";
+	var alterFeedTable2 = "ALTER TABLE feed ADD COLUMN maxDisplay INTEGER";
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
 			function(transaction, results) {
@@ -126,6 +128,22 @@ DBClass.prototype.initDB = function(callback) {
 				Mojo.Log.info("Episode table created");
 			},
 			function(transaction, error) {Mojo.Log.error("Error creating episode table: %j", error);});
+		transaction.executeSql(alterFeedTable2, [],
+			function(transaction, results) {
+				Mojo.Log.info("Feed table altered");
+				transaction.executeSql("UPDATE feed SET maxDisplay=20", [],
+					function(transaction, results) {
+						Mojo.Log.info("Updating maxDisplay=20");
+					},
+					function(transaction, error) {Mojo.Log.error("Error updating maxDisplay: %j", error);});
+			},
+			function(transaction, error) {
+				if (error.message === "duplicate column name: maxDisplay") {
+					Mojo.Log.info("Feed table previously altered");
+				} else {
+					Mojo.Log.error("Error altering feed table: %j", error);
+				}
+			});
 		transaction.executeSql(alterEpisodeTable, [],
 			function(transaction, results) {
 				Mojo.Log.info("Episode table altered");
@@ -216,36 +234,38 @@ DBClass.prototype.loadEpisodes = function() {
 DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	if (results.rows.length > 0) {
 		for (var i=0; i<results.rows.length; i++) {
-			var e = new Episode(results.rows.item(i));
-			if (e.enclosure === "undefined") {e.enclosure = null;}
-			if (e.type === "undefined") {e.type = null;}
-			if (e.pubDate === "undefined") {e.pubDate = null;}
-			var f = feedModel.getFeedById(e.feedId);
-			if (f.details === undefined) {f.details = e.title;}
-			f.episodes.push(e);
-			f.guid[e.guid] = e;
-			f.numEpisodes++;
-			if (!e.listened) {f.numNew++;}
-			if (e.downloaded) {f.numDownloaded++;}
-			if (e.position !== 0) {
-				f.numStarted++;
-				if (e.length) {
-					e.bookmarkPercent = 100*e.position/e.length;
+			var f = feedModel.getFeedById(results.rows.item(i).feedId);
+			//if (f.episodes.length < f.maxDisplay) {
+				var e = new Episode(results.rows.item(i));
+				if (e.enclosure === "undefined") {e.enclosure = null;}
+				if (e.type === "undefined") {e.type = null;}
+				if (e.pubDate === "undefined") {e.pubDate = null;}
+				if (f.details === undefined) {f.details = e.title;}
+				f.episodes.push(e);
+				f.guid[e.guid] = e;
+				f.numEpisodes++;
+				if (!e.listened) {f.numNew++;}
+				if (e.downloaded) {f.numDownloaded++;}
+				if (e.position !== 0) {
+					f.numStarted++;
+					if (e.length) {
+						e.bookmarkPercent = 100*e.position/e.length;
+					}
 				}
-			}
 
-			e.listen(f.episodeUpdate.bind(f));
+				e.listen(f.episodeUpdate.bind(f));
 
-			if (e.downloadTicket) {
-				e.downloading = true;
-				e.downloadActivity();
-				f.downloading = true;
-				f.downloadCount++;
-				e.downloadRequest = AppAssistant.downloadService.downloadStatus(null, e.downloadTicket,
-					e.downloadingCallback.bind(e));
-			}
+				if (e.downloadTicket) {
+					e.downloading = true;
+					e.downloadActivity();
+					f.downloading = true;
+					f.downloadCount++;
+					e.downloadRequest = AppAssistant.downloadService.downloadStatus(null, e.downloadTicket,
+						e.downloadingCallback.bind(e));
+				}
 
-			e.updateUIElements();
+				e.updateUIElements();
+			//}
 		}
 
 		this.feedsReady = true;
@@ -260,8 +280,8 @@ DBClass.prototype.saveFeeds = function() {
 
 DBClass.prototype.saveFeed = function(f, displayOrder) {
 	var saveFeedSQL = "INSERT OR REPLACE INTO feed (id, displayOrder, title, url, albumArt, " +
-	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements) " +
-					  "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements, maxDisplay) " +
+					  "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
 
 	if (displayOrder !== undefined) {
 		f.displayOrder = displayOrder;
@@ -270,7 +290,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	this.db.transaction(function(transaction) {
 		if (f.id === undefined) {f.id = null;}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
-											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements],
+											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay],
 			function(transaction, results) {
 				Mojo.Log.error("Feed saved: %s", f.title);
 				if (f.id === null) {
@@ -402,11 +422,13 @@ DBClass.prototype.defaultFeeds = function() {
 	feed.interval = 60000;
 	feedModel.add(feed);
 
+	/*
 	feed = new Feed();
 	feed.url = "http://blog.stackoverflow.com/index.php?feed=podcast";
 	feed.title = "Stack Overflow";
 	feed.interval = 60000;
 	feedModel.add(feed);
+	*/
 
 	feed = new Feed();
 	feed.url = "http://feeds.feedburner.com/podictionary";

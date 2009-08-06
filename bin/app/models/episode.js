@@ -212,6 +212,9 @@ Episode.prototype.getDownloadFilename = function() {
 		case "video/mp4":
 			ext = "mp4";
 			break;
+		case "video/mpeg4":
+			ext = "mp4";
+			break;
 		case "video/x-mp4":
 			ext = "mp4";
 			break;
@@ -230,6 +233,8 @@ Episode.prototype.getDownloadFilename = function() {
 		case "application/x-shockwave-flash":
 			ext = "flv";
 			break;
+		default:
+			Mojo.Log.error("Unknown enclosure type: " + this.type);
 	}
 
 	return Util.escapeSpecial(this.title) + "-" + this.getDateString() + "." + ext;

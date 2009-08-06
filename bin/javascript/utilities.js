@@ -90,6 +90,9 @@ Utilities.prototype.escapeSpecial = function(file) {
 		file = file.slice(200);
 	}
 
+	// if file ends in a space character, get rid of it, that's bad
+	file = file.replace(/\s*$/,"");
+
 	if (file.length === 0) {
 		file = "Unknown";
 	}
