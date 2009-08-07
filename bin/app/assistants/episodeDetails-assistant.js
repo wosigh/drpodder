@@ -164,6 +164,7 @@ EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 };
 
 EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
+	Mojo.Log.error("received mediaKeyPress: %j", event);
 	switch (event.key) {
 		case "togglePausePlay":
 			if (this.audioObject.paused) {
@@ -185,7 +186,7 @@ EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
 			this.doSkip(-20);
 			break;
 		default:
-			Mojo.Log.error("Ignoring mediaKeyPress: %j", event);
+			Mojo.Log.error("Ignoring mediaKeyPress");
 			break;
 	}
 };
@@ -418,15 +419,20 @@ EpisodeDetailsAssistant.prototype.deleteFile = function() {
 };
 
 EpisodeDetailsAssistant.prototype.pause = function() {
+	try {
 	this.cmdMenuModel.items[2].disabled = true;
 	setTimeout(this.enablePlayPause.bind(this), 10000);
 	this.controller.modelChanged(this.cmdMenuModel);
 	this.audioObject.pause();
 	this.bookmark();
 	this.setTimer(false);
+	} catch (e) {
+		Mojo.Log.error("Error in pause: %j", e);
+	}
 };
 
 EpisodeDetailsAssistant.prototype.play = function() {
+	try {
 	this.cmdMenuModel.items[2].disabled = true;
 	setTimeout(this.enablePlayPause.bind(this), 10000);
 	this.controller.modelChanged(this.cmdMenuModel);
@@ -437,6 +443,9 @@ EpisodeDetailsAssistant.prototype.play = function() {
 	}
 	this.bookmark();
 	this.setTimer(true);
+	} catch (e) {
+		Mojo.Log.error("Error in play: %j", e);
+	}
 };
 
 EpisodeDetailsAssistant.prototype.streamPlay = function() {
