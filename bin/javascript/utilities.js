@@ -46,6 +46,19 @@ Utilities.prototype.showError = function(title, message){
     });
 };
 
+Utilities.prototype.xpath = function(path, node, getData, numeric) {
+    var type = XPathResult.FIRST_UNORDERED_NODE_TYPE;
+    var result = node.evaluate(path, node, null, type, null);
+    var resultNode = (result !== undefined)?result.singleNodeValue:result;
+    if (!getData) {
+       return resultNode;
+    } else if (numeric) {
+       return (resultNode !== undefined)?resultNode.data:0;
+    } else {
+       return (resultNode !== undefined)?resultNode.data:"";
+    }
+};
+
 Utilities.prototype.xmlTagValue = function(node, element, def) {
 	var arr = node.getElementsByTagName(element);
 	var val = def;

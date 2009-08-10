@@ -249,15 +249,20 @@ AddFeedAssistant.prototype.check = function(url) {
 	if (url) {
 		this.urlModel.value = url;
 	}
+	//this.ajaxRequestTime = (new Date()).getTime();
+	//Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
 	var request = new Ajax.Request(this.urlModel.value, {
 		method : "get",
 		evalJSON : "false",
+		evalJS : "false",
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});
+	//Mojo.Log.error("finished making ajax request");
 };
 
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
+	//Mojo.Log.error("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
 	var location = transport.getHeader("Location");
 	if (location) {
 		Mojo.Log.error("Redirection location=%s", location);
@@ -273,8 +278,10 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	// DEBUG - Work around due occasion Ajax XML error in response.
 	if (transport.responseXML === null && transport.responseText !== null) {
 		Mojo.Log.info("Request not in XML format - manually converting");
+		//var start = (new Date()).getTime();
 		transport.responseXML = new DOMParser().parseFromString(
 				transport.responseText, "text/xml");
+		//Mojo.Log.error("parse time: %d", (new Date()).getTime()-start);
 	}
 
 	//  If a new feed, push the entered feed data on to the feedlist and

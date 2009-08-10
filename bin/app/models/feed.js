@@ -62,12 +62,16 @@ Feed.prototype.update = function(callback, url) {
 		this.url = url;
 	}
 
+	//this.ajaxStartDate = (new Date()).getTime();
+	//Mojo.Log.error("making ajax request");
 	var req = new Ajax.Request(this.url, {
 		method: 'get',
 		evalJSON : "false",
+		evalJS : "false",
 		onFailure: this.checkFailure.bind(this, callback),
 		onSuccess: this.checkSuccess.bind(this, callback)
 	});
+	//Mojo.Log.error("finished making ajax request");
 };
 
 Feed.prototype.checkFailure = function(callback, transport) {
@@ -76,6 +80,7 @@ Feed.prototype.checkFailure = function(callback, transport) {
 };
 
 Feed.prototype.checkSuccess = function(callback, transport) {
+	//Mojo.Log.error("check success %d", (new Date()).getTime()-this.ajaxStartDate);
 	var location = transport.getHeader("Location");
 	if (location) {
 		Mojo.Log.error("Redirection location=%s", location);
@@ -89,7 +94,9 @@ Feed.prototype.checkSuccess = function(callback, transport) {
 Feed.prototype.validateXML = function(transport){
 	// Convert the string to an XML object
 	if (!transport.responseXML) {
+		//var start = (new Date()).getTime();
 		transport.responseXML = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
+		//Mojo.Log.error("document parse: %d", (new Date()).getTime() - start);
 	}
 };
 
@@ -190,7 +197,15 @@ Feed.prototype.updateCheck = function(transport, callback) {
 
 	Mojo.Log.error("Update: ", this.title, "(", this.url, ")");
 
+	//need to evaluate difference between iterator processing and xpath processing
+	// although, the real slowdown seems to be in getting the xml from the server (probably the parsing of the xml)
+	//var numItems = Util.xpath("/rss/channel/item[last()]/@index", transport.responseXML).value;
+	// how would I get the number of item entries?
+
+
+	//var start = (new Date()).getTime();
 	nodes = document.evaluate(itemPath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
+	//Mojo.Log.error("document evaluate: %d", (new Date()).getTime() - start);
 
 	if (!nodes) {
 		// bring this back once feed add dialog is its own page
@@ -205,10 +220,14 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	//var newToKeep = Math.floor(Math.random()*4+1);
 	// end debugging
 	//while (result && this.episodes.length < this.maxDisplay) {
+
 	while (result) {
 		// construct a new Episode based on the current item from XML
 		var episode = new Episode();
+		//var start2 = (new Date()).getTime();
 		episode.loadFromXML(result);
+		//Mojo.Log.error("loadFromXML: %d", (new Date()).getTime() - start2);
+
 
 		// what really needs to happen here:
 		// check based on guid each of the episodes, add new ones to the top of the array
@@ -239,6 +258,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		}
 		result = nodes.iterateNext();
 	}
+	//Mojo.Log.error("documentProcessing: %d", (new Date()).getTime() - start);
 
 	//this.episodes.splice(this.maxDisplay);
 
@@ -253,6 +273,8 @@ Feed.prototype.updateCheck = function(transport, callback) {
 				} else {
 					downloaded++;
 				}
+			} else if (e.downloading) {
+				downloaded++;
 			} else if ((this.maxDownloads == "0" || downloaded < this.maxDownloads) &&
 					   !e.listened && !e.downloadTicket && e.enclosure) {
 				e.download();

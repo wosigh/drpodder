@@ -90,7 +90,7 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 		}
 		if (firstLoad) {
 			this.updateFeeds();
-		} else {
+		} else if (!this.updatingFeeds) {
 			this.cmdMenuModel.items[1].disabled = false;
 			this.controller.modelChanged(this.cmdMenuModel);
 		}
@@ -102,6 +102,7 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
 	if (!feedIndex) {
 		// first time through
+		this.updatingFeeds = true;
 		this.cmdMenuModel.items[1].disabled = true;
 		this.controller.modelChanged(this.cmdMenuModel);
 		feedIndex = 0;
@@ -118,6 +119,7 @@ FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
 	} else {
 		DB.saveFeeds();
 		this.refresh();
+		this.updatingFeeds = false;
 		this.cmdMenuModel.items[1].disabled = false;
 		this.controller.modelChanged(this.cmdMenuModel);
 		this.checkForDownloads();
