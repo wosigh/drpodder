@@ -1,4 +1,6 @@
 function FeedListAssistant() {
+	this.appController = Mojo.Controller.getAppController();
+	this.stageController = this.appController.getStageController(PrePod.MainStageName);
 }
 
 FeedListAssistant.prototype.cmdMenuModel = {
@@ -51,7 +53,7 @@ FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget("refreshSpinner", {property: "updating"});
 	this.controller.setupWidget("downloadSpinner", {property: "downloading"});
 
-	this.controller.setupWidget(Mojo.Menu.appMenu, StageAssistant.appMenuAttr, StageAssistant.appMenuModel);
+	this.controller.setupWidget(Mojo.Menu.appMenu, AppAssistant.appMenuAttr, AppAssistant.appMenuModel);
 
 	this.feedUpdateHandler = this.feedUpdate.bind(this);
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
@@ -63,7 +65,7 @@ FeedListAssistant.prototype.activate = function() {
 	if (Prefs.updated) {
 		if (Prefs.reload) {
 			delete Prefs.reload;
-			this.controller.stageController.swapScene("feedList");
+			this.stageController.swapScene("feedList");
 		}
 		delete Prefs.updated;
 		DB.writePrefs();
@@ -95,7 +97,7 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 			this.controller.modelChanged(this.cmdMenuModel);
 		}
 	} else {
-		setTimeout(this.waitForFeedsReady.bind(this), 200);
+		this.controller.window.setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
 };
 
@@ -206,14 +208,14 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        {label: "Cancel Downloads", command: 'cancelDownloads-cmd'}
 			]});
 	} else {
-		this.controller.stageController.pushScene("episodeList", feed);
+		this.stageController.pushScene("episodeList", feed);
 	}
 };
 
 FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 	switch(command) {
 		case "edit-cmd":
-			this.controller.stageController.pushScene("addFeed", this, feed);
+			this.stageController.pushScene("addFeed", this, feed);
 			break;
 		case "listened-cmd":
 			feed.listened();
@@ -234,7 +236,7 @@ FeedListAssistant.prototype.handleCommand = function(event) {
     if (event.type == Mojo.Event.command) {
         switch (event.command) {
 			case "add-cmd":
-				this.controller.stageController.pushScene("addFeed", this, null);
+				this.stageController.pushScene("addFeed", this, null);
 				break;
 			case "refresh-cmd":
 				this.updateFeeds();

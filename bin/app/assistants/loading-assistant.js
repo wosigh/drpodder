@@ -1,4 +1,6 @@
 function LoadingAssistant() {
+	this.appController = Mojo.Controller.getAppController();
+	this.stageController = this.appController.getStageController(PrePod.MainStageName);
 }
 
 LoadingAssistant.prototype.initialize = function() {
@@ -20,8 +22,8 @@ LoadingAssistant.prototype.waitForFeedsReady = function() {
 		this.spinnerScrim.hide();
 		this.spinnerModel.spinning = false;
 		this.controller.modelChanged(this.spinnerModel);
-		this.controller.stageController.swapScene("feedList");
+		this.stageController.swapScene("feedList");
 	} else {
-		setTimeout(this.waitForFeedsReady.bind(this), 200);
+		this.controller.window.setTimeout(this.waitForFeedsReady.bind(this), 200);
 	}
 };

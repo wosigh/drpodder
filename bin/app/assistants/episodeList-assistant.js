@@ -4,6 +4,9 @@ function EpisodeListAssistant(feedObject) {
 
 	this.feedUpdateHandler = this.feedUpdate.bind(this);
 	this.episodeUpdateHandler = this.episodeUpdate.bind(this);
+
+	this.appController = Mojo.Controller.getAppController();
+	this.stageController = this.appController.getStageController(PrePod.MainStageName);
 }
 
 EpisodeListAssistant.prototype.items = [];
@@ -81,7 +84,7 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				this.feedObject.listened();
 				break;
 			case "edit-cmd":
-				this.controller.stageController.pushScene("addFeed", this, this.feedObject);
+				this.stageController.pushScene("addFeed", this, this.feedObject);
 				break;
 		}
 	}
@@ -319,7 +322,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
-	this.controller.stageController.pushScene("episodeDetails", episode, autoPlay, resume);
+	this.stageController.pushScene("episodeDetails", episode, autoPlay, resume);
 };
 
 EpisodeListAssistant.prototype.updatePercent = function(episode) {

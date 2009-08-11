@@ -357,7 +357,7 @@ Feed.prototype.unlisten = function(callback) {
 Feed.prototype.notify = function(action, extra) {
 	for (var i=0; i<this.listeners.length; i++) {
 		//Mojo.Log.error("Feed.notify %d", i);
-		setTimeout(this.listeners[i].bind(this, action, this, extra), 10*i);
+		this.listeners[i](action, this, extra);
 		//Mojo.Log.error("Feed.notify %d done", i);
 	}
 };

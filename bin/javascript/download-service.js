@@ -51,7 +51,7 @@ DownloadService.prototype.downloadWhenEmpty = function(sceneController, target, 
 				this.download(sceneController, target, callback, true);
 			} else {
 				Mojo.Log.error("Waiting for pending to empty before downloading:", target, "count:", event.count);
-				setTimeout(this.downloadWhenEmpty.bind(this, sceneController, target, callback), 2000);
+				this.controller.window.setTimeout(this.downloadWhenEmpty.bind(this, sceneController, target, callback), 2000);
 			}
 		}.bind(this),
 		parameters: {}});

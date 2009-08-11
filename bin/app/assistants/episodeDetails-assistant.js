@@ -58,48 +58,51 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.listen("progress", Mojo.Event.sliderDragStart, this.sliderDragStart.bind(this));
 	this.controller.listen("progress", Mojo.Event.sliderDragEnd, this.sliderDragEnd.bind(this));
 
-	this.cmdMenuModel = {items: [{},{},{},{},{}]};
-	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
-	this.audioObject = AudioTag.extendElement("episodeDetailsAudio");
-	this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
+	if (this.episodeObject.enclosure) {
+		this.cmdMenuModel = {items: [{},{},{},{},{}]};
+		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
-	this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlay.bind(this));
-	//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
-	//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
-	this.audioObject.addEventListener(Media.Event.ERROR, this.handleError.bind(this));
+		this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
+		this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
 
-	this.audioObject.addEventListener(Media.Event.PAUSE, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.PLAY, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlay.bind(this));
+		//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
+		//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
+		this.audioObject.addEventListener(Media.Event.ERROR, this.handleError.bind(this));
 
-	this.audioObject.addEventListener(Media.Event.ENDED, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.ABORT, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.CANPLAY, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.CANPLAYTHROUGH, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.CANSHOWFIRSTFRAME, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.EMPTIED, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.LOAD, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.LOADEDFIRSTFRAME, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.LOADEDMETADATA, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.LOADSTART, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.SEEKED, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.SEEKING, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.STALLED, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.TIMEUPDATE, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.WAITING, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.X_PALM_DISCONNECT, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.X_PALM_RENDER_MODE, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEvents.bind(this));
-	this.audioObject.addEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.PAUSE, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.PLAY, this.handleAudioEvents.bind(this));
 
-	this.keyDownEventHandler = this.keyDownHandler.bind(this);
-	this.controller.listen(this.controller.sceneElement, Mojo.Event.keydown, this.keyDownEventHandler);
+		this.audioObject.addEventListener(Media.Event.ENDED, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.ABORT, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.CANPLAY, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.CANPLAYTHROUGH, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.CANSHOWFIRSTFRAME, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.EMPTIED, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.LOAD, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.LOADEDFIRSTFRAME, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.LOADEDMETADATA, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.LOADSTART, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.SEEKED, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.SEEKING, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.STALLED, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.TIMEUPDATE, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.WAITING, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.X_PALM_DISCONNECT, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.X_PALM_RENDER_MODE, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEvents.bind(this));
+		this.audioObject.addEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEvents.bind(this));
 
-	AppAssistant.mediaEventsService.registerForMediaEvents(this.controller, this.mediaKeyPressHandler.bind(this));
+		this.keyDownEventHandler = this.keyDownHandler.bind(this);
+		this.controller.listen(this.controller.sceneElement, Mojo.Event.keydown, this.keyDownEventHandler);
 
-	this.updateTimer = null;
+		AppAssistant.mediaEventsService.registerForMediaEvents(this.controller, this.mediaKeyPressHandler.bind(this));
 
-	this.episodeObject.listen(this.episodeUpdateHandler);
+		this.updateTimer = null;
+
+		this.episodeObject.listen(this.episodeUpdateHandler);
+	}
 };
 
 EpisodeDetailsAssistant.prototype.activate = function() {
@@ -111,9 +114,11 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 };
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
-	this.setTimer(false);
-	this.bookmark();
-	this.episodeObject.unlisten(this.episodeUpdateHandler);
+	if (this.episodeObject.enclosure) {
+		this.setTimer(false);
+		this.bookmark();
+		this.episodeObject.unlisten(this.episodeUpdateHandler);
+	}
 };
 
 EpisodeDetailsAssistant.prototype.episodeUpdate = function(action, episode) {
@@ -421,7 +426,7 @@ EpisodeDetailsAssistant.prototype.deleteFile = function() {
 EpisodeDetailsAssistant.prototype.pause = function() {
 	try {
 	this.cmdMenuModel.items[2].disabled = true;
-	setTimeout(this.enablePlayPause.bind(this), 10000);
+	this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
 	this.controller.modelChanged(this.cmdMenuModel);
 	this.audioObject.pause();
 	this.bookmark();
@@ -434,7 +439,7 @@ EpisodeDetailsAssistant.prototype.pause = function() {
 EpisodeDetailsAssistant.prototype.play = function() {
 	try {
 	this.cmdMenuModel.items[2].disabled = true;
-	setTimeout(this.enablePlayPause.bind(this), 10000);
+	this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
 	this.controller.modelChanged(this.cmdMenuModel);
 	if (this.episodeObject.file) {
 		this.filePlay();
@@ -454,7 +459,7 @@ EpisodeDetailsAssistant.prototype.streamPlay = function() {
 		if (this.isForeground) {
 			this.launchVideo(this.episodeObject.enclosure);
 			this.enablePlayPause();
-			setTimeout(this.refreshMenu.bind(this), 5000);
+			this.controller.window.setTimeout(this.refreshMenu.bind(this), 5000);
 		}
 	} else {
 		if (this.audioObject.src === null || this.audioObject.src === undefined) {
@@ -495,7 +500,7 @@ EpisodeDetailsAssistant.prototype.filePlay = function() {
 		if (this.isForeground) {
 			this.launchVideo(this.episodeObject.file);
 			this.enablePlayPause();
-			setTimeout(this.refreshMenu.bind(this), 5000);
+			this.controller.window.setTimeout(this.refreshMenu.bind(this), 5000);
 		}
 	} else {
 		if (this.audioObject.src === null || this.audioObject.src === undefined) {

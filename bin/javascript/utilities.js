@@ -32,8 +32,9 @@ Utilities.albumArtListUrlFormatter = function(url){
 };
 
 Utilities.prototype.showError = function(title, message){
-    var controller = Mojo.Controller.stageController.activeScene();
-	controller.showAlertDialog({
+	var stageController = this.controller.getActiveStageController();
+	var currentScene = stageController.currentScene();
+	currentScene.showAlertDialog({
         onChoose: function(value){
         },
         title: title,

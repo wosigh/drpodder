@@ -15,7 +15,8 @@ function DBClass() {
 				currentVerIndex++;
 			} else {
 				Mojo.Log.error("Exception opening db: %s", e.message);
-				setTimeout("Util.showError('Exception opening db', '"+e.message+"');", 1000);
+				// setTimeout only works with assistants
+				//setTimeout("Util.showError('Exception opening db', '"+e.message+"');", 1000);
 				currentVerIndex = 99;
 			}
 		}
@@ -65,7 +66,9 @@ function DBClass() {
 
 	this.db = openDatabase(this.dbName, this.dbVersions[0].version);
 	if (!this.db) {
-		setTimeout(Util.showError.bind(this, 'Error opening db', 'There was an unknown error opening the feed db'), 1000);
+		// setTimeout only works with assistants
+		//this.controller.window.setTimeout(Util.showError.bind(this, 'Error opening db', 'There was an unknown error opening the feed db'), 1000);
+		Mojo.Log.error("Error opening feed db");
 	} else {
 		this.initDB(this.loadFeeds.bind(this));
 	}

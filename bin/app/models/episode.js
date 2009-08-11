@@ -71,9 +71,7 @@ Episode.prototype.unlisten = function(callback) {
 
 Episode.prototype.notify = function(action, extra) {
 	for (var i=0; i<this.listeners.length; i++) {
-		//Mojo.Log.error("episode.notify %d", i);
-		setTimeout(this.listeners[i].bind(this, action, this, extra), 10*i);
-		//Mojo.Log.error("episode.notify %d done", i);
+		this.listeners[i](action, this, extra);
 	}
 };
 
@@ -168,7 +166,7 @@ Episode.prototype.download = function() {
 																		this.downloadingCallback.bind(this));
 		}
 	} else {
-		setTimeout(this.download.bind(this), 5000);
+		this.setTimeout(this.download.bind(this), 5000);
 	}
 };
 
@@ -255,9 +253,9 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadingPercent = 0;
 		if (!this.downloading) {
 			this.downloading = true;
-			this.downloadActivity();
 			this.updateUIElements(this);
 			this.notify("DOWNLOADSTART");
+			this.downloadActivity();
 		}
 	} else if (this.downloading && event.completed === false) {
 		this.deleteTempFile();
@@ -363,7 +361,7 @@ Episode.prototype.downloadActivity = function() {
 	// every 5 minutes, if we are still downloading we start an activity
 	if (this.downloading) {
 		AppAssistant.powerService.activityStart(null, this.id);
-		setTimeout(this.downloadActivity.bind(this), 300000);
+		this.setTimeout(this.downloadActivity.bind(this), 300000);
 	} else {
 		AppAssistant.powerService.activityEnd(null, this.id);
 	}
@@ -390,6 +388,11 @@ Episode.prototype.cancelDownload = function(refresh) {
 		this.notify("DOWNLOADCANCEL", {needRefresh: refresh, needSave: refresh});
 		Mojo.Log.error("Canceling download");
 	}
+};
+
+Episode.prototype.setTimeout = function(func, interval) {
+	// TODO: Fix setTimeout
+	//this.controller.window.setTimeout(func, interval);
 };
 
 
