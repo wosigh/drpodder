@@ -159,10 +159,10 @@ EpisodeDetailsAssistant.prototype.backToList = function() {
 
 EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 	if (bool && !this.updateTimer) {
-		this.updateTimer = setInterval(this.updateProgress.bind(this), 500);
+		this.updateTimer = this.controller.window.setInterval(this.updateProgress.bind(this), 500);
 	} else {
 		if (this.updateTimer) {
-			clearInterval(this.updateTimer);
+			this.controller.window.clearInterval(this.updateTimer);
 			this.updateTimer = null;
 		}
 	}

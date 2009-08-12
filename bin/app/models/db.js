@@ -378,9 +378,16 @@ DBClass.prototype.readPrefs = function() {
 	if (prefsCookie) {
 		Prefs = prefsCookie.get();
 	}
-	if (!Prefs || Prefs.albumArt === undefined) {
-		Prefs = {albumArt: true, simple: false, singleTap: true};
+	if (!Prefs) {
+		Prefs = {};
 	}
+	if (Prefs.autoUpdate === undefined) {Prefs.autoUpdate = false;}
+	if (Prefs.enableWifi === undefined) {Prefs.enableWifi = false;}
+	if (Prefs.limitToWifi === undefined) {Prefs.limitToWifi = true;}
+	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}
+	if (Prefs.simple === undefined) {Prefs.simple = true;}
+	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
+	this.writePrefs();
 };
 
 DBClass.prototype.writePrefs = function() {

@@ -76,7 +76,7 @@ AppAssistant.prototype.setWakeup = function() {
 			method: "set",
 			parameters: {
 				"key": "com.palm.drnull.prepod.update",
-				"in": "00:05:00",
+				"in": "00:30:00",
 				"uri": "palm://com.palm.applicationManager/open",
 				"params": {
 					"id": "com.palm.drnull.prepod",
