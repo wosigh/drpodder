@@ -115,5 +115,37 @@ Utilities.prototype.escapeSpecial = function(file) {
 };
 
 
+Utilities.prototype.updateDashboard = function(title, message, params) {
+	if (!params) {params={};}
+	var appController = Mojo.Controller.appController;
+	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
+	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
+	if (Prefs.enableNotifications || cardVisible) {
+		var bannerParams = {
+			messageText: title + ": " + message
+		};
+		appController.showBanner(bannerParams, params);
+	}
+
+	if (!cardVisible && Prefs.enableNotifications) {
+		Mojo.Log.error("making dashboard");
+		var dashboardStageController = appController.getStageProxy(PrePod.DashboardStageName);
+		if (!dashboardStageController) {
+		Mojo.Log.error("creating stage");
+			var pushDashboard = function(stageController) {
+				stageController.pushScene("dashboard", title, message);
+			};
+			appController.createStageWithCallback(
+				{name: PrePod.DashboardStageName,lightweight: true},
+				pushDashboard, "dashboard");
+		} else {
+		Mojo.Log.error("swapping scene");
+			dashboardStageController.swapScene("dashboard", title, message);
+		}
+		Mojo.Log.error("making dashboard end");
+	}
+};
+
+
 
 Util = new Utilities();

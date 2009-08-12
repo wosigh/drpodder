@@ -262,27 +262,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 
 	//this.episodes.splice(this.maxDisplay);
 
-	if (this.autoDownload) {
-		var downloaded = 0;
-		for (var i=0; i<this.episodes.length; i++) {
-			e = this.episodes[i];
-			if (e.downloaded) {
-				if (this.maxDownloads > 0 && downloaded >= this.maxDownloads &&
-					!e.position) {
-					e.deleteFile();
-				} else {
-					downloaded++;
-				}
-			} else if (e.downloading) {
-				downloaded++;
-			} else if ((this.maxDownloads == "0" || downloaded < this.maxDownloads) &&
-					   !e.listened && !e.downloadTicket && e.enclosure) {
-				e.download();
-				downloaded++;
-			}
-		}
-	}
-
 	// debugging
 	//if (newEpisodeCount > newToKeep) {
 		//this.episodes.splice(0, newEpisodeCount-newToKeep);
@@ -428,9 +407,6 @@ function FeedModel(init) {
 FeedModel.prototype.items = [];
 FeedModel.prototype.ids = [];
 
-// feeds_update
-// feed_update
-// episode_download
 FeedModel.prototype.listeners = {};
 
 FeedModel.prototype.add = function(feed) {
@@ -449,5 +425,127 @@ FeedModel.prototype.listen = function(type, id, func) {
 FeedModel.prototype.unlisten = function(type, id, func) {
 };
 
-//var feedModel = {items: [], ids: []};
+FeedModel.prototype._enableWifiIfDisabled = function(status) {
+	if (status.returnValue && status.status === "serviceDisabled") {
+		Mojo.Log.error("enabledWifi");
+		this.enabledWifi = true;
+		AppAssistant.wifiService.setState(null, "enabled");
+	}
+};
+
+FeedModel.prototype.updateFeeds = function(feedIndex, callback) {
+	if (Prefs.enableWifi) {
+		this.enabledWifi = false;
+		AppAssistant.wifiService.getStatus(null, this._enableWifiIfDisabled.bind(this));
+	}
+
+	if (!feedIndex) {
+		// first time through
+		this.updatingFeeds = true;
+		feedIndex = 0;
+		if (!callback) {callback = function(){};}
+	}
+	if (feedIndex < this.items.length) {
+		var feed = this.items[feedIndex];
+		feed.updating = true;
+		callback(feedIndex, feed);
+		feed.update(function() {
+			feed.updating = false;
+			callback(feedIndex, feed);
+			this.updateFeeds(feedIndex+1, callback);
+		}.bind(this));
+	} else {
+		this.updatingFeeds = false;
+		this.download();
+		callback();
+	}
+};
+
+FeedModel.prototype.getEpisodesToDownload = function() {
+	var eps = [];
+	for (var i=0, len=this.items.length; i<len; ++i) {
+		var feed = this.items[i];
+		if (feed.autoDownload) {
+			var downloaded = 0;
+			for (var j=0, len2=feed.episodes.length; j<len2; ++j) {
+				var e = feed.episodes[j];
+				if (e.downloaded) {
+					if (feed.maxDownloads > 0 && downloaded > feed.maxDownloads &&
+						!e.position) {
+						e.deleteFile();
+					} else {
+						++downloaded;
+					}
+				} else if (e.downloading) {
+					++downloaded;
+				} else if ((feed.maxDownloads == "0" || downloaded < feed.maxDownloads) &&
+						   !e.listened && !e.downloadTicket && e.enclosure) {
+					eps.push(e);
+					++downloaded;
+				}
+			}
+		}
+	}
+	return eps;
+};
+
+FeedModel.prototype.download = function() {
+	var eps = this.getEpisodesToDownload();
+
+	if (eps.length) {
+		if (Prefs.limitToWifi) {
+			AppAssistant.wifiService.isWifiConnected(null, this._wifiCheck.bind(this, eps));
+		} else {
+			this._doDownload(eps);
+		}
+	}
+
+	if (this.enabledWifi) {
+		Mojo.Log.error("disabling wifi");
+		AppAssistant.wifiService.setState(null, "disabled");
+	}
+};
+
+FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
+	if (false && wifiConnected) {
+		this._doDownload(eps);
+	} else {
+		// popup banner saying that we couldn't download episodes
+		// because wifi wasn't enabled, maybe even do a "click to retry"
+		Mojo.Log.error("Skipping %d episode download because wifi isn't connected", eps.length);
+		var appController = Mojo.Controller.appController;
+		var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
+		                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
+		if (Prefs.enableNotifications || cardVisible) {
+			var bannerParams = {
+				messageText: eps.length + " DL" + ((eps.length===1)?"":"s") +
+				            " pending WiFi (tap to retry)"
+			};
+			appController.showBanner(bannerParams, {
+				action: "download"});
+		}
+
+		if (!cardVisible && Prefs.enableNotifications) {
+			var dashboardStageController = appController.getStageProxy(PrePod.DashboardStageName);
+			if (!dashboardStageController) {
+				var pushDashboard = function(stageController) {
+					stageController.pushScene("pendingDL", eps);
+				};
+				appController.createStageWithCallback(
+					{name: PrePod.DashboardStageName,lightweight: true},
+					pushDashboard, "dashboard");
+			} else {
+				dashboardStageController.delegateToSceneAssistant("updateDashboard", eps);
+			}
+		}
+	}
+};
+
+FeedModel.prototype._doDownload = function(eps) {
+	for (var i=0, len=eps.length; i<len; ++i) {
+		var e = eps[i];
+		e.download();
+	}
+};
+
 var feedModel = new FeedModel();

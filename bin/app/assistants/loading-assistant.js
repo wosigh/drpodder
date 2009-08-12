@@ -14,16 +14,17 @@ LoadingAssistant.prototype.setup = function() {
 };
 
 LoadingAssistant.prototype.activate = function() {
-	this.waitForFeedsReady();
+	if (!DB) {
+		DB = new DBClass();
+		DB.waitForFeeds(this.waitForFeedsReady.bind(this));
+	} else {
+		this.waitForFeedsReady();
+	}
 };
 
 LoadingAssistant.prototype.waitForFeedsReady = function() {
-	if (DB.feedsReady) {
-		this.spinnerScrim.hide();
-		this.spinnerModel.spinning = false;
-		this.controller.modelChanged(this.spinnerModel);
-		this.stageController.swapScene("feedList");
-	} else {
-		this.controller.window.setTimeout(this.waitForFeedsReady.bind(this), 200);
-	}
+	this.spinnerScrim.hide();
+	this.spinnerModel.spinning = false;
+	this.controller.modelChanged(this.spinnerModel);
+	this.stageController.swapScene("feedList");
 };

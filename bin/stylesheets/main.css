@@ -208,3 +208,7 @@
   left: 30%;
   top: 65%;
 }
+
+.dashboard-icon-prepod {
+  background: url(../icon.png);
+}

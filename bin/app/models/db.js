@@ -1,11 +1,12 @@
 var Prefs = {};
 
 function DBClass() {
-	var currentVerIndex = 0;
+}
 
 	/*
 	 // CRAP.  All that and it doesn't look like palm has implemented the changeVersion method
 	 // for db objects yet.  Which means, I have to manage my schema changes manually.  BOOO.
+	var currentVerIndex = 0;
 	do {
 		var ver = this.dbVersions[currentVerIndex];
 		try {
@@ -62,6 +63,8 @@ function DBClass() {
 	}
 	*/
 
+DBClass.prototype.waitForFeeds = function(callback) {
+	this.callback = callback;
 	this.readPrefs();
 
 	this.db = openDatabase(this.dbName, this.dbVersions[0].version);
@@ -70,14 +73,11 @@ function DBClass() {
 		//this.controller.window.setTimeout(Util.showError.bind(this, 'Error opening db', 'There was an unknown error opening the feed db'), 1000);
 		Mojo.Log.error("Error opening feed db");
 	} else {
-		this.initDB(this.loadFeeds.bind(this));
+		this.initDB();
 	}
-}
-
-//DBClass.prototype.depotOptions = { name: "feed", replace: false };
+};
 
 DBClass.prototype.dbName = "ext:PrePodFeeds";
-DBClass.prototype.feedsReady = false;
 
 // db version number, followed by the sql statements required to bring it up to the latest version
 DBClass.prototype.dbVersions = [
@@ -86,7 +86,7 @@ DBClass.prototype.dbVersions = [
 ];
 
 
-DBClass.prototype.initDB = function(callback) {
+DBClass.prototype.initDB = function() {
 	var createFeedTable = "CREATE TABLE IF NOT EXISTS 'feed' " +
 	                      "(id INTEGER PRIMARY KEY, " +
 	                      "displayOrder INTEGER, " +
@@ -120,6 +120,7 @@ DBClass.prototype.initDB = function(callback) {
 	var alterFeedTable = "ALTER TABLE feed ADD COLUMN replacements TEXT";
 	var alterEpisodeTable = "ALTER TABLE episode ADD COLUMN type TEXT";
 	var alterFeedTable2 = "ALTER TABLE feed ADD COLUMN maxDisplay INTEGER";
+	var loadFeeds = this.loadFeeds.bind(this);
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
 			function(transaction, results) {
@@ -161,7 +162,7 @@ DBClass.prototype.initDB = function(callback) {
 		transaction.executeSql(alterFeedTable, [],
 			function(transaction, results) {
 				Mojo.Log.info("Feed table altered");
-				callback();
+				loadFeeds();
 				transaction.executeSql("UPDATE feed SET maxDownloads=1", [],
 					function(transaction, results) {
 						Mojo.Log.info("Updating maxDownloads=1");
@@ -171,7 +172,7 @@ DBClass.prototype.initDB = function(callback) {
 			function(transaction, error) {
 				if (error.message === "duplicate column name: replacements") {
 					Mojo.Log.info("Feed table previously altered");
-					callback();
+					loadFeeds();
 				} else {
 					Mojo.Log.error("Error altering feed table: %j", error);
 				}
@@ -187,18 +188,6 @@ DBClass.prototype.loadFeeds = function() {
 			this.loadFeedsSuccess.bind(this),
 			function(transaction, error) {Mojo.Log.error("Error retrieving feeds: %j", error);});
 	}.bind(this));
-
-	/*
-	this.db.transaction(function(transaction) {
-		transaction.executeSql("DROP TABLE 'feed'", [],
-			function(transaction, results) { Mojo.Log.error("drop Feed table: %j", results);},
-			function(transaction, error) {Mojo.Log.error("Error dropping feed table: %j", error);});
-		transaction.executeSql("DROP TABLE 'episode'", [],
-			function(transaction, results) { Mojo.Log.error("drop Episode table: %j", results);},
-			function(transaction, error) {Mojo.Log.error("Error dropping episode table: %j", error);});
-		callback();
-	});
-	*/
 };
 
 DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
@@ -271,7 +260,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 			//}
 		}
 
-		this.feedsReady = true;
+		this.callback();
 	}
 };
 
@@ -381,6 +370,7 @@ DBClass.prototype.readPrefs = function() {
 	if (!Prefs) {
 		Prefs = {};
 	}
+	if (Prefs.enableNotifications === undefined) {Prefs.enableNotifications = true;}
 	if (Prefs.autoUpdate === undefined) {Prefs.autoUpdate = false;}
 	if (Prefs.enableWifi === undefined) {Prefs.enableWifi = false;}
 	if (Prefs.limitToWifi === undefined) {Prefs.limitToWifi = true;}
@@ -450,8 +440,8 @@ DBClass.prototype.defaultFeeds = function() {
 	feed.interval = 60000;
 	feedModel.add(feed);
 
-	this.feedsReady = true;
+	this.callback();
 	this.saveFeeds();
 };
 
-var DB = new DBClass();
+var DB;

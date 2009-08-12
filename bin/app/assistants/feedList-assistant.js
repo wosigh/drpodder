@@ -70,18 +70,6 @@ FeedListAssistant.prototype.activate = function() {
 		delete Prefs.updated;
 		DB.writePrefs();
 	} else {
-		this.waitForFeedsReady();
-	}
-};
-
-FeedListAssistant.prototype.deactivate = function() {
-	for (var i=0; i<feedModel.items.length; i++) {
-		feedModel.items[i].unlisten(this.feedUpdateHandler);
-	}
-};
-
-FeedListAssistant.prototype.waitForFeedsReady = function() {
-	if (DB.feedsReady) {
 		this.refresh();
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
@@ -92,44 +80,34 @@ FeedListAssistant.prototype.waitForFeedsReady = function() {
 		}
 		if (firstLoad) {
 			this.updateFeeds();
-		} else if (!this.updatingFeeds) {
+		} else if (!feedModel.updatingFeeds) {
 			this.cmdMenuModel.items[1].disabled = false;
 			this.controller.modelChanged(this.cmdMenuModel);
 		}
-	} else {
-		this.controller.window.setTimeout(this.waitForFeedsReady.bind(this), 200);
+	}
+};
+
+FeedListAssistant.prototype.deactivate = function() {
+	for (var i=0; i<feedModel.items.length; i++) {
+		feedModel.items[i].unlisten(this.feedUpdateHandler);
 	}
 };
 
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
-	if (!feedIndex) {
-		// first time through
-		this.updatingFeeds = true;
-		this.cmdMenuModel.items[1].disabled = true;
-		this.controller.modelChanged(this.cmdMenuModel);
-		feedIndex = 0;
-	}
-	if (feedIndex < feedModel.items.length) {
-		var feed = feedModel.items[feedIndex];
-		feed.updating = true;
-		this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
-		feed.update(function() {
-			feed.updating = false;
-			this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
-			this.updateFeeds(feedIndex+1);
-		}.bind(this));
-	} else {
-		DB.saveFeeds();
-		this.refresh();
-		this.updatingFeeds = false;
-		this.cmdMenuModel.items[1].disabled = false;
-		this.controller.modelChanged(this.cmdMenuModel);
-		this.checkForDownloads();
-	}
+	this.cmdMenuModel.items[1].disabled = true;
+	this.controller.modelChanged(this.cmdMenuModel);
+	feedModel.updateFeeds(0, this._updateFeedsCallback.bind(this));
 };
 
-FeedListAssistant.prototype.checkForDownloads = function(feedIndex, episodeIndex) {
-	// this is currently done in the feed update
+FeedListAssistant.prototype._updateFeedsCallback = function(feedIndex, feed) {
+	if (feedIndex !== undefined) {
+		this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
+	} else {
+		this.refresh();
+		this.cmdMenuModel.items[1].disabled = false;
+		this.controller.modelChanged(this.cmdMenuModel);
+		DB.saveFeeds();
+	}
 };
 
 FeedListAssistant.prototype.cleanup = function() {

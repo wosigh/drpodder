@@ -9,6 +9,7 @@
 	{"source": "javascript\/utilities.js"},
 	{"source": "javascript\/applicationManager-service.js"},
 	{"source": "javascript\/power-service.js"},
+	{"source": "javascript\/wifi-service.js"},
 	{"source": "app\/assistants\/feedList-assistant.js",
 	 "scenes": "feedList"},
 	{"source": "app\/assistants\/addFeed-assistant.js",
@@ -23,4 +24,8 @@
 	{"source": "app\/models\/feed.js"},
 	{"source": "app\/models\/episode.js"},
 	{"source": "\/usr\/palm\/frameworks\/media\/media.js"},
+	{"source": "app\/assistants\/pendingDL-assistant.js",
+	 "scenes": "pendingDL"},
+	{"source": "app\/assistants\/dashboard-assistant.js",
+	 "scenes": "dashboard"},
 ]

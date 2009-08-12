@@ -1,5 +1,6 @@
 var PrePod = {};
 PrePod.MainStageName = "PrePodMain";
+PrePod.DashboardStageName = "PrePodDashboard";
 
 function AppAssistant(){
 	AppAssistant.downloadService = new DownloadService();
@@ -7,6 +8,7 @@ function AppAssistant(){
 	AppAssistant.applicationManagerService = new ApplicationManagerService();
 	AppAssistant.powerService = new PowerService();
 	AppAssistant.mediaEventsService = new MediaEventsService();
+	AppAssistant.wifiService = new WifiService();
 
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	window.document.addEventListener(Mojo.Event.deactivate, this.onBlurHandler.bind(this));
@@ -41,12 +43,10 @@ AppAssistant.appMenuModel = {
 };
 
 AppAssistant.prototype.handleLaunch = function(launchParams) {
-	var cardStageController = this.controller.getStageController(PrePod.MainStageName);
-
 	if (!launchParams) {
+		var cardStageController = this.controller.getStageController(PrePod.MainStageName);
 		if (cardStageController) {
 			Mojo.Log.error("Main Stage exists");
-			cardStageController.popScenesTo("feedList");
 			cardStageController.activate();
 		} else {
 			var pushMainScene = function(stageController) {
@@ -57,21 +57,35 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 			this.controller.createStageWithCallback(stageArguments, pushMainScene.bind(this), "card");
 		}
 	} else {
-		Mojo.Log.error("Wakeup call!", launchParams.action);
-		switch (launchParams.action) {
-			case "updateFeeds":
-				this.setWakeup();
-				break;
-			case "somethingElse":
-				break;
+		if (!DB) {
+			DB = new DBClass();
+			DB.waitForFeeds(this.handleLaunchParams.bind(this, launchParams));
+		} else {
+			this.handleLaunchParams(launchParams);
 		}
+	}
+};
 
+AppAssistant.prototype.handleLaunchParams = function(launchParams) {
+	Mojo.Log.error("handleLaunchParams called: %s", launchParams.action);
+	switch (launchParams.action) {
+		case "updateFeeds":
+			if (Prefs.autoUpdate) {
+				feedModel.updateFeeds();
+				this.setWakeup();
+			}
+			break;
+		case "download":
+			feedModel.download();
+			break;
 	}
 };
 
 AppAssistant.prototype.setWakeup = function() {
-	// obviously, a preference needs to be here
-	if (true) {
+	// send wakeup from command line
+	// luna-send -n 1 palm://com.palm.applicationManager/open '{"id":"com.palm.drnull.prepod","params":{"action":"updateFeeds"}}'
+	// obviously, an update time preference needs to be here
+	if (Prefs.autoUpdate) {
 		this.wakeupRequest = new Mojo.Service.Request("palm://com.palm.power/timeout", {
 			method: "set",
 			parameters: {
