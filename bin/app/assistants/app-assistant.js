@@ -1,6 +1,7 @@
 var PrePod = {};
 PrePod.MainStageName = "PrePodMain";
 PrePod.DashboardStageName = "PrePodDashboard";
+PrePod.DownloadingStageName = "PrePodDownloading";
 
 function AppAssistant(){
 	AppAssistant.downloadService = new DownloadService();
@@ -43,8 +44,11 @@ AppAssistant.appMenuModel = {
 };
 
 AppAssistant.prototype.handleLaunch = function(launchParams) {
-	if (!launchParams) {
+	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(PrePod.MainStageName);
+		var dashboardStageController = this.controller.getStageProxy(PrePod.DashboardStageName);
+		Util.closeDashboard(PrePod.DashboardStageName);
+		Util.closeDashboard(PrePod.DownloadingStageName);
 		if (cardStageController) {
 			Mojo.Log.error("Main Stage exists");
 			cardStageController.activate();
@@ -90,7 +94,7 @@ AppAssistant.prototype.setWakeup = function() {
 			method: "set",
 			parameters: {
 				"key": "com.palm.drnull.prepod.update",
-				"in": "00:30:00",
+				"in": "01:00:00",
 				"uri": "palm://com.palm.applicationManager/open",
 				"params": {
 					"id": "com.palm.drnull.prepod",

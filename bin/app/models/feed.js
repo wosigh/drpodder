@@ -48,7 +48,6 @@ function Feed(init) {
 		this.numDownloaded = 0;
 		this.numStarted = 0;
 	}
-	this.listeners = [];
 }
 
 Feed.prototype.update = function(callback, url) {
@@ -61,6 +60,9 @@ Feed.prototype.update = function(callback, url) {
 	if (url) {
 		this.url = url;
 	}
+
+	var feedTitle = (this.title)?this.title:"Unknown feed title";
+	Util.dashboard(PrePod.DashboardStageName, "Updating Feed", feedTitle, true);
 
 	//this.ajaxStartDate = (new Date()).getTime();
 	//Mojo.Log.error("making ajax request");
@@ -188,7 +190,8 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			null, this.albumArt, ".albumArt", newAlbumArt,
 			function(event) {
 				if (event.completed) {
-					this.notify("REFRESH");
+					Mojo.Controller.getAppController().sendToNotificationChain({
+						type: "feedUpdated", feed: this});
 				}
 			}.bind(this));
 		this.albumArt = "/media/internal/PrePod/.albumArt/" + newAlbumArt;
@@ -235,6 +238,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		var e = this.guid[episode.guid];
 		if (e === undefined) {
 			episode.feedId = this.id;
+			episode.feedObject = this;
 			// record the title of the topmost episode
 			if (newEpisodeCount === 0) {
 				this.details = episode.title;
@@ -245,7 +249,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
 			episode.updateUIElements();
 			newEpisodeCount++;
-			episode.listen(this.episodeUpdate.bind(this));
 			updateCheckStatus = UPDATECHECK_UPDATES;
 		} else {
 			// it already exists, check that the enclosure url is up to date
@@ -321,81 +324,82 @@ Feed.prototype.setReplacements = function(arr) {
 	}
 };
 
-Feed.prototype.listen = function(callback) {
-	this.listeners.push(callback);
-};
-
-Feed.prototype.unlisten = function(callback) {
-	for (var i=0; i<this.listeners.length; i++) {
-		if (callback === this.listeners[i]) {
-			this.listeners.splice(i, 1);
-		}
-	}
-};
-
-Feed.prototype.notify = function(action, extra) {
-	for (var i=0; i<this.listeners.length; i++) {
-		//Mojo.Log.error("Feed.notify %d", i);
-		this.listeners[i](action, this, extra);
-		//Mojo.Log.error("Feed.notify %d done", i);
-	}
-};
-
-Feed.prototype.listened = function() {
+Feed.prototype.listened = function(ignore) {
 	for (var i=0; i<this.episodes.length; i++) {
-		this.episodes[i].setListened(false);
+		this.episodes[i].setListened(true);
 	}
-	this.notify("REFRESH");
+	if (!ignore) {
+		this.updated();
+		this.updatedEpisodes();
+	}
+	this.save();
+};
+
+Feed.prototype.unlistened = function(ignore) {
+	for (var i=0; i<this.episodes.length; i++) {
+		this.episodes[i].setUnlistened(true);
+	}
+	if (!ignore) {
+		this.updated();
+		this.updatedEpisodes();
+	}
+	this.save();
+};
+
+Feed.prototype.downloadingEpisode = function(ignore) {
+	this.downloadCount++;
+	this.downloading = true;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.downloadFinished = function(ignore) {
+	this.downloadCount--;
+	this.downloading = (this.downloadCount > 0);
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.episodeListened = function(ignore) {
+	this.numNew--;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.episodeUnlistened = function(ignore) {
+	this.numNew++;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.episodeDownloaded = function(ignore) {
+	this.numDownloaded++;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.episodeDeleted = function(ignore) {
+	this.numDownloaded--;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.episodeBookmarked = function(ignore) {
+	this.numStarted++;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.episodeBookmarkCleared = function(ignore) {
+	this.numStarted--;
+	if (!ignore) {this.updated();}
+};
+
+Feed.prototype.save = function() {
 	DB.saveFeed(this);
 };
 
-Feed.prototype.unlistened = function() {
-	for (var i=0; i<this.episodes.length; i++) {
-		this.episodes[i].setUnlistened(false);
-	}
-	this.notify("REFRESH");
-	DB.saveFeed(this);
+Feed.prototype.updated = function() {
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "feedUpdated", feed: this});
 };
 
-Feed.prototype.episodeUpdate = function(action, episode, extra) {
-	if (extra === undefined) {extra = {};}
-	if (extra.needRefresh === undefined) {extra.needRefresh = true;}
-	if (extra.needSave === undefined) {extra.needSave = true;}
-	//Mojo.Log.error("Feed: episode [%s] said: %s, needRefresh=%d", episode.title, action, extra.needRefresh);
-	switch (action) {
-		case "LISTENED":
-			if (episode.listened) { this.numNew--; }
-			else                  { this.numNew++; }
-			break;
-		case "DOWNLOADED":
-			if (episode.downloaded) { this.numDownloaded++;}
-			else                    { this.numDownloaded--; }
-			break;
-		case "BOOKMARK":
-			if (episode.position) { this.numStarted++; }
-			else                  { this.numStarted--; }
-			break;
-		case "DOWNLOADSTART":
-			this.downloadCount++;
-			this.downloading = true;
-			break;
-		case "DOWNLOADABORT":
-		case "DOWNLOADCANCEL":
-		case "DOWNLOADCOMPLETE":
-			this.downloadCount--;
-			this.downloading = (this.downloadCount > 0);
-			break;
-		default:
-			extra.needRefresh = false;
-			extra.needSave = false;
-	}
-
-	if (extra.needRefresh) {
-		this.notify("REFRESH");
-	}
-	if (extra.needSave) {
-		DB.saveFeed(this);
-	}
+Feed.prototype.updatedEpisodes = function() {
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "feedEpisodesUpdated", feed: this});
 };
 
 
@@ -407,8 +411,6 @@ function FeedModel(init) {
 FeedModel.prototype.items = [];
 FeedModel.prototype.ids = [];
 
-FeedModel.prototype.listeners = {};
-
 FeedModel.prototype.add = function(feed) {
 	this.items.push(feed);
 	this.ids[feed.id] = feed;
@@ -419,12 +421,6 @@ FeedModel.prototype.getFeedById = function(id) {
 	return this.ids[id];
 };
 
-FeedModel.prototype.listen = function(type, id, func) {
-};
-
-FeedModel.prototype.unlisten = function(type, id, func) {
-};
-
 FeedModel.prototype._enableWifiIfDisabled = function(status) {
 	if (status.returnValue && status.status === "serviceDisabled") {
 		Mojo.Log.error("enabledWifi");
@@ -433,7 +429,7 @@ FeedModel.prototype._enableWifiIfDisabled = function(status) {
 	}
 };
 
-FeedModel.prototype.updateFeeds = function(feedIndex, callback) {
+FeedModel.prototype.updateFeeds = function(feedIndex) {
 	if (Prefs.enableWifi) {
 		this.enabledWifi = false;
 		AppAssistant.wifiService.getStatus(null, this._enableWifiIfDisabled.bind(this));
@@ -441,23 +437,28 @@ FeedModel.prototype.updateFeeds = function(feedIndex, callback) {
 
 	if (!feedIndex) {
 		// first time through
+		Util.banner("Updating PrePod Feeds");
 		this.updatingFeeds = true;
+		Mojo.Controller.getAppController().sendToNotificationChain({
+			type: "feedsUpdating", value: true});
 		feedIndex = 0;
-		if (!callback) {callback = function(){};}
 	}
 	if (feedIndex < this.items.length) {
 		var feed = this.items[feedIndex];
 		feed.updating = true;
-		callback(feedIndex, feed);
+		feed.updated();
 		feed.update(function() {
 			feed.updating = false;
-			callback(feedIndex, feed);
-			this.updateFeeds(feedIndex+1, callback);
+			feed.updated();
+			feed.updatedEpisodes();
+			this.updateFeeds(feedIndex+1);
 		}.bind(this));
 	} else {
 		this.updatingFeeds = false;
+		DB.saveFeeds();
 		this.download();
-		callback();
+		Mojo.Controller.getAppController().sendToNotificationChain({
+			type: "feedsUpdating", value: false});
 	}
 };
 
@@ -498,6 +499,8 @@ FeedModel.prototype.download = function() {
 		} else {
 			this._doDownload(eps);
 		}
+	} else {
+		Util.closeDashboard(PrePod.DashboardStageName);
 	}
 
 	if (this.enabledWifi) {
@@ -507,37 +510,16 @@ FeedModel.prototype.download = function() {
 };
 
 FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
-	if (false && wifiConnected) {
+	if (wifiConnected) {
 		this._doDownload(eps);
 	} else {
 		// popup banner saying that we couldn't download episodes
 		// because wifi wasn't enabled, maybe even do a "click to retry"
 		Mojo.Log.error("Skipping %d episode download because wifi isn't connected", eps.length);
-		var appController = Mojo.Controller.appController;
-		var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
-		                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
-		if (Prefs.enableNotifications || cardVisible) {
-			var bannerParams = {
-				messageText: eps.length + " DL" + ((eps.length===1)?"":"s") +
-				            " pending WiFi (tap to retry)"
-			};
-			appController.showBanner(bannerParams, {
-				action: "download"});
-		}
-
-		if (!cardVisible && Prefs.enableNotifications) {
-			var dashboardStageController = appController.getStageProxy(PrePod.DashboardStageName);
-			if (!dashboardStageController) {
-				var pushDashboard = function(stageController) {
-					stageController.pushScene("pendingDL", eps);
-				};
-				appController.createStageWithCallback(
-					{name: PrePod.DashboardStageName,lightweight: true},
-					pushDashboard, "dashboard");
-			} else {
-				dashboardStageController.delegateToSceneAssistant("updateDashboard", eps);
-			}
-		}
+		Util.banner(eps.length + " Download" + ((eps.length===1)?"":"s") +
+				            " pending WiFi");
+		Util.dashboard(PrePod.DashboardStageName, "Downloads pending WiFi",
+						eps.map(function(e){return e.title;}), true);
 	}
 };
 
@@ -546,6 +528,7 @@ FeedModel.prototype._doDownload = function(eps) {
 		var e = eps[i];
 		e.download();
 	}
+	Util.closeDashboard(PrePod.DashboardStageName);
 };
 
 var feedModel = new FeedModel();

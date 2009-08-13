@@ -2,7 +2,6 @@ function EpisodeDetailsAssistant(episode, autoPlay, resume) {
 	this.episodeObject = episode;
 	this.resume = resume;
 	this.autoPlay = autoPlay;
-	this.episodeUpdateHandler = this.episodeUpdate.bind(this);
 }
 
 EpisodeDetailsAssistant.prototype.progressAttr = {
@@ -100,8 +99,6 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 		AppAssistant.mediaEventsService.registerForMediaEvents(this.controller, this.mediaKeyPressHandler.bind(this));
 
 		this.updateTimer = null;
-
-		this.episodeObject.listen(this.episodeUpdateHandler);
 	}
 };
 
@@ -117,21 +114,6 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
 		this.setTimer(false);
 		this.bookmark();
-		this.episodeObject.unlisten(this.episodeUpdateHandler);
-	}
-};
-
-EpisodeDetailsAssistant.prototype.episodeUpdate = function(action, episode) {
-	//Mojo.Log.error("EpisodeDA: episode [%s] said: %s", episode.title, action);
-	switch (action) {
-		case "BOOKMARK":
-			DB.saveEpisode(episode);
-			break;
-		case "BOOKMARKUPDATE":
-			DB.saveEpisode(episode);
-			break;
-		case "ACTION":
-			break;
 	}
 };
 

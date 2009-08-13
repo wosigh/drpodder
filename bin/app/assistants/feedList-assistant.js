@@ -73,9 +73,9 @@ FeedListAssistant.prototype.activate = function() {
 		this.refresh();
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
-			feedModel.items[i].listen(this.feedUpdateHandler);
 			if (feedModel.items[i].episodes.length > 0) {
 				firstLoad = false;
+				break;
 			}
 		}
 		if (firstLoad) {
@@ -88,26 +88,10 @@ FeedListAssistant.prototype.activate = function() {
 };
 
 FeedListAssistant.prototype.deactivate = function() {
-	for (var i=0; i<feedModel.items.length; i++) {
-		feedModel.items[i].unlisten(this.feedUpdateHandler);
-	}
 };
 
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
-	this.cmdMenuModel.items[1].disabled = true;
-	this.controller.modelChanged(this.cmdMenuModel);
-	feedModel.updateFeeds(0, this._updateFeedsCallback.bind(this));
-};
-
-FeedListAssistant.prototype._updateFeedsCallback = function(feedIndex, feed) {
-	if (feedIndex !== undefined) {
-		this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
-	} else {
-		this.refresh();
-		this.cmdMenuModel.items[1].disabled = false;
-		this.controller.modelChanged(this.cmdMenuModel);
-		DB.saveFeeds();
-	}
+	feedModel.updateFeeds();
 };
 
 FeedListAssistant.prototype.cleanup = function() {
@@ -203,8 +187,6 @@ FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 				var episode = feed.episodes[i];
 				episode.cancelDownload();
 			}
-			this.feedList.mojo.noticeUpdatedItems(feedIndex, feed);
-			DB.saveFeed(feed);
 			break;
 	}
 
@@ -247,5 +229,28 @@ FeedListAssistant.prototype.feedUpdate = function(action, feed) {
 			break;
 		case "ACTION":
 			break;
+	}
+};
+
+FeedListAssistant.prototype.considerForNotification = function(params) {
+	if (params) {
+		switch (params.type) {
+			case "feedUpdated":
+				var feedIndex = params.feedIndex;
+				if (feedIndex === undefined) {
+					feedIndex = feedModel.items.indexOf(params.feed);
+				}
+				if (feedIndex !== -1) {
+					this.feedList.mojo.noticeUpdatedItems(feedIndex, [params.feed]);
+				}
+				break;
+			case "feedsUpdating":
+				this.cmdMenuModel.items[1].disabled = params.value;
+				this.controller.modelChanged(this.cmdMenuModel);
+				if (!params.value) {
+					this.refresh();
+				}
+				break;
+		}
 	}
 };

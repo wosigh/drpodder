@@ -2,9 +2,6 @@ function EpisodeListAssistant(feedObject) {
 	this.feedObject = feedObject;
 	this.episodeModel = {items: feedObject.episodes};
 
-	this.feedUpdateHandler = this.feedUpdate.bind(this);
-	this.episodeUpdateHandler = this.episodeUpdate.bind(this);
-
 	this.appController = Mojo.Controller.getAppController();
 	this.stageController = this.appController.getStageController(PrePod.MainStageName);
 }
@@ -64,6 +61,7 @@ EpisodeListAssistant.prototype.setup = function() {
 
 
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
+	this.episodeList = this.controller.get("episodeListWgt");
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
 
@@ -124,19 +122,9 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 
 EpisodeListAssistant.prototype.activate = function(changes) {
 	this.refreshNow();
-	this.feedObject.listen(this.feedUpdateHandler);
-
-	for (var i=0; i<this.feedObject.episodes.length; i++) {
-		this.feedObject.episodes[i].listen(this.episodeUpdateHandler);
-	}
 };
 
 EpisodeListAssistant.prototype.deactivate = function(changes) {
-	this.feedObject.unlisten(this.feedUpdateHandler);
-
-	for (var i=0; i<this.feedObject.episodes.length; i++) {
-		this.feedObject.episodes[i].unlisten(this.episodeUpdateHandler);
-	}
 };
 
 EpisodeListAssistant.prototype.cleanup = function(changes) {
@@ -173,8 +161,10 @@ EpisodeListAssistant.prototype.handleDelete = function(event) {
 	if (event.item.downloading) {
 		event.item.cancelDownload();
 	} else {
-		event.item.setListened();
-		event.item.deleteFile();
+		event.item.setListened(true);
+		event.item.deleteFile(true);
+		event.item.updateUIElements();
+		event.item.save();
 	}
 };
 
@@ -332,24 +322,30 @@ EpisodeListAssistant.prototype.updatePercent = function(episode) {
 	nodes[0].style.width = episode.downloadingPercent + "%";
 };
 
-EpisodeListAssistant.prototype.feedUpdate = function(action, feed) {
-	//Mojo.Log.error("EpisodeLA: feed [%s] said: %s", feed.title, action);
-	switch (action) {
-		case "REFRESH":
-			this.refreshNow();
-			break;
-		case "ACTION":
-			break;
-	}
-};
-
-EpisodeListAssistant.prototype.episodeUpdate = function(action, episode) {
-	//Mojo.Log.error("EpisodeLA: episode [%s] said: %s", episode.title, action);
-	switch (action) {
-		case "DOWNLOADPROGRESS":
-			this.updatePercent(episode);
-			break;
-		case "ACTION":
-			break;
+EpisodeListAssistant.prototype.considerForNotification = function(params) {
+	if (params) {
+		switch (params.type) {
+			case "feedEpisodesUpdated":
+				if (params.feed === this.feedObject) {
+					this.refresh();
+				}
+				break;
+			case "episodeUpdated":
+				if (params.episode.feedObject === this.feedObject) {
+					var episodeIndex = params.episodeIndex;
+					if (episodeIndex === undefined) {
+						episodeIndex = this.episodeModel.items.indexOf(params.episode);
+					}
+					if (episodeIndex !== -1) {
+						this.episodeList.mojo.noticeUpdatedItems(episodeIndex, [params.episode]);
+					}
+				}
+				break;
+			case "downloadProgress":
+				if (params.episode.feedObject === this.feedObject) {
+					this.updatePercent(params.episode);
+				}
+				break;
+		}
 	}
 };

@@ -229,6 +229,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 			var f = feedModel.getFeedById(results.rows.item(i).feedId);
 			//if (f.episodes.length < f.maxDisplay) {
 				var e = new Episode(results.rows.item(i));
+				e.feedObject = f;
 				if (e.enclosure === "undefined") {e.enclosure = null;}
 				if (e.type === "undefined") {e.type = null;}
 				if (e.pubDate === "undefined") {e.pubDate = null;}
@@ -245,8 +246,6 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 					}
 				}
 
-				e.listen(f.episodeUpdate.bind(f));
-
 				if (e.downloadTicket) {
 					e.downloading = true;
 					e.downloadActivity();
@@ -256,12 +255,11 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						e.downloadingCallback.bind(e));
 				}
 
-				e.updateUIElements();
+				e.updateUIElements(false);
 			//}
 		}
-
-		this.callback();
 	}
+	this.callback();
 };
 
 DBClass.prototype.saveFeeds = function() {

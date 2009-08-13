@@ -31,9 +31,7 @@ function Episode(init) {
 		this.position = 0;
 		this.type = null;
 	}
-	this.listeners = [];
 	this.downloading = false;
-
 }
 
 Episode.prototype.findLinks = /(\b(https?|ftp|file):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%=~_|])/ig;
@@ -57,25 +55,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	this.type = Util.xmlTagAttributeValue(xmlObject, "enclosure", "type");
 };
 
-Episode.prototype.listen = function(callback) {
-	this.listeners.unshift(callback);
-};
-
-Episode.prototype.unlisten = function(callback) {
-	for (var i=0; i<this.listeners.length; i++) {
-		if (callback === this.listeners[i]) {
-			this.listeners.splice(i, 1);
-		}
-	}
-};
-
-Episode.prototype.notify = function(action, extra) {
-	for (var i=0; i<this.listeners.length; i++) {
-		this.listeners[i](action, this, extra);
-	}
-};
-
-Episode.prototype.updateUIElements = function() {
+Episode.prototype.updateUIElements = function(ignore) {
 	if (this.downloading) {
 		if (this.listened) {
 			this.indicatorColor = "gray";
@@ -103,29 +83,40 @@ Episode.prototype.updateUIElements = function() {
 			this.statusIcon = "Knob Help.png";
 		}
 	}
+	if (!ignore) {
+		Mojo.Controller.getAppController().sendToNotificationChain({
+			type: "episodeUpdated", episode: this});
+	}
 };
 
-Episode.prototype.setListened = function(needRefresh) {
+Episode.prototype.save = function(ignore) {
+	if (!ignore) {DB.saveEpisode(this);}
+};
+
+Episode.prototype.setListened = function(ignore) {
 	if (!this.listened && this.enclosure) {
 		this.listened = true;
-		this.updateUIElements();
-		this.notify("LISTENED", {needRefresh: needRefresh, needSave: needRefresh});
+		this.updateUIElements(ignore);
+		this.save(ignore);
+		this.feedObject.episodeListened(ignore);
 	}
 };
 
-Episode.prototype.setUnlistened = function(needRefresh) {
+Episode.prototype.setUnlistened = function(ignore) {
 	if (this.listened && this.enclosure) {
 		this.listened = false;
-		this.updateUIElements();
-		this.notify("LISTENED", {needRefresh: needRefresh, needSave: needRefresh});
+		this.updateUIElements(ignore);
+		this.save(ignore);
+		this.feedObject.episodeUnlistened(ignore);
 	}
 };
 
-Episode.prototype.setDownloaded = function(needRefresh) {
+Episode.prototype.setDownloaded = function(ignore) {
 	if (!this.downloaded) {
 		this.downloaded = true;
-		this.updateUIElements();
-		this.notify("DOWNLOADED", {needRefresh: needRefresh, needSave: needRefresh});
+		this.updateUIElements(ignore);
+		this.save(ignore);
+		this.feedObject.episodeDownloaded(ignore);
 	}
 };
 
@@ -138,11 +129,10 @@ Episode.prototype.bookmark = function(pos) {
 	} else {
 		this.bookmarkPercent = 0;
 	}
+	this.save();
 
 	if (newBookmark) {
-		this.notify("BOOKMARK");
-	} else {
-		this.notify("BOOKMARKUPDATE");
+		this.feedObject.episodeBookmarked();
 	}
 };
 
@@ -150,23 +140,21 @@ Episode.prototype.clearBookmark = function() {
 	if (this.position) {
 		this.position = 0;
 		this.bookmarkPercent = 0;
-		this.notify("BOOKMARK");
+		this.feedObject.episodeBookmarkCleared();
 	}
 };
 
 Episode.prototype.download = function() {
-	if (this.feedId) {
-		this.deleteFile();
-		Mojo.Log.error("Downloading %s", this.enclosure);
-		Mojo.Log.error("We will call it %s", this.getDownloadFilename());
-		if (this.enclosure) {
-			this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
-																		Util.escapeSpecial(feedModel.getFeedById(this.feedId).title),
-																		this.getDownloadFilename(),
-																		this.downloadingCallback.bind(this));
-		}
-	} else {
-		this.setTimeout(this.download.bind(this), 5000);
+	this.deleteFile();
+	Util.banner("Downloading: " + this.title);
+	Util.dashboard(PrePod.DownloadingStageName, "Downloading", this.title);
+	Mojo.Log.error("Downloading %s", this.enclosure);
+	Mojo.Log.error("We will call it %s", this.getDownloadFilename());
+	if (this.enclosure) {
+		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
+																	Util.escapeSpecial(this.feedObject.title),
+																	this.getDownloadFilename(),
+																	this.downloadingCallback.bind(this));
 	}
 };
 
@@ -239,7 +227,7 @@ Episode.prototype.getDownloadFilename = function() {
 };
 
 Episode.prototype.deleteTempFile = function() {
-	var filename = "/media/internal/PrePod/" + Util.escapeSpecial(feedModel.getFeedById(this.feedId).title);
+	var filename = "/media/internal/PrePod/" + Util.escapeSpecial(this.feedObject.title);
 	filename += "/." + this.getDownloadFilename();
 	Mojo.Log.error("deleting temp file: %s", filename);
 	AppAssistant.mediaService.deleteFile(null, filename, function(event) {});
@@ -253,8 +241,9 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadingPercent = 0;
 		if (!this.downloading) {
 			this.downloading = true;
-			this.updateUIElements(this);
-			this.notify("DOWNLOADSTART");
+			this.updateUIElements();
+			this.save();
+			this.feedObject.downloadingEpisode();
 			this.downloadActivity();
 		}
 	} else if (this.downloading && event.completed === false) {
@@ -262,14 +251,14 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloading = false;
 		this.downloadTicket = 0;
 		this.downloadingPercent = 0;
-		this.updateUIElements(this);
+		this.updateUIElements();
+		this.save();
+		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
 		// if the user didn't do this, let them know what happened
+		this.feedObject.downloadFinished();
 		if (!event.aborted) {
 			Mojo.Log.error("Download error=%j", event);
 			Util.showError("Download aborted", "There was an error downloading url:"+this.enclosure);
-			this.notify("DOWNLOADABORT");
-		} else {
-			this.notify("DOWNLOADCANCEL");
 		}
 	} else if (this.downloading && event.completed && event.completionStatusCode === 200) {
 		//success!
@@ -280,10 +269,14 @@ Episode.prototype.downloadingCallback = function(event) {
 
 		this.file = event.target;
 
-		this.setDownloaded(false);
-		this.setUnlistened(false);
+		this.setDownloaded(true);
+		this.setUnlistened(true);
+		this.updateUIElements();
+		this.save();
+		this.feedObject.downloadFinished();
 
-		this.notify("DOWNLOADCOMPLETE");
+		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
+		Util.dashboard(PrePod.DashboardStageName, "Downloaded", this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.error("Redirecting...", event.target);
@@ -291,7 +284,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloading = false;
 		this.downloadingPercent = 0;
 
-		this.notify("DOWNLOADCOMPLETE");
+		this.feedObject.downloadFinished();
 
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
@@ -315,12 +308,13 @@ Episode.prototype.downloadingCallback = function(event) {
 				if (redirect !== undefined) {
 					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
 					this.downloadRequest = AppAssistant.downloadService.download(null, redirect,
-						Util.escapeSpecial(feedModel.getFeedById(this.feedId).title),
+						Util.escapeSpecial(this.feedObject.title),
 						this.getDownloadFilename(),
 						this.downloadingCallback.bind(this));
 				} else {
 					Mojo.Log.error("No download link found! [%s]", transport.responseText);
-					this.updateUIElements(this);
+					this.updateUIElements();
+					this.save();
 				}
 			}.bind(this)
 		});
@@ -329,8 +323,10 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
-		this.updateUIElements(this);
-		this.notify("DOWNLOADABORT");
+		this.updateUIElements();
+		this.save();
+		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
+		this.feedObject.downloadFinished();
 	} else if (this.downloading) {
 		var per = 0;
 		// if amountTotal is < 2048 or so, we'll assume it's a redirect
@@ -339,12 +335,14 @@ Episode.prototype.downloadingCallback = function(event) {
 		}
 		if (this.downloadingPercent !== per) {
 			this.downloadingPercent = per;
-			this.notify("DOWNLOADPROGRESS");
+			Mojo.Controller.getAppController().sendToNotificationChain({
+				type: "downloadProgress", episode: this});
 		}
 	} else if (event.aborted || this.downloadCanceled) {
 		this.deleteTempFile();
 		this.downloadCanceled = false;
 		Mojo.Log.error("Got the cancel event, but it has already been handled");
+		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
 	} else {
 		this.deleteTempFile();
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
@@ -352,7 +350,8 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadTicket = 0;
 		// this.downloading = false; // must already be false
 		this.downloadingPercent = 0;
-		this.updateUIElements(this);
+		this.updateUIElements();
+		this.save();
 		// this.notify("DOWNLOADABORT"); // can't notify, or count would be messed up
 	}
 };
@@ -367,25 +366,27 @@ Episode.prototype.downloadActivity = function() {
 	}
 };
 
-Episode.prototype.deleteFile = function(refresh) {
+Episode.prototype.deleteFile = function(ignore) {
 	if (this.downloaded) {
 		AppAssistant.mediaService.deleteFile(null, this.file, function() {});
 		this.downloaded = false;
 		this.file = null;
-		this.updateUIElements();
-		this.notify("DOWNLOADED", {needRefresh: refresh, needSave: refresh});
+		this.updateUIElements(ignore);
+		this.save(ignore);
+		this.feedObject.episodeDeleted();
 	}
 };
 
-Episode.prototype.cancelDownload = function(refresh) {
+Episode.prototype.cancelDownload = function(ignore) {
 	if (this.downloading) {
 		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
-		this.updateUIElements(this);
+		this.updateUIElements(ignore);
+		this.save(ignore);
 		this.downloadCanceled = true;
-		this.notify("DOWNLOADCANCEL", {needRefresh: refresh, needSave: refresh});
+		this.feedObject.downloadFinished();
 		Mojo.Log.error("Canceling download");
 	}
 };

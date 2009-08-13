@@ -114,36 +114,53 @@ Utilities.prototype.escapeSpecial = function(file) {
 	return file;
 };
 
-
-Utilities.prototype.updateDashboard = function(title, message, params) {
-	if (!params) {params={};}
+Utilities.prototype.banner = function(message) {
 	var appController = Mojo.Controller.appController;
 	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
 	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
 	if (Prefs.enableNotifications || cardVisible) {
 		var bannerParams = {
-			messageText: title + ": " + message
+			messageText: message
 		};
-		appController.showBanner(bannerParams, params);
+		appController.showBanner(bannerParams, {});
 	}
+};
 
+Utilities.prototype.dashboard = function(stageName, title, message, clearMessages) {
+	var appController = Mojo.Controller.appController;
+	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
+	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
 	if (!cardVisible && Prefs.enableNotifications) {
-		Mojo.Log.error("making dashboard");
-		var dashboardStageController = appController.getStageProxy(PrePod.DashboardStageName);
-		if (!dashboardStageController) {
-		Mojo.Log.error("creating stage");
+		var cont = appController.getStageProxy(stageName);
+		if (!cont) {
 			var pushDashboard = function(stageController) {
 				stageController.pushScene("dashboard", title, message);
 			};
 			appController.createStageWithCallback(
-				{name: PrePod.DashboardStageName,lightweight: true},
+				{name: stageName,lightweight: true},
 				pushDashboard, "dashboard");
 		} else {
-		Mojo.Log.error("swapping scene");
-			dashboardStageController.swapScene("dashboard", title, message);
+			cont.delegateToSceneAssistant("sendMessage", title, message, clearMessages);
 		}
-		Mojo.Log.error("making dashboard end");
 	}
+};
+
+Utilities.prototype.removeMessage = function(stageName, title, message) {
+	var appController = Mojo.Controller.appController;
+	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
+	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
+	if (!cardVisible && Prefs.enableNotifications) {
+		var cont = appController.getStageProxy(stageName);
+		if (cont) {
+			cont.delegateToSceneAssistant("removeMessage", title, message);
+		}
+	}
+};
+
+Utilities.prototype.closeDashboard = function(stageName) {
+	var appController = Mojo.Controller.appController;
+	var cont = appController.getStageProxy(stageName);
+	if (cont) {cont.window.close();}
 };
 
 

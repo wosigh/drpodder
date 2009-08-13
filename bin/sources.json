@@ -24,8 +24,6 @@
 	{"source": "app\/models\/feed.js"},
 	{"source": "app\/models\/episode.js"},
 	{"source": "\/usr\/palm\/frameworks\/media\/media.js"},
-	{"source": "app\/assistants\/pendingDL-assistant.js",
-	 "scenes": "pendingDL"},
 	{"source": "app\/assistants\/dashboard-assistant.js",
 	 "scenes": "dashboard"},
 ]
