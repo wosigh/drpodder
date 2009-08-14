@@ -141,15 +141,18 @@ Episode.prototype.clearBookmark = function() {
 		this.position = 0;
 		this.bookmarkPercent = 0;
 		this.feedObject.episodeBookmarkCleared();
+		this.updateUIElements();
+		this.save();
 	}
 };
 
-Episode.prototype.download = function() {
+Episode.prototype.download = function(silent) {
 	this.deleteFile();
-	Util.banner("Downloading: " + this.title);
-	Util.dashboard(PrePod.DownloadingStageName, "Downloading", this.title);
-	Mojo.Log.error("Downloading %s", this.enclosure);
-	Mojo.Log.error("We will call it %s", this.getDownloadFilename());
+	if (!silent) {
+		Util.banner("Downloading: " + this.title);
+		Util.dashboard(PrePod.DownloadingStageName, "Downloading", this.title);
+	}
+	Mojo.Log.error("Downloading %s as %s", this.enclosure, this.getDownloadFilename());
 	if (this.enclosure) {
 		this.downloadRequest = AppAssistant.downloadService.download(null, this.enclosure,
 																	Util.escapeSpecial(this.feedObject.title),
@@ -276,7 +279,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.feedObject.downloadFinished();
 
 		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
-		Util.dashboard(PrePod.DashboardStageName, "Downloaded", this.title);
+		Util.dashboard(PrePod.DownloadedStageName, "Downloaded", this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.error("Redirecting...", event.target);

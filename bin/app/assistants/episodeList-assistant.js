@@ -255,7 +255,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 						if (episode.downloaded) {
 							this.play(episode, true, true);
 						} else {
-							episode.download();
+							episode.download(true);
 						}
 					}
 				}
@@ -284,7 +284,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 			episode.cancelDownload();
 			break;
 		case "download-cmd":
-			episode.download();
+			episode.download(true);
 			break;
 		case "stream-cmd":
 			this.play(episode, true, true);

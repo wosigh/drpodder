@@ -2,6 +2,7 @@ var PrePod = {};
 PrePod.MainStageName = "PrePodMain";
 PrePod.DashboardStageName = "PrePodDashboard";
 PrePod.DownloadingStageName = "PrePodDownloading";
+PrePod.DownloadedStageName = "PrePodDownloaded";
 
 function AppAssistant(){
 	AppAssistant.downloadService = new DownloadService();
@@ -12,22 +13,30 @@ function AppAssistant(){
 	AppAssistant.wifiService = new WifiService();
 
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
-	window.document.addEventListener(Mojo.Event.deactivate, this.onBlurHandler.bind(this));
-	window.document.addEventListener(Mojo.Event.activate, this.onFocusHandler.bind(this));
+	Mojo.Log.error("Here");
+	Mojo.Event.listen(window.document, Mojo.Event.deactivate, this.onBlurHandler.bind(this));
+	Mojo.Event.listen(window.document, Mojo.Event.activate, this.onFocusHandler.bind(this));
+	Mojo.Log.error("There");
 	this.setWakeup();
 }
 
 AppAssistant.prototype.onBlurHandler = function() {
+	Mojo.Log.error("onBlur");
 	if (this.foregroundVolumeMarker) {
+		Mojo.Log.error("onBlur canceling foreground");
 		this.foregroundVolumeMarker.cancel();
 		this.foregroundVolumeMarker = null;
 	}
+	Mojo.Log.error("onBlur end");
 };
 
 AppAssistant.prototype.onFocusHandler = function() {
+	Mojo.Log.error("onFocus");
 	if (!this.foregroundVolumeMarker) {
+		Mojo.Log.error("onFocus foreground");
 		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	}
+	Mojo.Log.error("onFocus end");
 };
 
 AppAssistant.appMenuAttr = {omitDefaultItems: true};
@@ -46,9 +55,9 @@ AppAssistant.appMenuModel = {
 AppAssistant.prototype.handleLaunch = function(launchParams) {
 	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(PrePod.MainStageName);
-		var dashboardStageController = this.controller.getStageProxy(PrePod.DashboardStageName);
 		Util.closeDashboard(PrePod.DashboardStageName);
 		Util.closeDashboard(PrePod.DownloadingStageName);
+		Util.closeDashboard(PrePod.DownloadedStageName);
 		if (cardStageController) {
 			Mojo.Log.error("Main Stage exists");
 			cardStageController.activate();

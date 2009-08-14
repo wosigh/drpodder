@@ -12,7 +12,9 @@ PreferencesAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("wifiToggle",
 		{},
-		{ value : Prefs.enableWifi });
+		{ value : Prefs.enableWifi});
+
+	this.controller.get("wifiToggleDiv").hide();
 
 	this.controller.setupWidget("limitToWifiToggle",
 		{},
