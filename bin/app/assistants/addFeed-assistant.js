@@ -139,9 +139,6 @@ AddFeedAssistant.prototype.setup = function() {
 	this.listAddHandler = this.listAddHandler.bindAsEventListener(this);
 	this.listDeleteHandler = this.listDeleteHandler.bindAsEventListener(this);
 	this.listReorderHandler = this.listReorderHandler.bindAsEventListener(this);
-	Mojo.Event.listen(this.replacementList, Mojo.Event.listAdd, this.listAddHandler);
-	Mojo.Event.listen(this.replacementList, Mojo.Event.listDelete, this.listDeleteHandler);
-	Mojo.Event.listen(this.replacementList, Mojo.Event.listReorder, this.listReorderHandler);
 
 	this.controller.setupWidget("okButton", {
 		type : Mojo.Widget.activityButton
@@ -152,8 +149,6 @@ AddFeedAssistant.prototype.setup = function() {
 	this.okButtonActive = false;
 	this.okButton = this.controller.get('okButton');
 	this.checkFeedHandler = this.checkFeed.bindAsEventListener(this);
-	this.controller.listen("okButton", Mojo.Event.tap,
-			this.checkFeedHandler);
 
 	if (!this.autoDownloadModel.value) {
 		this.controller.get("maxDownloadsRow").hide();
@@ -165,10 +160,24 @@ AddFeedAssistant.prototype.setup = function() {
 		this.controller.get("albumArtDiv").hide();
 	}
 
+	this.autoDownloadToggle = this.controller.get('autoDownloadToggle');
 	this.autoDownloadHandler = this.autoDownloadChanged.bindAsEventListener(this);
-	Mojo.Event.listen(this.controller.get('autoDownloadToggle'),Mojo.Event.propertyChange,this.autoDownloadHandler);
+};
 
-	//Mojo.Event.listen(this.sceneAssistant.controller, Mojo.Event.back, this.cancelHandler);
+AddFeedAssistant.prototype.activate = function() {
+	Mojo.Event.listen(this.replacementList, Mojo.Event.listAdd, this.listAddHandler);
+	Mojo.Event.listen(this.replacementList, Mojo.Event.listDelete, this.listDeleteHandler);
+	Mojo.Event.listen(this.replacementList, Mojo.Event.listReorder, this.listReorderHandler);
+	Mojo.Event.listen(this.okButton, Mojo.Event.tap, this.checkFeedHandler);
+	Mojo.Event.listen(this.autoDownloadToggle, Mojo.Event.propertyChange,this.autoDownloadHandler);
+};
+
+AddFeedAssistant.prototype.deactivate = function() {
+	Mojo.Event.stopListening(this.replacementList, Mojo.Event.listAdd, this.listAddHandler);
+	Mojo.Event.stopListening(this.replacementList, Mojo.Event.listDelete, this.listDeleteHandler);
+	Mojo.Event.stopListening(this.replacementList, Mojo.Event.listReorder, this.listReorderHandler);
+	Mojo.Event.stopListening(this.okButton, Mojo.Event.tap, this.checkFeedHandler);
+	Mojo.Event.stopListening(this.autoDownloadToggle, Mojo.Event.propertyChange,this.autoDownloadHandler);
 };
 
 AddFeedAssistant.prototype.listAddHandler = function(event){

@@ -40,28 +40,18 @@ EpisodeListAssistant.prototype.setup = function() {
 		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this)}};
 
 
-
-
-
-
-
-
 	// things to move somewhere else...
 	// check to see that episode.file exists and wasn't deleted...
 	// http://developer.palm.com/distribution/viewtopic.php?f=16&t=133
 
-	this.controller.get("episodeListWgt").observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
-	this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
-	//this.controller.get("episodeListWgt").observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
-	this.controller.get("episodeListWgt").observe(Mojo.Event.hold, this.handleHold.bindAsEventListener(this));
-	this.controller.get("episodeListWgt").observe(Mojo.Event.dragStart, this.clearPopupMenuOnSelection.bindAsEventListener(this));
-	//this.controller.get("episodeListWgt").observe(Mojo.Event.holdEnd, this.handleHoldUp.bindAsEventListener(this));
-	// might be better to do the holdEnd...
-	// this.controller.get("episodeListWgt").observe(Mojo.Event.holdEnd, this.handleHold.bindAsEventListener(this));
-
 
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
 	this.episodeList = this.controller.get("episodeListWgt");
+
+	this.handleSelectionHandler = this.handleSelection.bindAsEventListener(this);
+	this.handleDeleteHandler = this.handleDelete.bindAsEventListener(this);
+	this.handleHoldHandler = this.handleHold.bindAsEventListener(this);
+	this.dragStartHandler = this.clearPopupMenuOnSelection.bindAsEventListener(this);
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
 
@@ -69,6 +59,24 @@ EpisodeListAssistant.prototype.setup = function() {
 
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
+};
+
+EpisodeListAssistant.prototype.activate = function(changes) {
+	this.refreshNow();
+	Mojo.Event.listen(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
+	Mojo.Event.listen(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
+	Mojo.Event.listen(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);
+	Mojo.Event.listen(this.episodeList, Mojo.Event.dragStart, this.dragStartHandler);
+};
+
+EpisodeListAssistant.prototype.deactivate = function(changes) {
+	Mojo.Event.stopListening(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
+	Mojo.Event.stopListening(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
+	Mojo.Event.stopListening(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);
+	Mojo.Event.stopListening(this.episodeList, Mojo.Event.dragStart, this.dragStartHandler);
+};
+
+EpisodeListAssistant.prototype.cleanup = function(changes) {
 };
 
 EpisodeListAssistant.prototype.handleCommand = function(event) {
@@ -118,16 +126,6 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		            " " + h + ":" + min + " " + pm;
 	}
 	return formatted;
-};
-
-EpisodeListAssistant.prototype.activate = function(changes) {
-	this.refreshNow();
-};
-
-EpisodeListAssistant.prototype.deactivate = function(changes) {
-};
-
-EpisodeListAssistant.prototype.cleanup = function(changes) {
 };
 
 EpisodeListAssistant.prototype._refreshDebounced = function() {

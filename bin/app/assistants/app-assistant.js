@@ -12,32 +12,8 @@ function AppAssistant(){
 	AppAssistant.mediaEventsService = new MediaEventsService();
 	AppAssistant.wifiService = new WifiService();
 
-	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
-	//Mojo.Log.error("Here");
-	Mojo.Event.listen(window.document, Mojo.Event.deactivate, this.onBlurHandler.bind(this));
-	Mojo.Event.listen(window.document, Mojo.Event.activate, this.onFocusHandler.bind(this));
-	//Mojo.Log.error("There");
 	this.setWakeup();
 }
-
-AppAssistant.prototype.onBlurHandler = function() {
-	Mojo.Log.error("onBlur");
-	if (this.foregroundVolumeMarker) {
-		Mojo.Log.error("onBlur canceling foreground");
-		this.foregroundVolumeMarker.cancel();
-		this.foregroundVolumeMarker = null;
-	}
-	Mojo.Log.error("onBlur end");
-};
-
-AppAssistant.prototype.onFocusHandler = function() {
-	Mojo.Log.error("onFocus");
-	if (!this.foregroundVolumeMarker) {
-		Mojo.Log.error("onFocus foreground");
-		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
-	}
-	Mojo.Log.error("onFocus end");
-};
 
 AppAssistant.appMenuAttr = {omitDefaultItems: true};
 AppAssistant.appMenuModel = {
@@ -103,7 +79,7 @@ AppAssistant.prototype.setWakeup = function() {
 			method: "set",
 			parameters: {
 				"key": "com.palm.drnull.prepod.update",
-				"in": "01:00:00",
+				"in": Prefs.updateInterval,
 				"uri": "palm://com.palm.applicationManager/open",
 				"params": {
 					"id": "com.palm.drnull.prepod",

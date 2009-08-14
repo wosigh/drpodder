@@ -46,9 +46,9 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.feedList = this.controller.get("feedListWgt");
 
-	this.feedList.observe(Mojo.Event.listTap, this.handleSelection.bindAsEventListener(this));
-	this.feedList.observe(Mojo.Event.listDelete, this.handleDelete.bindAsEventListener(this));
-	this.feedList.observe(Mojo.Event.listReorder, this.handleReorder.bindAsEventListener(this));
+	this.handleSelectionHandler = this.handleSelection.bindAsEventListener(this);
+	this.handleDeleteHandler = this.handleDelete.bindAsEventListener(this);
+	this.handleReorderHandler = this.handleReorder.bindAsEventListener(this);
 
 	this.controller.setupWidget("refreshSpinner", {property: "updating"});
 	this.controller.setupWidget("downloadSpinner", {property: "downloading"});
@@ -59,9 +59,27 @@ FeedListAssistant.prototype.setup = function() {
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
 	this.refreshedOnce = false;
+
+	this.onBlurHandler = this.onBlur.bind(this);
+	this.onFocusHandler = this.onFocus.bind(this);
 };
 
-FeedListAssistant.prototype.activate = function() {
+FeedListAssistant.prototype.activate = function(feedToAdd) {
+	if (feedToAdd) {
+		var feed = new Feed();
+		feed.title = feedToAdd.title;
+		feed.url = feedToAdd.url;
+		feed.update();
+		feedModel.add(feed);
+	}
+
+	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
+	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
+	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+	Mojo.Event.listen(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
+	Mojo.Event.listen(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
+	Mojo.Event.listen(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
+
 	if (Prefs.updated) {
 		if (Prefs.reload) {
 			delete Prefs.reload;
@@ -88,6 +106,24 @@ FeedListAssistant.prototype.activate = function() {
 };
 
 FeedListAssistant.prototype.deactivate = function() {
+	Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
+	Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+	Mojo.Event.stopListening(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
+	Mojo.Event.stopListening(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
+	Mojo.Event.stopListening(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
+};
+
+FeedListAssistant.prototype.onBlur = function() {
+	if (this.foregroundVolumeMarker) {
+		this.foregroundVolumeMarker.cancel();
+		this.foregroundVolumeMarker = null;
+	}
+};
+
+FeedListAssistant.prototype.onFocus = function() {
+	if (!this.foregroundVolumeMarker) {
+		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
+	}
 };
 
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
@@ -97,6 +133,10 @@ FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
 FeedListAssistant.prototype.cleanup = function() {
 	// this doesn't seem to actually save the feeds.  db has gone away maybe?
 	//DB.saveFeeds();
+	if (this.foregroundVolumeMarker) {
+		this.foregroundVolumeMarker.cancel();
+		this.foregroundVolumeMarker = null;
+	}
 };
 
 FeedListAssistant.prototype._refreshDebounced = function() {
@@ -196,7 +236,21 @@ FeedListAssistant.prototype.handleCommand = function(event) {
     if (event.type == Mojo.Event.command) {
         switch (event.command) {
 			case "add-cmd":
-				this.stageController.pushScene("addFeed", this, null);
+				this.controller.popupSubmenu({
+					onChoose: function(command) {
+						switch (command) {
+							case "add-feed":
+								this.stageController.pushScene("addFeed", this, null);
+								break;
+							case "feed-search":
+								this.stageController.pushScene("feedSearch", this, null);
+								break;
+						}
+					}.bind(this),
+					placeNear: event.originalEvent.target,
+					items: [{label: "Search...", command: "feed-search"},
+					        {label: "Enter feed URL...", command: "add-feed"}]
+				});
 				break;
 			case "refresh-cmd":
 				this.updateFeeds();

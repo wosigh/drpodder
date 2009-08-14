@@ -255,7 +255,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						e.downloadingCallback.bind(e));
 				}
 
-				e.updateUIElements(false);
+				e.updateUIElements(true);
 			//}
 		}
 	}
@@ -370,6 +370,7 @@ DBClass.prototype.readPrefs = function() {
 	}
 	if (Prefs.enableNotifications === undefined) {Prefs.enableNotifications = true;}
 	if (Prefs.autoUpdate === undefined) {Prefs.autoUpdate = false;}
+	if (Prefs.updateInterval === undefined) {Prefs.updateInterval = "01:00:00";}
 	if (Prefs.enableWifi === undefined) {Prefs.enableWifi = false;}
 	if (Prefs.limitToWifi === undefined) {Prefs.limitToWifi = true;}
 	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}

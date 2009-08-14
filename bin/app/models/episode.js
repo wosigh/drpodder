@@ -254,6 +254,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloading = false;
 		this.downloadTicket = 0;
 		this.downloadingPercent = 0;
+		this.downloadActivity();
 		this.updateUIElements();
 		this.save();
 		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
@@ -269,6 +270,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
+		this.downloadActivity();
 
 		this.file = event.target;
 
@@ -286,6 +288,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
+		this.downloadActivity();
 
 		this.feedObject.downloadFinished();
 
@@ -326,6 +329,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
+		this.downloadActivity();
 		this.updateUIElements();
 		this.save();
 		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
@@ -363,7 +367,7 @@ Episode.prototype.downloadActivity = function() {
 	// every 5 minutes, if we are still downloading we start an activity
 	if (this.downloading) {
 		AppAssistant.powerService.activityStart(null, this.id);
-		this.setTimeout(this.downloadActivity.bind(this), 300000);
+		this.setTimeout(this.downloadActivity.bind(this), 900000);
 	} else {
 		AppAssistant.powerService.activityEnd(null, this.id);
 	}
@@ -386,6 +390,7 @@ Episode.prototype.cancelDownload = function(ignore) {
 		this.downloadTicket = 0;
 		this.downloading = false;
 		this.downloadingPercent = 0;
+		this.downloadActivity();
 		this.updateUIElements(ignore);
 		this.save(ignore);
 		this.downloadCanceled = true;

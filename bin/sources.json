@@ -26,4 +26,6 @@
 	{"source": "\/usr\/palm\/frameworks\/media\/media.js"},
 	{"source": "app\/assistants\/dashboard-assistant.js",
 	 "scenes": "dashboard"},
+	{"source": "app\/assistants\/feedSearch-assistant.js",
+	 "scenes": "feedSearch"},
 ]
