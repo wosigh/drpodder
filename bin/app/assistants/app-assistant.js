@@ -13,10 +13,10 @@ function AppAssistant(){
 	AppAssistant.wifiService = new WifiService();
 
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
-	Mojo.Log.error("Here");
+	//Mojo.Log.error("Here");
 	Mojo.Event.listen(window.document, Mojo.Event.deactivate, this.onBlurHandler.bind(this));
 	Mojo.Event.listen(window.document, Mojo.Event.activate, this.onFocusHandler.bind(this));
-	Mojo.Log.error("There");
+	//Mojo.Log.error("There");
 	this.setWakeup();
 }
 

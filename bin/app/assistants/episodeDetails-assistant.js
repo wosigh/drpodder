@@ -30,7 +30,7 @@ EpisodeDetailsAssistant.prototype.menuCommandItems = {
 	skipBack:    {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack-cmd"},
 	skipForward2:{iconPath: "images/menu-icon-music-forward.png", command: "skipForward2-cmd"},
 	skipBack2:   {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack2-cmd"},
-	nil:         {}
+	nil:         {icon: "", command: "", label: " "}
 };
 
 EpisodeDetailsAssistant.prototype.cmdMenuModel = {
@@ -60,6 +60,8 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
+	this.cmdMenuModel.items[2] = this.menuCommandItems.nil;
+	this.controller.modelChanged(this.cmdMenuModel);
 	if (this.episodeObject.enclosure) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
@@ -319,9 +321,6 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
-	this.cmdMenuModel.items[2] = this.menuCommandItems.nil;
-	this.controller.modelChanged(this.cmdMenuModel);
-
 	if (this.isVideo()) {
 		this.cmdMenuModel.items[2] = this.menuCommandItems.play;
 		this.enablePlayPause();
@@ -339,8 +338,6 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 		}
 		this.audioObject.pause();
 	}
-
-	this.controller.modelChanged(this.cmdMenuModel);
 };
 
 EpisodeDetailsAssistant.prototype.playGUI = function() {
