@@ -6,6 +6,7 @@
 	"version": "0.3.7",
 	"vendor": "drnull",
 	"icon": "icon.png",
+	"miniicon": "miniicon.png",
 	"noWindow": "true",
 	"theme": "light",
 	"removable": "true"

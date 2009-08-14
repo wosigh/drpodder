@@ -120,7 +120,8 @@ Utilities.prototype.banner = function(message) {
 	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
 	if (Prefs.enableNotifications || cardVisible) {
 		var bannerParams = {
-			messageText: message
+			icon: "miniicon.png",
+            messageText: message
 		};
 		appController.showBanner(bannerParams, {});
 	}
