@@ -232,7 +232,6 @@ Episode.prototype.getDownloadFilename = function() {
 Episode.prototype.deleteTempFile = function() {
 	var filename = "/media/internal/PrePod/" + Util.escapeSpecial(this.feedObject.title);
 	filename += "/." + this.getDownloadFilename();
-	Mojo.Log.error("deleting temp file: %s", filename);
 	AppAssistant.mediaService.deleteFile(null, filename, function(event) {});
 };
 

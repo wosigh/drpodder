@@ -26,7 +26,7 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		{ value : Prefs.enableWifi});
 
-	this.controller.get("wifiToggleDiv").hide();
+	//this.controller.get("wifiToggleDiv").hide();
 
 	this.controller.setupWidget("limitToWifiToggle",
 		{},

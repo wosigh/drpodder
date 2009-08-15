@@ -448,19 +448,18 @@ FeedModel.prototype.getFeedById = function(id) {
 
 FeedModel.prototype._enableWifiIfDisabled = function(status) {
 	if (status.returnValue && status.status === "serviceDisabled") {
-		Mojo.Log.error("enabledWifi");
 		this.enabledWifi = true;
 		AppAssistant.wifiService.setState(null, "enabled");
 	}
 };
 
 FeedModel.prototype.updateFeeds = function(feedIndex) {
-	if (Prefs.enableWifi) {
-		this.enabledWifi = false;
-		AppAssistant.wifiService.getStatus(null, this._enableWifiIfDisabled.bind(this));
-	}
-
 	if (!feedIndex) {
+		this.enabledWifi = false;
+		if (Prefs.enableWifi) {
+			AppAssistant.wifiService.getStatus(null, this._enableWifiIfDisabled.bind(this));
+		}
+
 		// first time through
 		Util.banner("Updating PrePod Feeds");
 		AppAssistant.powerService.activityStart(null, "FeedsUpdating");
@@ -523,12 +522,11 @@ FeedModel.prototype.download = function() {
 		}
 	} else {
 		Util.closeDashboard(PrePod.DashboardStageName);
+		if (this.enabledWifi) {
+			AppAssistant.wifiService.setState(null, "disabled");
+		}
 	}
 
-	if (this.enabledWifi) {
-		Mojo.Log.error("disabling wifi");
-		AppAssistant.wifiService.setState(null, "disabled");
-	}
 };
 
 FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {

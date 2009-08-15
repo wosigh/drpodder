@@ -90,7 +90,7 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				this.feedObject.listened();
 				break;
 			case "edit-cmd":
-				this.stageController.pushScene("addFeed", this, this.feedObject);
+				this.stageController.pushScene("addFeed", this.feedObject);
 				break;
 		}
 	}
@@ -230,11 +230,7 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	} else {
 		if (targetClass.indexOf("episodeStatus") === -1) {
 			// we clicked on the row, just push the scene
-			if (episode.position || (episode.downloaded && !episode.listened)) {
-				this.play(episode, true, true);
-			} else {
-				this.play(episode, false, true);
-			}
+			this.play(episode, true, true);
 		} else {
 			// we clicked on the icon, do something different
 			if (episode.downloading) {
