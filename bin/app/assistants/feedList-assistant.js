@@ -71,6 +71,8 @@ FeedListAssistant.prototype.activate = function(feedToAdd) {
 		feed.url = feedToAdd.url;
 		feed.update();
 		feedModel.add(feed);
+		this.feedList.mojo.noticeAddedItems(feedModel.items.length-1, [feed]);
+		this.feedList.mojo.revealItem(feedModel.items.length-1, true);
 	}
 
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();

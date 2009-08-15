@@ -341,6 +341,10 @@ Episode.prototype.downloadingCallback = function(event) {
 			per = Math.floor(1000*event.amountReceived/event.amountTotal)/10;
 		}
 		if (this.downloadingPercent !== per) {
+			// start downloading activity when the download actually starts rolling
+			if (this.downloadingPercent === 0) {
+				this.downloadActivity();
+			}
 			this.downloadingPercent = per;
 			Mojo.Controller.getAppController().sendToNotificationChain({
 				type: "downloadProgress", episode: this});
@@ -367,7 +371,7 @@ Episode.prototype.downloadActivity = function() {
 	// every 5 minutes, if we are still downloading we start an activity
 	if (this.downloading) {
 		AppAssistant.powerService.activityStart(null, this.id);
-		this.setTimeout(this.downloadActivity.bind(this), 900000);
+		//this.setTimeout(this.downloadActivity.bind(this), 900000);
 	} else {
 		AppAssistant.powerService.activityEnd(null, this.id);
 	}

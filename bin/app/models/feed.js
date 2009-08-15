@@ -461,6 +461,7 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 	if (!feedIndex) {
 		// first time through
 		Util.banner("Updating PrePod Feeds");
+		AppAssistant.powerService.activityStart(null, "FeedsUpdating");
 		this.updatingFeeds = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({
 			type: "feedsUpdating", value: true});
@@ -482,6 +483,7 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 		this.download();
 		Mojo.Controller.getAppController().sendToNotificationChain({
 			type: "feedsUpdating", value: false});
+		AppAssistant.powerService.activityEnd(null, "FeedsUpdating");
 	}
 };
 

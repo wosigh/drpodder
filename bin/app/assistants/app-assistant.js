@@ -57,12 +57,15 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 
 AppAssistant.prototype.handleLaunchParams = function(launchParams) {
 	Mojo.Log.error("handleLaunchParams called: %s", launchParams.action);
+	var dashboardOpen = this.controller.getStageController(PrePod.DashboardStageName);
+	var downloadedDashboardOpen = this.controller.getStageController(PrePod.DownloadedStageName);
+	var downloadingDashboardOpen = this.controller.getStageController(PrePod.DownloadingStageName);
 	switch (launchParams.action) {
 		case "updateFeeds":
-			if (Prefs.autoUpdate) {
+			if (Prefs.autoUpdate && !downloadingDashboardOpen && !feedModel.updatingFeeds) {
 				feedModel.updateFeeds();
-				this.setWakeup();
 			}
+			this.setWakeup();
 			break;
 		case "download":
 			feedModel.download();
@@ -80,6 +83,7 @@ AppAssistant.prototype.setWakeup = function() {
 			parameters: {
 				"key": "com.palm.drnull.prepod.update",
 				"in": Prefs.updateInterval,
+				//"wakeup": true,
 				"uri": "palm://com.palm.applicationManager/open",
 				"params": {
 					"id": "com.palm.drnull.prepod",
