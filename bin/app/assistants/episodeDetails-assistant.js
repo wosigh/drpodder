@@ -253,6 +253,7 @@ EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
 				this.pause();
 			}
 			break;
+		case "stop":
 		case "pause":
 			this.pause();
 			break;
