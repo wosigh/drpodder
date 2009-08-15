@@ -88,10 +88,26 @@ FeedSearchAssistant.prototype.keywordChange = function(event) {
 };
 
 FeedSearchAssistant.prototype.searchResults = function(transport) {
+	//Mojo.Log.error("transport.status = %d", transport.status);
+	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
+		Mojo.Log.error("Error contacting search service: %d", transport.status);
+		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		return;
+	}
+
 	var doc = transport.responseXML;
 	if (!doc) {
 		doc = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
 	}
+
+	var totalResults = Util.xmlTagValue(doc, "totalResults");
+
+	if (totalResults === undefined) {
+		Mojo.Log.error("Error contacting search service: result count not found");
+		Util.showError("Error contacting search service", "Result Count not found");
+		return;
+	}
+
 	var nodes = document.evaluate("//outline", doc, null, XPathResult.ANY_TYPE, null);
 	var node = nodes.iterateNext();
 	var numFeeds = 0;
