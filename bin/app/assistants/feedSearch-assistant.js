@@ -72,8 +72,8 @@ FeedSearchAssistant.prototype.keywordChange = function(event) {
 	//var t = new Template("#{status}");
 	//var m = t.evaluate(transport);
 	var digitalPodcastURL = "http://www.digitalpodcast.com/podcastsearchservice/v2b/search/?appid=PrePodID&results=50&keywords=";
-	Mojo.Log.error("You are searching for: %s", event.value);
-	Mojo.Log.error("url: %s", digitalPodcastURL+encodeURI(event.value));
+	//Mojo.Log.error("You are searching for: %s", event.value);
+	//Mojo.Log.error("url: %s", digitalPodcastURL+encodeURI(event.value));
 
 	var request = new Ajax.Request(digitalPodcastURL + encodeURI(event.value), {
 		method : "get",
@@ -118,6 +118,6 @@ FeedSearchAssistant.prototype.searchResults = function(transport) {
 };
 
 FeedSearchAssistant.prototype.selection = function(event) {
-	Mojo.Log.error("You clicked on: [%s], [%s]", event.item.title, event.item.url);
+	//Mojo.Log.error("You clicked on: [%s], [%s]", event.item.title, event.item.url);
 	this.controller.stageController.popScene({feedToAdd: event.item});
 };

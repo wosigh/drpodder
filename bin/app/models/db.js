@@ -233,6 +233,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				if (e.enclosure === "undefined") {e.enclosure = null;}
 				if (e.type === "undefined") {e.type = null;}
 				if (e.pubDate === "undefined") {e.pubDate = null;}
+				if (e.description === "undefined") {e.description = null;}
 				if (f.details === undefined) {f.details = e.title;}
 				f.episodes.push(e);
 				f.guid[e.guid] = e;

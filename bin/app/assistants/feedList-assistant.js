@@ -129,6 +129,9 @@ FeedListAssistant.prototype.onBlur = function() {
 		this.foregroundVolumeMarker.cancel();
 		this.foregroundVolumeMarker = null;
 	}
+	if (feedModel.updatingFeeds) {
+		this.wasUpdatingFeeds = true;
+	}
 };
 
 FeedListAssistant.prototype.onFocus = function() {
@@ -139,7 +142,10 @@ FeedListAssistant.prototype.onFocus = function() {
 		this.cmdMenuModel.items[1].disabled = false;
 		this.controller.modelChanged(this.cmdMenuModel);
 	}
-	this.refreshNow();
+	if (this.wasUpdatingFeeds) {
+		this.wasUpdatingFeeds = false;
+		this.refreshNow();
+	}
 };
 
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
