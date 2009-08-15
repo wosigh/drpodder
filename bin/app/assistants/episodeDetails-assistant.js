@@ -113,7 +113,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 EpisodeDetailsAssistant.prototype.activate = function() {
 	this.isForeground = true;
-	if (!this.isVideo()) {
+	if (this.episodeObject.enclosure && !this.isVideo()) {
 		Mojo.Event.listen(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
 		Mojo.Event.listen(this.progress, Mojo.Event.sliderDragStart, this.sliderDragStartHandler);
 		Mojo.Event.listen(this.progress, Mojo.Event.sliderDragEnd, this.sliderDragEndHandler);
@@ -126,7 +126,7 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 
 EpisodeDetailsAssistant.prototype.deactivate = function() {
 	this.isForeground = false;
-	if (!this.isVideo()) {
+	if (this.episodeObject.enclosure && !this.isVideo()) {
 		Mojo.Event.stopListening(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
 		Mojo.Event.stopListening(this.progress, Mojo.Event.sliderDragStart, this.sliderDragStartHandler);
 		Mojo.Event.stopListening(this.progress, Mojo.Event.sliderDragEnd, this.sliderDragEndHandler);
@@ -136,36 +136,38 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 };
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
-	this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
-	if (!this.isVideo()) {
-		this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
+	if (this.episodeObject.enclosure) {
+		this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
+		if (!this.isVideo()) {
+			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
-		this.audioObject.removeEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.PLAY, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.PLAY, this.handleAudioEventsHandler);
 
-		this.audioObject.removeEventListener(Media.Event.ENDED, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.ABORT, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.CANPLAY, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.CANPLAYTHROUGH, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.CANSHOWFIRSTFRAME, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.EMPTIED, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.LOAD, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.LOADEDFIRSTFRAME, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.LOADEDMETADATA, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.LOADSTART, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.SEEKED, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.SEEKING, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.STALLED, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.TIMEUPDATE, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.WAITING, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.X_PALM_DISCONNECT, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.X_PALM_RENDER_MODE, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEventsHandler);
-		this.audioObject.removeEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEventsHandler);
-		this.mediaEvents.cancel();
+			this.audioObject.removeEventListener(Media.Event.ENDED, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.ABORT, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.CANPLAY, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.CANPLAYTHROUGH, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.CANSHOWFIRSTFRAME, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.EMPTIED, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.LOAD, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.LOADEDFIRSTFRAME, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.LOADEDMETADATA, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.LOADSTART, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.SEEKED, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.SEEKING, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.STALLED, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.TIMEUPDATE, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.WAITING, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.X_PALM_DISCONNECT, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.X_PALM_RENDER_MODE, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEventsHandler);
+			this.audioObject.removeEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEventsHandler);
+			this.mediaEvents.cancel();
+		}
+		this.setTimer(false);
+		this.bookmark();
 	}
-	this.setTimer(false);
-	this.bookmark();
 };
 
 EpisodeDetailsAssistant.prototype.bookmark = function() {
@@ -266,7 +268,6 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
 	} catch (f) {
 	}
-	this.stop();
 	this.readyToPlay();
 };
 
@@ -277,7 +278,16 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			//this.stalled = true;
 			//break;
 		case "play":
-			this.playGUI();
+			if (!this.autoPlay) {
+				this.audioObject.pause();
+			} else {
+				this.playGUI();
+			}
+			break;
+		case "waiting":
+			this.cmdMenuModel.items[2] = this.menuCommandItems.play;
+			this.cmdMenuModel.items[2].disabled = true;
+			this.controller.modelChanged(this.cmdMenuModel);
 			break;
 		case "loadedmetadata":
 			this.cmdMenuModel.items[2] = this.menuCommandItems.play;
@@ -290,14 +300,13 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			}
 			this.updateProgress();
 			break;
+		case "canplaythrough":
 		case "canplay":
-		case "seeked":
-			this.enablePlayPause();
 			this.updateProgress();
-
 			if (this.autoPlay) {
-				this.play();
+				this.audioObject.play();
 			}
+			this.enablePlayPause();
 			break;
 		/*
 		case "x-palm-success":
@@ -430,6 +439,7 @@ EpisodeDetailsAssistant.prototype.progressChange = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.sliderDragEnd = function(event) {
+	this.audioObject.currentTime = event.value * this.audioObject.duration;
 	this.bookmark();
 	if (this.wasPlaying) {
 		this.audioObject.play();
@@ -492,8 +502,8 @@ EpisodeDetailsAssistant.prototype.pause = function() {
 	try {
 		this.cmdMenuModel.items[2].disabled = true;
 		this.controller.modelChanged(this.cmdMenuModel);
-		//this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
 		this.audioObject.pause();
+		//this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
 		this.bookmark();
 	} catch (e) {
 		Mojo.Log.error("Error in pause: %j", e);
@@ -514,10 +524,10 @@ EpisodeDetailsAssistant.prototype.play = function() {
 				this.cmdMenuModel.items[2].disabled = true;
 				this.controller.modelChanged(this.cmdMenuModel);
 			}
+			this.audioObject.play();
 			//this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
 			//this.bookmark();
 
-			this.audioObject.play();
 		}
 	} catch (e) {
 		Mojo.Log.error("Error in play: %j", e);

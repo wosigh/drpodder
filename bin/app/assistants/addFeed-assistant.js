@@ -1,5 +1,4 @@
-function AddFeedAssistant(sceneAssistant, feed) {
-	this.sceneAssistant = sceneAssistant;
+function AddFeedAssistant(feed) {
 	this.feed = feed;
 
 	// default empty replacement
@@ -231,9 +230,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	// update the feed title and close the dialog. Otherwise update the feed.
 	if (!this.newFeed && this.feed !== null && this.feed.url === this.urlModel.value) {
 		this.updateFields();
-		this.sceneAssistant.refresh();
-		DB.saveFeeds();
-		this.controller.stageController.popScene();
+		this.controller.stageController.popScene({feedChanged: true, feedIndex: feedModel.items.indexOf(this.feed)});
 	} else {
 		this.okButton.mojo.activate();
 		this.okButtonActive = true;
@@ -264,6 +261,8 @@ AddFeedAssistant.prototype.check = function(url) {
 		method : "get",
 		evalJSON : "false",
 		evalJS : "false",
+		requestHeaders: {"User-Agent":"wget", "hello":"world"},
+		removeHeaders: ['User-Agent', 'Referer'],
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});
@@ -313,7 +312,7 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	this.updateFields();
 
 	this.feed.gui = true;
-	feedSuccess = this.feed.updateCheck(transport, this.sceneAssistant);
+	feedSuccess = this.feed.updateCheck(transport);
 	this.feed.gui = false;
 
 	if (feedSuccess <= 0) {
@@ -325,12 +324,15 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 
 		this.resetButton();
 	} else {
+		var results = {};
 		if (this.newFeed) {
 			feedModel.items.push(this.feed);
+			results.feedAdded = true;
+		} else {
+			results.feedChanged = true;
+			results.feedIndex = feedModel.items.indexOf(this.feed);
 		}
-		this.sceneAssistant.refresh();
-		DB.saveFeeds();
-		this.controller.stageController.popScene();
+		this.controller.stageController.popScene(results);
 	}
 };
 
@@ -359,6 +361,5 @@ AddFeedAssistant.prototype.checkFailure = function(transport) {
 AddFeedAssistant.prototype.cancel = function() {
 	// TODO - Cancel Ajax request or Feed operation if in progress
 	this.controller.stopListening("okButton", Mojo.Event.tap, this.checkFeedHandler);
-	//Mojo.Event.stopListening(this.sceneAssistant.controller, Mojo.Event.back, this.cancelHandler);
 	this.controller.stageController.popScene();
 };

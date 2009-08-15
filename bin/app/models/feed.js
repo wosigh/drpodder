@@ -72,6 +72,8 @@ Feed.prototype.update = function(callback, url) {
 		method: 'get',
 		evalJSON : "false",
 		evalJS : "false",
+		requestHeaders: {"User-Agent":"wget", "hello":"world"},
+		removeHeaders: ['User-Agent', 'Referer'],
 		onFailure: this.checkFailure.bind(this, callback),
 		onSuccess: this.checkSuccess.bind(this, callback)
 	});
@@ -118,16 +120,12 @@ Feed.prototype.getTitle = function(transport) {
 	var title;
 	try {
 		var nodes = document.evaluate(titlePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
-		Mojo.Log.error("nodes: ", nodes);
 		if (nodes) {
 			var node = nodes.iterateNext();
-			Mojo.Log.error("node: ", node);
 			if (node) {
 				var firstChild = node.firstChild;
-				Mojo.Log.error("firstChild: ", firstChild);
 				if (firstChild) {
 					title = firstChild.nodeValue;
-					Mojo.Log.error("title: ", title);
 				}
 			}
 		}
@@ -139,15 +137,10 @@ Feed.prototype.getTitle = function(transport) {
 		Mojo.Log.error("Error finding feed title: %o", e);
 	}
 	if (!title) {
-		Mojo.Log.error("!title");
 		if (this.gui) {
-			Mojo.Log.error("util.showError");
 			Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
-			Mojo.Log.error("util.showError done");
 		}
-		Mojo.Log.error("log error");
 		Mojo.Log.error("Error finding feed title for feed: %s", this.url);
-		Mojo.Log.error("log error done");
 	}
 	return title;
 };

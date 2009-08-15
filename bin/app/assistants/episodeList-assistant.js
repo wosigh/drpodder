@@ -193,9 +193,9 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	var episode = event.item;
 	var items = [];
 
-	if (!Prefs.singleTap || this.popupMenuOnSelection || (!episode.enclosure) ||
+	if (!Prefs.singleTap || this.popupMenuOnSelection ||
 		(targetClass.indexOf("episodeStatus") !== -1 &&
-			!episode.downloading && episode.enclosure &&
+			!episode.downloading &&
 			episode.listened && !episode.downloaded)) {
 		this.popupMenuOnSelection = false;
 		if (episode.downloading) {

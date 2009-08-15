@@ -55,7 +55,6 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, AppAssistant.appMenuAttr, AppAssistant.appMenuModel);
 
-	this.feedUpdateHandler = this.feedUpdate.bind(this);
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
 	this.refreshedOnce = false;
@@ -64,16 +63,25 @@ FeedListAssistant.prototype.setup = function() {
 	this.onFocusHandler = this.onFocus.bind(this);
 };
 
-FeedListAssistant.prototype.activate = function(feedToAdd) {
-	if (feedToAdd) {
-		var feed = new Feed();
-		feed.title = feedToAdd.title;
-		feed.url = feedToAdd.url;
-		feed.update();
-		feedModel.add(feed);
-		this.feedList.mojo.noticeAddedItems(feedModel.items.length-1, [feed]);
-		this.feedList.mojo.revealItem(feedModel.items.length-1, true);
-		DB.saveFeeds();
+FeedListAssistant.prototype.activate = function(result) {
+	if (result) {
+		if (result.feedToAdd) {
+			var feed = new Feed();
+			feed.title = result.feedToAdd.title;
+			feed.url = result.feedToAdd.url;
+			feed.update();
+			feedModel.add(feed);
+			result.feedAdded = true;
+			DB.saveFeeds();
+		}
+		if (result.feedChanged) {
+			this.feedList.mojo.noticeUpdatedItems(result.feedIndex, [feedModel.items[result.feedIndex]]);
+			this.feedList.mojo.revealItem(result.feedIndex, true);
+		}
+		if (result.feedAdded) {
+			this.feedList.mojo.noticeAddedItems(feedModel.items.length-1, [feedModel.items[feedModel.items.length-1]]);
+			this.feedList.mojo.revealItem(feedModel.items.length-1, true);
+		}
 	}
 
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
@@ -127,6 +135,11 @@ FeedListAssistant.prototype.onFocus = function() {
 	if (!this.foregroundVolumeMarker) {
 		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	}
+	if (!feedModel.updatingFeeds) {
+		this.cmdMenuModel.items[1].disabled = false;
+		this.controller.modelChanged(this.cmdMenuModel);
+	}
+	this.refreshNow();
 };
 
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
@@ -220,7 +233,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 	switch(command) {
 		case "edit-cmd":
-			this.stageController.pushScene("addFeed", this, feed);
+			this.stageController.pushScene("addFeed", feed);
 			break;
 		case "listened-cmd":
 			feed.listened();
@@ -243,7 +256,7 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 					onChoose: function(command) {
 						switch (command) {
 							case "add-feed":
-								this.stageController.pushScene("addFeed", this, null);
+								this.stageController.pushScene("addFeed", null);
 								break;
 							case "feed-search":
 								this.stageController.pushScene("feedSearch", this, null);
@@ -276,17 +289,6 @@ FeedListAssistant.prototype.handleReorder = function(event) {
 	}
 	event.model.items.splice(event.toIndex, 0, event.item);
 	DB.saveFeeds();
-};
-
-FeedListAssistant.prototype.feedUpdate = function(action, feed) {
-	//Mojo.Log.error("EpisodeLA: feed [%s] said: %s", feed.title, action);
-	switch (action) {
-		case "REFRESH":
-			this.refresh();
-			break;
-		case "ACTION":
-			break;
-	}
 };
 
 FeedListAssistant.prototype.considerForNotification = function(params) {

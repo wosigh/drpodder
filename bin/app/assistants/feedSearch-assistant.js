@@ -101,11 +101,11 @@ FeedSearchAssistant.prototype.searchResults = function(transport) {
 		var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
 		var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
 		if (title !== undefined && url !== undefined) {
-			Mojo.Log.error("found: (%s)-[%s]", title, url);
+			//Mojo.Log.error("found: (%s)-[%s]", title, url);
 			this.listModel.items.push({title:title, url:url});
 			++numFeeds;
 		} else {
-			Mojo.Log.error("skipping: (%s)-[%s]", title, url);
+			//Mojo.Log.error("skipping: (%s)-[%s]", title, url);
 		}
 		node = nodes.iterateNext();
 	}
@@ -119,5 +119,5 @@ FeedSearchAssistant.prototype.searchResults = function(transport) {
 
 FeedSearchAssistant.prototype.selection = function(event) {
 	Mojo.Log.error("You clicked on: [%s], [%s]", event.item.title, event.item.url);
-	this.controller.stageController.popScene(event.item);
+	this.controller.stageController.popScene({feedToAdd: event.item});
 };
