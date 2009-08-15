@@ -51,6 +51,8 @@ function Feed(init) {
 }
 
 Feed.prototype.update = function(callback, url) {
+	this.updating = true;
+	this.updated();
 	/*
 	if (Mojo.Host.current === Mojo.Host.mojoHost) {
 		// same original policy means we need to use the proxy on mojo-host
@@ -78,6 +80,9 @@ Feed.prototype.update = function(callback, url) {
 
 Feed.prototype.checkFailure = function(callback, transport) {
 	Mojo.Log.error("Failed to request feed:", this.title, "(", this.url, ")");
+	this.updating = false;
+	this.updated();
+	this.updatedEpisodes();
 	callback();
 };
 
@@ -89,6 +94,10 @@ Feed.prototype.checkSuccess = function(callback, transport) {
 		this.update(callback, location);
 	} else {
 		this.updateCheck(transport);
+		this.updating = false;
+		this.updated();
+		this.updatedEpisodes();
+		DB.saveFeed(this);
 		callback();
 	}
 };
@@ -469,12 +478,7 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 	}
 	if (feedIndex < this.items.length) {
 		var feed = this.items[feedIndex];
-		feed.updating = true;
-		feed.updated();
 		feed.update(function() {
-			feed.updating = false;
-			feed.updated();
-			feed.updatedEpisodes();
 			this.updateFeeds(feedIndex+1);
 		}.bind(this));
 	} else {

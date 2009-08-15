@@ -13,7 +13,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.setupWidget("updateIntervalList",
 		{label: "Update Interval",
 		choices: [
-				  {label: "5 Minutes", value: "00:05:00"},
+				  //{label: "5 Minutes", value: "00:05:00"},
 				  {label: "1 Hour", value: "01:00:00"},
 				  {label: "2 Hours", value: "02:00:00"},
 				  {label: "4 Hours", value: "04:00:00"},
