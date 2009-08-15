@@ -11,7 +11,7 @@ PreferencesAssistant.prototype.setup = function() {
 		{ value : Prefs.autoUpdate });
 
 	this.controller.setupWidget("updateIntervalList",
-		{label: "Update Interval",
+		{label: "Interval",
 		choices: [
 				  //{label: "5 Minutes", value: "00:05:00"},
 				  {label: "1 Hour", value: "01:00:00"},

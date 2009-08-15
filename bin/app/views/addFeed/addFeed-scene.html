@@ -8,18 +8,27 @@
     <!--div class="palm-group-title"><span>Feed Details</span></div-->
     <div class="palm-list">
         <div class="palm-row first">
-            <div class="textfield-group" x-mojo-focus-highlight="true">
-                <div x-mojo-element="TextField" id="newFeedURL"></div>
+            <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+                <div class="title">
+                    <div class="label right">URL</div>
+                    <div x-mojo-element="TextField" id="newFeedURL"></div>
+                </div>
             </div>
         </div>
         <div id="newFeedDiv" class="palm-row">
-            <div class="textfield-group" x-mojo-focus-highlight="true">
-                <div x-mojo-element="TextField" id="newFeedName"></div>
+            <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+                <div class="title">
+                    <div class="label right">Title</div>
+                    <div x-mojo-element="TextField" id="newFeedName"></div>
+                </div>
             </div>
         </div>
         <div id="albumArtDiv" class="palm-row last">
-            <div class="textfield-group" x-mojo-focus-highlight="true">
-                <div x-mojo-element="TextField" id="albumArt"></div>
+            <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+                <div class="title">
+                    <div class="label right">Icon</div>
+                    <div x-mojo-element="TextField" id="albumArt"></div>
+                </div>
             </div>
         </div>
     </div>

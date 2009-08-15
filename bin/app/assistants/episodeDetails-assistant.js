@@ -182,6 +182,7 @@ EpisodeDetailsAssistant.prototype.bookmark = function() {
 EpisodeDetailsAssistant.prototype.backToList = function() {
 	var feed = this.episodeObject.feedObject;
 
+	this.audioObject.pause();
 	this.audioObject.currentTime = 0;
 
 	this.episodeObject.setListened();
