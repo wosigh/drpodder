@@ -56,7 +56,8 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.setupWidget("progress", this.progressAttr, this.progressModel);
 	this.progress = this.controller.get("progress");
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
-	this.cmdMenuModel.items[2] = this.menuCommandItems.nil;
+	this.cmdMenuModel.items[2] = this.menuCommandItems.play;
+	this.cmdMenuModel.items[2].disabled = true;
 	this.controller.modelChanged(this.cmdMenuModel);
 	if (this.episodeObject.enclosure) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
@@ -202,6 +203,45 @@ EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 	}
 };
 
+EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
+	if (this.isVideo()) {
+		this.cmdMenuModel.items[2] = this.menuCommandItems.play;
+		this.enablePlayPause();
+		this.play();
+	} else {
+		if (this.episodeObject.file) {
+			Mojo.Log.error("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
+			this.audioObject.src = this.episodeObject.file;
+			this.progressModel.progressStart = 0;
+			this.progressModel.progressEnd = 1;
+			this.controller.modelChanged(this.progressModel);
+		} else {
+			Mojo.Log.error("Setting [%s] stream src to:[%s]", this.episodeObject.type, this.episodeObject.enclosure);
+			this.audioObject.src = this.episodeObject.enclosure;
+		}
+		this.audioObject.pause();
+	}
+};
+
+EpisodeDetailsAssistant.prototype.handleError = function(event) {
+	try {
+		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
+	} catch (f) {
+	}
+	this.bookmark();
+	this.setTimer(false);
+	this.cmdMenuModel.items[0] = {};
+	this.cmdMenuModel.items[1] = {};
+	this.cmdMenuModel.items[2] = this.menuCommandItems.play;
+	this.cmdMenuModel.items[3] = {};
+	this.cmdMenuModel.items[4] = {};
+	this.cmdMenuModel.items[2].disabled = true;
+	this.controller.modelChanged(this.cmdMenuModel);
+	this.autoPlay = true;
+	this.resume = true;
+	this.readyToPlay();
+};
+
 EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
 	//Mojo.Log.error("received mediaKeyPress: %j", event);
 	switch (event.key) {
@@ -261,14 +301,6 @@ EpisodeDetailsAssistant.prototype.keyDownHandler = function(event) {
 			//Mojo.Log.error("Ignoring keyCode", key);
 			break;
 	}
-};
-
-EpisodeDetailsAssistant.prototype.handleError = function(event) {
-	try {
-		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
-	} catch (f) {
-	}
-	this.readyToPlay();
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
@@ -374,26 +406,6 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 				this.doSkip(-60);
 				break;
 		}
-	}
-};
-
-EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
-	if (this.isVideo()) {
-		this.cmdMenuModel.items[2] = this.menuCommandItems.play;
-		this.enablePlayPause();
-		this.play();
-	} else {
-		if (this.episodeObject.file) {
-			Mojo.Log.error("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
-			this.audioObject.src = this.episodeObject.file;
-			this.progressModel.progressStart = 0;
-			this.progressModel.progressEnd = 1;
-			this.controller.modelChanged(this.progressModel);
-		} else {
-			Mojo.Log.error("Setting [%s] stream src to:[%s]", this.episodeObject.type, this.episodeObject.enclosure);
-			this.audioObject.src = this.episodeObject.enclosure;
-		}
-		this.audioObject.pause();
 	}
 };
 
