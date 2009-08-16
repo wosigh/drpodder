@@ -456,7 +456,7 @@ FeedModel.prototype._enableWifiIfDisabled = function(status) {
 FeedModel.prototype.updateFeeds = function(feedIndex) {
 	if (!feedIndex) {
 		this.enabledWifi = false;
-		if (Prefs.enableWifi) {
+		if (false && Prefs.enableWifi) {
 			AppAssistant.wifiService.getStatus(null, this._enableWifiIfDisabled.bind(this));
 		}
 
