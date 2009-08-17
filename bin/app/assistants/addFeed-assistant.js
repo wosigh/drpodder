@@ -261,8 +261,6 @@ AddFeedAssistant.prototype.check = function(url) {
 		method : "get",
 		evalJSON : "false",
 		evalJS : "false",
-		requestHeaders: {"User-Agent":"wget", "hello":"world"},
-		removeHeaders: ['User-Agent', 'Referer'],
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});

@@ -23,9 +23,10 @@
 	{"source": "app\/models\/db.js"},
 	{"source": "app\/models\/feed.js"},
 	{"source": "app\/models\/episode.js"},
-	{"source": "\/usr\/palm\/frameworks\/media\/media.js"},
 	{"source": "app\/assistants\/dashboard-assistant.js",
 	 "scenes": "dashboard"},
 	{"source": "app\/assistants\/feedSearch-assistant.js",
 	 "scenes": "feedSearch"},
+
+	{"source": "\/usr\/palm\/frameworks\/media\/media.js"},
 ]

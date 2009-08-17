@@ -228,6 +228,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 		for (var i=0; i<results.rows.length; i++) {
 			var f = feedModel.getFeedById(results.rows.item(i).feedId);
 			//if (f.episodes.length < f.maxDisplay) {
+			if (f) {
 				var e = new Episode(results.rows.item(i));
 				e.feedObject = f;
 				if (e.enclosure === "undefined") {e.enclosure = null;}
@@ -257,7 +258,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				}
 
 				e.updateUIElements(true);
-			//}
+			}
 		}
 	}
 	this.callback();
@@ -314,7 +315,9 @@ DBClass.prototype.saveEpisode = function(e, displayOrder) {
 		e.displayOrder = displayOrder;
 	}
 
-	this.db.transaction(this.saveEpisodeTransaction.bind(this, e));
+	if (e.feedId) {
+		this.db.transaction(this.saveEpisodeTransaction.bind(this, e));
+	}
 };
 
 DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {

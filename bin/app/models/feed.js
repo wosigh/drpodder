@@ -66,14 +66,11 @@ Feed.prototype.update = function(callback, url) {
 	var feedTitle = (this.title)?this.title:"Unknown feed title";
 	Util.dashboard(PrePod.DashboardStageName, "Updating Feed", feedTitle, true);
 
-	//this.ajaxStartDate = (new Date()).getTime();
 	//Mojo.Log.error("making ajax request");
 	var req = new Ajax.Request(this.url, {
 		method: 'get',
 		evalJSON : "false",
 		evalJS : "false",
-		requestHeaders: {"User-Agent":"wget", "hello":"world"},
-		removeHeaders: ['User-Agent', 'Referer'],
 		onFailure: this.checkFailure.bind(this, callback),
 		onSuccess: this.checkSuccess.bind(this, callback)
 	});
@@ -114,7 +111,7 @@ Feed.prototype.validateXML = function(transport){
 };
 
 Feed.prototype.getTitle = function(transport) {
-	var titlePath = "/rss/channel/title ";
+	var titlePath = "/rss/channel/title";
 	this.validateXML(transport);
 
 	var title;
@@ -272,7 +269,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			this.episodes.splice(newEpisodeCount, 0, episode);
 			this.guid[episode.guid] = episode;
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
-			episode.updateUIElements();
+			episode.updateUIElements(true);
 			newEpisodeCount++;
 			updateCheckStatus = UPDATECHECK_UPDATES;
 		} else {

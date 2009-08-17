@@ -72,7 +72,6 @@ FeedListAssistant.prototype.activate = function(result) {
 			feed.update();
 			feedModel.add(feed);
 			result.feedAdded = true;
-			DB.saveFeeds();
 		}
 		if (result.feedChanged) {
 			this.feedList.mojo.noticeUpdatedItems(result.feedIndex, [feedModel.items[result.feedIndex]]);
@@ -81,6 +80,7 @@ FeedListAssistant.prototype.activate = function(result) {
 		if (result.feedAdded) {
 			this.feedList.mojo.noticeAddedItems(feedModel.items.length-1, [feedModel.items[feedModel.items.length-1]]);
 			this.feedList.mojo.revealItem(feedModel.items.length-1, true);
+			DB.saveFeeds();
 		}
 	}
 
