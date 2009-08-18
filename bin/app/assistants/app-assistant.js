@@ -111,7 +111,10 @@ AppAssistant.prototype.handleCommand = function(event) {
 				currentScene.showAlertDialog({
 					onChoose: function(value) {},
 					title: "PrePod - v" + Mojo.Controller.appInfo.version,
-					message: "Copyright 2009, Jamie Hatfield",
+					message: "Copyright 2009, Jamie Hatfield<BR>" +
+					         "Logo Design: <a href='http://jamie3d.com/project-143'>Jamie Hamel-Smith</a><BR>" +
+							 "Original Logo Concept: <a href='http://www.userinterfaceicons.com/preview.php'>UII</a>",
+					allowHTMLMessage: true,
 					choices: [
 						{label: "OK", value:""}
 					]

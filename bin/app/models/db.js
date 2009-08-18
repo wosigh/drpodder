@@ -67,6 +67,8 @@ DBClass.prototype.waitForFeeds = function(callback) {
 	this.callback = callback;
 	this.readPrefs();
 
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "updateLoadingMessage", message: "Opening Database"});
 	this.db = openDatabase(this.dbName, this.dbVersions[0].version);
 	if (!this.db) {
 		// setTimeout only works with assistants
@@ -182,6 +184,8 @@ DBClass.prototype.initDB = function() {
 
 DBClass.prototype.loadFeeds = function() {
 	var loadSQL = "SELECT * FROM feed ORDER BY displayOrder";
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "updateLoadingMessage", message: "Loading Feeds"});
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(loadSQL, [],
@@ -280,6 +284,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	}
 
 	this.db.transaction(function(transaction) {
+		Mojo.Log.error("@@@@@@@@@@ STARTED: db transaction for saving feed");
 		if (f.id === undefined) {f.id = null;}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay],
@@ -296,6 +301,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 					f.episodes[i].displayOrder = i;
 					this.saveEpisodeTransaction(f.episodes[i], transaction);
 				}
+				Mojo.Log.error("@@@@@@@@@@ ENDED: db transaction for saving feed");
 			}.bind(this),
 			function(transaction, error) {
 				Util.showError("Error Saving Feed", "There was an error saving feed: "+f.title);
