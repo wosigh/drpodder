@@ -279,8 +279,8 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.save();
 		this.feedObject.downloadFinished();
 
-		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
 		Util.dashboard(PrePod.DownloadedStageName, "Downloaded", this.title);
+		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.error("Redirecting...", event.target);

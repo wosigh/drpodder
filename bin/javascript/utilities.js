@@ -148,13 +148,9 @@ Utilities.prototype.dashboard = function(stageName, title, message, clearMessage
 
 Utilities.prototype.removeMessage = function(stageName, title, message) {
 	var appController = Mojo.Controller.appController;
-	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
-	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
-	if (!cardVisible && Prefs.enableNotifications) {
-		var cont = appController.getStageProxy(stageName);
-		if (cont) {
-			cont.delegateToSceneAssistant("removeMessage", title, message);
-		}
+	var cont = appController.getStageProxy(stageName);
+	if (cont) {
+		cont.delegateToSceneAssistant("removeMessage", title, message);
 	}
 };
 

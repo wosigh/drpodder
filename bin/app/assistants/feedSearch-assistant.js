@@ -20,13 +20,27 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.searchProvider = this.controller.get("searchProviderList");
 	this.searchProviderChangeHandler = this.searchProviderChange.bind(this);
 
+	this.controller.setupWidget("filterList",
+		{label: "Filter",
+		 choices: [{label: "No Filter", value: "nofilter"},
+				   {label: "No Adult", value: "noadult"},
+				   {label: "No Explicit", value: "noexplicit"},
+				   {label: "Clean", value: "clean"},
+				   {label: "Explicit", value: "explicit"},
+				   {label: "Adult", value: "adult"}]},
+		this.filterModel = { value : "nofilter" });
+
+	this.filter = this.controller.get("filterList");
+	this.filterChangeHandler = this.filterChange.bind(this);
+
 	this.controller.setupWidget("keywordField",
 		{
 			hintText : "Search Keyword",
-			focus : true,
+			autoFocus : true,
 			limitResize : true,
 			autoReplace : false,
 			textCase : Mojo.Widget.steModeLowerCase,
+			focusMode : Mojo.Widget.focusSelectMode,
 			requiresEnterKey: true
 		},
 		this.keywordModel = { value : ""});
@@ -44,6 +58,9 @@ FeedSearchAssistant.prototype.setup = function() {
 
 	this.listModel = {items: []};
 
+	this.providerLabel = this.controller.get("providerLabel");
+	this.providerLabel.update("powered by <a href='http://www.digitalpodcast.com'>Digital Podcast</a>");
+
 	this.controller.setupWidget("feedSearchList", this.listAttr, this.listModel);
 	this.feedSearchList = this.controller.get("feedSearchList");
 	this.selectionHandler = this.selection.bindAsEventListener(this);
@@ -58,6 +75,7 @@ FeedSearchAssistant.prototype.activate = function() {
 FeedSearchAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
 	//Mojo.Event.stopListening(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
+	Mojo.Event.stopListening(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
 };
 
 FeedSearchAssistant.prototype.cleanup = function() {
@@ -66,16 +84,24 @@ FeedSearchAssistant.prototype.cleanup = function() {
 FeedSearchAssistant.prototype.searchProviderChange = function(event) {
 };
 
+FeedSearchAssistant.prototype.filterChange = function(event) {
+};
+
 FeedSearchAssistant.prototype.keywordChange = function(event) {
 	// change this to an object based system (since we can have multiple providers)
 	// use Template to generate the url
 	//var t = new Template("#{status}");
 	//var m = t.evaluate(transport);
 	var digitalPodcastURL = "http://www.digitalpodcast.com/podcastsearchservice/v2b/search/?appid=PrePodID&results=50&keywords=";
+
 	//Mojo.Log.error("You are searching for: %s", event.value);
 	//Mojo.Log.error("url: %s", digitalPodcastURL+encodeURI(event.value));
 
-	var request = new Ajax.Request(digitalPodcastURL + encodeURI(event.value), {
+	var url = digitalPodcastURL + encodeURI(event.value);
+
+	url += "&contentfilter=" + this.filterModel.value;
+
+	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
 		evalJS : "false",
@@ -89,6 +115,8 @@ FeedSearchAssistant.prototype.keywordChange = function(event) {
 
 FeedSearchAssistant.prototype.searchResults = function(transport) {
 	//Mojo.Log.error("transport.status = %d", transport.status);
+	Mojo.View.getScrollerForElement(this.providerLabel).mojo.revealBottom(true);
+
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
 		Mojo.Log.error("Error contacting search service: %d", transport.status);
 		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);

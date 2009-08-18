@@ -61,6 +61,7 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.onBlurHandler = this.onBlur.bind(this);
 	this.onFocusHandler = this.onFocus.bind(this);
+	this.onFocus();
 };
 
 FeedListAssistant.prototype.activate = function(result) {
@@ -109,9 +110,6 @@ FeedListAssistant.prototype.activate = function(result) {
 		}
 		if (firstLoad) {
 			this.updateFeeds();
-		} else if (!feedModel.updatingFeeds) {
-			this.cmdMenuModel.items[1].disabled = false;
-			this.controller.modelChanged(this.cmdMenuModel);
 		}
 	}
 };
@@ -131,21 +129,37 @@ FeedListAssistant.prototype.onBlur = function() {
 	}
 	if (feedModel.updatingFeeds) {
 		this.wasUpdatingFeeds = true;
+	} else {
+		for (var i=0, len=feedModel.items.length; i<len; ++i) {
+			if (feedModel.items[i].downloading) {
+				this.wasUpdatingFeeds = true;
+				break;
+			}
+
+		}
 	}
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "onBlur"});
 };
 
 FeedListAssistant.prototype.onFocus = function() {
 	if (!this.foregroundVolumeMarker) {
 		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	}
-	if (!feedModel.updatingFeeds) {
-		this.cmdMenuModel.items[1].disabled = false;
-		this.controller.modelChanged(this.cmdMenuModel);
-	}
+
+	Util.closeDashboard(PrePod.DashboardStageName);
+	Util.closeDashboard(PrePod.DownloadingStageName);
+	Util.closeDashboard(PrePod.DownloadedStageName);
+
+	this.cmdMenuModel.items[1].disabled = feedModel.updatingFeeds;
+	this.controller.modelChanged(this.cmdMenuModel);
+
 	if (this.wasUpdatingFeeds) {
 		this.wasUpdatingFeeds = false;
 		this.refreshNow();
 	}
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "onFocus"});
 };
 
 FeedListAssistant.prototype.updateFeeds = function(feedIndex) {

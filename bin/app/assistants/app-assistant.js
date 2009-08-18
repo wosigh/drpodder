@@ -31,9 +31,6 @@ AppAssistant.appMenuModel = {
 AppAssistant.prototype.handleLaunch = function(launchParams) {
 	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(PrePod.MainStageName);
-		Util.closeDashboard(PrePod.DashboardStageName);
-		Util.closeDashboard(PrePod.DownloadingStageName);
-		Util.closeDashboard(PrePod.DownloadedStageName);
 		if (cardStageController) {
 			Mojo.Log.error("Main Stage exists");
 			cardStageController.activate();
