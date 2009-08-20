@@ -153,7 +153,7 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				this.stageController.swapScene("episodeList", feed);
 				break;
 			case "feedNext-cmd":
-				var feed = feedModel.items[this.feedObject.displayOrder+1];
+				feed = feedModel.items[this.feedObject.displayOrder+1];
 				this.stageController.swapScene("episodeList", feed);
 				break;
 		}
@@ -261,7 +261,8 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 	if (!Prefs.singleTap || this.popupMenuOnSelection ||
 		(targetClass.indexOf("episodeStatus") !== -1 &&
 			!episode.downloading &&
-			episode.listened && !episode.downloaded)) {
+			(episode.listened || !episode.enclosure) &&
+			!episode.downloaded)) {
 		this.popupMenuOnSelection = false;
 		if (episode.downloading) {
 			items.push(this.cmdItems.cancelCmd);
