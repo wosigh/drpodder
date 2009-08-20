@@ -37,8 +37,29 @@ EpisodeListAssistant.prototype.cmdMenuModel = {
 	]
 };
 
+EpisodeListAssistant.prototype.viewMenuModel = {
+	visible: true,
+	items: []
+};
+
 EpisodeListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
+
+	var viewMenuPrev = {icon: "", command: "", label: " "};
+	var viewMenuNext = {icon: "", command: "", label: " "};
+	if (this.feedObject.displayOrder > 0) {
+		viewMenuPrev = {icon: "back", command: "feedPrev-cmd"};
+	}
+
+	if (this.feedObject.displayOrder < feedModel.items.length-1) {
+		viewMenuNext = {icon: "forward", command: "feedNext-cmd"};
+	}
+
+	this.viewMenuModel.items = [{items: [viewMenuPrev,
+										{label: this.feedObject.title, width: 200, command: "edit-cmd"},
+										viewMenuNext]}];
+	this.controller.setupWidget(Mojo.Menu.viewMenu,
+								{}, this.viewMenuModel);
 
 	this.episodeAttr = {
 		itemTemplate: "episodeList/episodeRowTemplate",
@@ -124,8 +145,16 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 					var e = playlist.shift();
 					this.stageController.pushScene("episodeDetails", e, {autoPlay: true, resume: true, playlist: playlist});
 				} else {
-					Util.showError("Error playing episodes", "No unviewed episodes found");
+					Util.showError("Error playing episodes", "No New Episodes found");
 				}
+				break;
+			case "feedPrev-cmd":
+				var feed = feedModel.items[this.feedObject.displayOrder-1];
+				this.stageController.swapScene("episodeList", feed);
+				break;
+			case "feedNext-cmd":
+				var feed = feedModel.items[this.feedObject.displayOrder+1];
+				this.stageController.swapScene("episodeList", feed);
 				break;
 		}
 	}
@@ -342,7 +371,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
-	this.stageController.pushScene("episodeDetails", episode, {autoPlay: autoPlay, resume: resume, playlist: []});
+	this.stageController.pushScene("episodeDetails", episode, {"autoPlay": autoPlay, "resume": resume, playlist: []});
 };
 
 EpisodeListAssistant.prototype.updatePercent = function(episode) {

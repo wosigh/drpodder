@@ -165,11 +165,12 @@
 	margin-top: 4px;
 	/*height: 52px;*/
 	color: gray;
+	font-size: 80%;
 }
 
 .episodeDetails {
 	margin-left: 20px;
-	font-size: 75%;
+	font-size: 70%;
 	color: gray;
 }
 

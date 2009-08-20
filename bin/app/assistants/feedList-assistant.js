@@ -10,6 +10,12 @@ FeedListAssistant.prototype.cmdMenuModel = {
 	]
 };
 
+FeedListAssistant.prototype.viewMenuModel = {
+	visible: true,
+	items: []
+};
+
+
 //FeedListAssistant.prototype.depotOptions = { name: "feed", replace: false };
 
 initialize = function() {
@@ -17,6 +23,15 @@ initialize = function() {
 
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
+
+	/*
+	var viewWhatsNew = {icon: "", command: "whatsNew-cmd", label: "What's New"};
+
+	this.viewMenuModel.items = [viewWhatsNew];
+	this.controller.setupWidget(Mojo.Menu.viewMenu,
+								{}, this.viewMenuModel);
+	*/
+
 
 	this.feedAttr = {
 		itemTemplate: "feedList/feedRowTemplate",

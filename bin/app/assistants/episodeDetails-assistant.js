@@ -28,7 +28,6 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	]
 };
 
-
 EpisodeDetailsAssistant.prototype.menuCommandItems = {
 	//streamPlay:  {iconPath: "images/mini-player-icon-streamPlay.png", command: "streamPlay-cmd"},
 	//streamPause: {iconPath: "images/mini-player-icon-streamPause.png", command: "streamPause-cmd"},
@@ -54,11 +53,34 @@ EpisodeDetailsAssistant.prototype.cmdMenuModel = {
 	]
 };
 
+EpisodeDetailsAssistant.prototype.viewMenuModel = {
+	visible: true,
+	items: []
+};
 
 EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.setupWidget("bodyScroller", {}, {});
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
 	this.controller.update(this.controller.get("episodeDetailsDescription"), this.episodeObject.description);
+
+	/*
+	var viewMenuPrev = {icon: "", command: "", label: " "};
+	var viewMenuNext = {icon: "", command: "", label: " "};
+	if (this.episodeObject.displayOrder > 0) {
+		viewMenuPrev = {icon: "back", command: "feedPrev-cmd"};
+	}
+
+	if (this.episodeObject.displayOrder < this.episodeObject.feedObject.episodes.length) {
+		viewMenuNext = {icon: "forward", command: "feedNext-cmd"};
+	}
+
+	this.viewMenuModel.items = [{items: [viewMenuPrev,
+										{label: this.episodeObject.title, height: 100, width: 200, command: "edit-cmd"},
+										viewMenuNext]}];
+	this.controller.setupWidget(Mojo.Menu.viewMenu,
+								{}, this.viewMenuModel);
+	*/
+
 
 	this.progressModel.value = 0;
 	this.progressModel.progressStart = 0;
@@ -206,11 +228,8 @@ EpisodeDetailsAssistant.prototype.backToList = function() {
 	if (!this.playlist || this.playlist.length === 0) {
 		this.controller.stageController.popScene(true);
 	} else {
-		Mojo.Log.error("We were playing: %s", this.episodeObject.title);
 		var episode = this.playlist.shift();
-		Mojo.Log.error("We are switching to: %s", episode.title);
 		this.controller.stageController.swapScene("episodeDetails", episode, {autoPlay: true, resume: true, playlist: this.playlist});
-
 	}
 };
 
