@@ -1,8 +1,8 @@
-var PrePod = {};
-PrePod.MainStageName = "PrePodMain";
-PrePod.DashboardStageName = "PrePodDashboard";
-PrePod.DownloadingStageName = "PrePodDownloading";
-PrePod.DownloadedStageName = "PrePodDownloaded";
+var DrPodder = {};
+DrPodder.MainStageName = "DrPodderMain";
+DrPodder.DashboardStageName = "DrPodderDashboard";
+DrPodder.DownloadingStageName = "DrPodderDownloading";
+DrPodder.DownloadedStageName = "DrPodderDownloaded";
 
 function AppAssistant(){
 	AppAssistant.downloadService = new DownloadService();
@@ -20,7 +20,7 @@ AppAssistant.appMenuModel = {
 	visible: true,
 	items: [
 		{label: "OPML",
-		 items: [{label: "Import from prepod.xml", command: "import-cmd"},
+		 items: [{label: "Import from drpodder.xml", command: "import-cmd"},
 				 {label: "Export via email", command: "export-cmd"}]
 		},
 		{label: "Preferences", command: "prefs-cmd"},
@@ -30,7 +30,7 @@ AppAssistant.appMenuModel = {
 
 AppAssistant.prototype.handleLaunch = function(launchParams) {
 	if (!launchParams || launchParams.action === undefined) {
-		var cardStageController = this.controller.getStageController(PrePod.MainStageName);
+		var cardStageController = this.controller.getStageController(DrPodder.MainStageName);
 		if (cardStageController) {
 			Mojo.Log.error("Main Stage exists");
 			cardStageController.activate();
@@ -39,7 +39,7 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 				stageController.pushScene("loading");
 			};
 			Mojo.Log.error("Create Main Stage");
-			var stageArguments = {name: PrePod.MainStageName, lightweight: true};
+			var stageArguments = {name: DrPodder.MainStageName, lightweight: true};
 			this.controller.createStageWithCallback(stageArguments, pushMainScene.bind(this), "card");
 		}
 	} else {
@@ -54,9 +54,9 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 
 AppAssistant.prototype.handleLaunchParams = function(launchParams) {
 	Mojo.Log.error("handleLaunchParams called: %s", launchParams.action);
-	var dashboardOpen = this.controller.getStageController(PrePod.DashboardStageName);
-	var downloadedDashboardOpen = this.controller.getStageController(PrePod.DownloadedStageName);
-	var downloadingDashboardOpen = this.controller.getStageController(PrePod.DownloadingStageName);
+	var dashboardOpen = this.controller.getStageController(DrPodder.DashboardStageName);
+	var downloadedDashboardOpen = this.controller.getStageController(DrPodder.DownloadedStageName);
+	var downloadingDashboardOpen = this.controller.getStageController(DrPodder.DownloadingStageName);
 	switch (launchParams.action) {
 		case "updateFeeds":
 			if (Prefs.autoUpdate && !downloadingDashboardOpen && !feedModel.updatingFeeds) {
@@ -110,9 +110,10 @@ AppAssistant.prototype.handleCommand = function(event) {
 			case "about-cmd":
 				currentScene.showAlertDialog({
 					onChoose: function(value) {},
-					title: "PrePod - v" + Mojo.Controller.appInfo.version,
-					message: "Copyright 2009, Jamie Hatfield<BR>" +
-					         "Logo Design: <a href='http://jamie3d.com/project-143'>Jamie Hamel-Smith</a><BR>" +
+					//title: "drPodder - v" + Mojo.Controller.appInfo.version,
+					message: "<div style='width=100%; font-size: 30px;'>drPodder - v" + Mojo.Controller.appInfo.version + "</div><HR>" +
+					         "Copyright 2009, Jamie Hatfield<BR>" +
+					         "Logo Design: <a href='http://jamie3d.com/'>Jamie Hamel-Smith</a><BR>" +
 							 "Original Logo Concept: <a href='http://www.userinterfaceicons.com/preview.php'>UII</a>",
 					allowHTMLMessage: true,
 					choices: [
@@ -121,13 +122,13 @@ AppAssistant.prototype.handleCommand = function(event) {
 				});
 				break;
 			case "import-cmd":
-				var req = new Ajax.Request("/media/internal/prepod.xml", {
+				var req = new Ajax.Request("/media/internal/drpodder.xml", {
 					method: 'get',
 					onFailure: function() {
-						Util.showError("Weird error reading OPML File", "I don't know what happened, but we couldn't read the prepod.xml file.");
+						Util.showError("Weird error reading OPML File", "I don't know what happened, but we couldn't read the drpodder.xml file.");
 					},
 					on404: function() {
-						Util.showError("OPML File not found", "Please place the prepod.xml file in the root of the Pre's USB directory and retry.");
+						Util.showError("OPML File not found", "Please place the drpodder.xml file in the root of the Pre's USB directory and retry.");
 					},
 					onSuccess: function(transport) {
 						try {
@@ -162,7 +163,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 								DB.saveFeeds();
 								Util.showError("OPML Import Finished", "Please refresh the Feed List to see the " + imported + " imported feed" + ((imported !== 1)?"s":""));
 							} else {
-								Util.showError("OPML Import Finished", "No valid feeds found in prepod.xml");
+								Util.showError("OPML Import Finished", "No valid feeds found in drpodder.xml");
 							}
 						} catch (e){
 							Mojo.Log.error("error with OPML: (%s)", e);
@@ -172,8 +173,8 @@ AppAssistant.prototype.handleCommand = function(event) {
 				});
 				break;
 			case "export-cmd":
-				var message = "Copy the following out to a file named prepod.xml.<br>" +
-				              "To restore this set of feeds to PrePod, simply copy prepod.xml to the root of the Pre's USB directory." +
+				var message = "Copy the following out to a file named drpodder.xml.<br>" +
+				              "To restore this set of feeds to drPodder, simply copy drpodder.xml to the root of the Pre's USB directory." +
 							  "<br><br>&lt;opml version='1.1'>&lt;body><br>";
 				for (var i=0; i<feedModel.items.length; i++) {
 					var feed = feedModel.items[i];
@@ -186,7 +187,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 					message += "/><br>";
 				}
 				message += "&lt;/body>&lt;/opml>";
-				AppAssistant.applicationManagerService.email("PrePod OPML Export", message);
+				AppAssistant.applicationManagerService.email("drPodder OPML Export", message);
 				break;
 		}
 	}

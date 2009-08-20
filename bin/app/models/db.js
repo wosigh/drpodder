@@ -219,7 +219,11 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 
 DBClass.prototype.loadEpisodes = function() {
 	var loadSQL = "SELECT * FROM episode ORDER BY feedId, displayOrder";
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "updateLoadingMessage",
+		message: "Loading Episodes"});
 
+	//this.startEpisodeRetrieval = (new Date()).getTime();
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(loadSQL, [],
 			this.loadEpisodesSuccess.bind(this),
@@ -228,12 +232,20 @@ DBClass.prototype.loadEpisodes = function() {
 };
 
 DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
+	//Mojo.Log.error("episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 	if (results.rows.length > 0) {
-		for (var i=0; i<results.rows.length; i++) {
-			var f = feedModel.getFeedById(results.rows.item(i).feedId);
+		var oldFeedId = -1;
+		var f = null;
+		for (var i=0, len=results.rows.length; i<len; ++i) {
+			var item = results.rows.item(i);
+			var feedId = item.feedId;
+			if (feedId !== oldFeedId) {
+				f = feedModel.getFeedById(feedId);
+				oldFeedId = feedId;
+			}
 			//if (f.episodes.length < f.maxDisplay) {
 			if (f) {
-				var e = new Episode(results.rows.item(i));
+				var e = new Episode(item);
 				e.feedObject = f;
 				if (e.enclosure === "undefined") {e.enclosure = null;}
 				if (e.type === "undefined") {e.type = null;}
@@ -242,11 +254,11 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				if (f.details === undefined) {f.details = e.title;}
 				f.episodes.push(e);
 				f.guid[e.guid] = e;
-				f.numEpisodes++;
-				if (!e.listened) {f.numNew++;}
-				if (e.downloaded) {f.numDownloaded++;}
+				++f.numEpisodes;
+				if (!e.listened) {++f.numNew;}
+				if (e.downloaded) {++f.numDownloaded;}
 				if (e.position !== 0) {
-					f.numStarted++;
+					++f.numStarted;
 					if (e.length) {
 						e.bookmarkPercent = 100*e.position/e.length;
 					}
@@ -265,6 +277,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 			}
 		}
 	}
+	//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 	this.callback();
 };
 

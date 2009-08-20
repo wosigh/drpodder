@@ -116,11 +116,11 @@ Utilities.prototype.escapeSpecial = function(file) {
 
 Utilities.prototype.banner = function(message) {
 	var appController = Mojo.Controller.appController;
-	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
-	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
+	var cardVisible = appController.getStageProxy(DrPodder.MainStageName) &&
+	                  appController.getStageProxy(DrPodder.MainStageName).isActiveAndHasScenes();
 	if (Prefs.enableNotifications || cardVisible) {
 		var bannerParams = {
-			icon: "miniicon.png",
+			//icon: "miniicon.png",
             messageText: message
 		};
 		appController.showBanner(bannerParams, {});
@@ -129,8 +129,8 @@ Utilities.prototype.banner = function(message) {
 
 Utilities.prototype.dashboard = function(stageName, title, message, clearMessages) {
 	var appController = Mojo.Controller.appController;
-	var cardVisible = appController.getStageProxy(PrePod.MainStageName) &&
-	                  appController.getStageProxy(PrePod.MainStageName).isActiveAndHasScenes();
+	var cardVisible = appController.getStageProxy(DrPodder.MainStageName) &&
+	                  appController.getStageProxy(DrPodder.MainStageName).isActiveAndHasScenes();
 	if (!cardVisible && Prefs.enableNotifications) {
 		var cont = appController.getStageProxy(stageName);
 		if (!cont) {

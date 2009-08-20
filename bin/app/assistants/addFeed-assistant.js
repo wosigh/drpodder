@@ -223,9 +223,6 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	// Check entered URL and name to confirm that it is a valid feedlist
 	Mojo.Log.error("New Feed URL Request: ", this.urlModel.value);
 
-	// Update the entered URL & model
-	this.controller.modelChanged(this.urlModel);
-
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
 	if (!this.newFeed && this.feed !== null && this.feed.url === this.urlModel.value) {
@@ -245,19 +242,23 @@ AddFeedAssistant.prototype.checkFeed = function() {
 			// Strip any leading slashes
 			url = url.replace(/^\/{1,2}/, "");
 			url = "http://" + url;
+			this.urlModel.value = url;
+			// Update the entered URL & model
+			this.controller.modelChanged(this.urlModel);
 		}
+
 
 		this.check(url);
 	}
 };
 
 AddFeedAssistant.prototype.check = function(url) {
-	if (url) {
-		this.urlModel.value = url;
+	if (!url) {
+		url = this.urlModel.value;
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
 	//Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
-	var request = new Ajax.Request(this.urlModel.value, {
+	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
 		evalJS : "false",

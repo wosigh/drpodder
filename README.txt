@@ -1,4 +1,4 @@
-PrePod
+drPodder
 drnull - <jdhatfield (at) google's-email-service (dot) com>
 
 USAGE:
@@ -12,7 +12,7 @@ UI Description:
     - Refresh button to refresh the list of feeds
     - Feed icon should show up on first update, if the feed has one
     - Line under feed name is the latest episode name
-    - 3 mini icons 
+    - 3 mini icons
       - disk - number of episodes downloaded/saved
       - star - number of new episodes (their status is set to Unlistened)
       - pause - number of new episodes you've started listening to (count currently not updating, but bookmarks are retained)
@@ -74,5 +74,3 @@ Credits
     http://www.userinterfaceicons.com/
     http://www.famfamfam.com/lab/icons/silk/
     http://www.damieng.com/icons/silkcompanion
-
-

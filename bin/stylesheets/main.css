@@ -1,5 +1,5 @@
 /* shouldn't have to do this, but to get the menu to show up lower-case,
-   I had to override this.  Otherwise, people would be naming the file Prepod.Xml for import
+   I had to override this.  Otherwise, people would be naming the file drPodder.Xml for import
 */
 .title {
   text-transform: none;
@@ -203,7 +203,7 @@
 	float: left;
 }
 
-.dashboard-icon-prepod {
+.dashboard-icon-drpodder {
   background: url(../images/dashboard-icon.png);
 }
 
@@ -216,9 +216,15 @@
   font-size: 70%;
 }
 
-.prepod-large-logo {
-  background: url(../images/prepod_icon.png) top center no-repeat;
-  background-color: black;
+.drpodder-large-logo {
+  background: url(../images/drpodder_icon.png) top center no-repeat;
+  height: 100%;
+}
+
+.loading-scrim {
+  position: absolute;
+  z-index: -1;
+  width: 100%;
   height: 100%;
 }
 

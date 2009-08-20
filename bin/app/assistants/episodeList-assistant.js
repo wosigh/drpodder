@@ -3,7 +3,7 @@ function EpisodeListAssistant(feedObject) {
 	this.episodeModel = {items: feedObject.episodes};
 
 	this.appController = Mojo.Controller.getAppController();
-	this.stageController = this.appController.getStageController(PrePod.MainStageName);
+	this.stageController = this.appController.getStageController(DrPodder.MainStageName);
 }
 
 EpisodeListAssistant.prototype.items = [];
@@ -17,18 +17,29 @@ EpisodeListAssistant.prototype.items = [];
     //onFailure: this.onFailureHandler
 	//});
 
-EpisodeListAssistant.menuAttr = {omitDefaultItems: true};
-EpisodeListAssistant.menuModel = {
+EpisodeListAssistant.prototype.menuAttr = {omitDefaultItems: true};
+EpisodeListAssistant.prototype.menuModel = {
 	visible: true,
 	items: [
 		{label: "Edit Feed", command: "edit-cmd"},
-		{label: "Mark all Unlistened...", command: "unlistened-cmd"},
-		{label: "Mark all Listened...", command: "listened-cmd"},
+		{label: "Mark all as New", command: "unlistened-cmd"},
+		{label: "Mark all as Old", command: "listened-cmd"},
+		{label: "Play from Newest", command: "playFromNewest-cmd"},
+		{label: "Play from Oldest", command: "playFromOldest-cmd"},
 		{label: "About...", command: "about-cmd"}
 	]
 };
 
+EpisodeListAssistant.prototype.cmdMenuModel = {
+	items: [
+		{},
+		{icon: "refresh", command: "refresh-cmd"}
+	]
+};
+
 EpisodeListAssistant.prototype.setup = function() {
+	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
+
 	this.episodeAttr = {
 		itemTemplate: "episodeList/episodeRowTemplate",
 		listTemplate: "episodeList/episodeListTemplate",
@@ -55,7 +66,7 @@ EpisodeListAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
 
-	this.controller.setupWidget(Mojo.Menu.appMenu, EpisodeListAssistant.menuAttr, EpisodeListAssistant.menuModel);
+	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
 
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
@@ -80,7 +91,6 @@ EpisodeListAssistant.prototype.cleanup = function(changes) {
 };
 
 EpisodeListAssistant.prototype.handleCommand = function(event) {
-	var i, episode;
 	if (event.type === Mojo.Event.command) {
 		switch (event.command) {
 			case "unlistened-cmd":
@@ -91,6 +101,31 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "edit-cmd":
 				this.stageController.pushScene("addFeed", this.feedObject);
+				break;
+			case "refresh-cmd":
+				this.cmdMenuModel.items[1].disabled = true;
+				this.controller.modelChanged(this.cmdMenuModel);
+				this.feedObject.update(function() {
+					this.cmdMenuModel.items[1].disabled = false;
+					this.controller.modelChanged(this.cmdMenuModel);
+				}.bind(this));
+				break;
+			case "playFromNewest-cmd":
+			case "playFromOldest-cmd":
+				var playlist = [];
+				for (var i=0,len=this.feedObject.episodes.length; i<len; ++i) {
+					var episode = this.feedObject.episodes[i];
+					if (!episode.listened && episode.enclosure) {
+						playlist.push(episode);
+					}
+				}
+				if (event.command === "playFromOldest-cmd") {playlist.reverse();}
+				if (playlist.length > 0) {
+					var e = playlist.shift();
+					this.stageController.pushScene("episodeDetails", e, {autoPlay: true, resume: true, playlist: playlist});
+				} else {
+					Util.showError("Error playing episodes", "No unviewed episodes found");
+				}
 				break;
 		}
 	}
@@ -161,6 +196,7 @@ EpisodeListAssistant.prototype.handleDelete = function(event) {
 	} else {
 		event.item.setListened(true);
 		event.item.deleteFile(true);
+		event.item.clearBookmark(true);
 		event.item.updateUIElements();
 		event.item.save();
 	}
@@ -173,8 +209,8 @@ EpisodeListAssistant.prototype.cmdItems = {
 	playCmd       : {label: "Play", command: "resume-cmd"},
 	resumeCmd     : {label: "Resume", command: "resume-cmd"},
 	restartCmd    : {label: "Restart", command: "restart-cmd"},
-	listenedCmd   : {label: "Mark Listened", command: "listen-cmd"},
-	unlistenedCmd : {label: "Mark Unlistened", command: "unlisten-cmd"},
+	listenedCmd   : {label: "Mark as Old", command: "listen-cmd"},
+	unlistenedCmd : {label: "Mark as New", command: "unlisten-cmd"},
 	clearCmd      : {label: "Clear Bookmark", command: "clear-cmd"},
 	detailsCmd    : {label: "Episode Details", command: "details-cmd"},
 	noEnclosureCmd: {label: "No enclosure found", command: "noenclosure-cmd", disabled: true}
@@ -217,13 +253,13 @@ EpisodeListAssistant.prototype.handleSelection = function(event) {
 				if (episode.downloaded) {
 					items.push(this.cmdItems.deleteCmd);
 				}
-				if (episode.listened) {
-					items.push(this.cmdItems.unlistenedCmd);
-				} else {
-					items.push(this.cmdItems.listenedCmd);
-				}
 			} else {
 				items.push(this.cmdItems.noEnclosureCmd);
+			}
+			if (episode.listened) {
+				items.push(this.cmdItems.unlistenedCmd);
+			} else {
+				items.push(this.cmdItems.listenedCmd);
 			}
 			items.push(this.cmdItems.detailsCmd);
 		}
@@ -306,7 +342,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
-	this.stageController.pushScene("episodeDetails", episode, autoPlay, resume);
+	this.stageController.pushScene("episodeDetails", episode, {autoPlay: autoPlay, resume: resume, playlist: []});
 };
 
 EpisodeListAssistant.prototype.updatePercent = function(episode) {

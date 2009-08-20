@@ -1,12 +1,11 @@
 {
-	"title": "PrePod",
+	"title": "drPodder",
 	"type": "web",
 	"main": "index.html",
 	"id": "com.palm.drnull.prepod",
 	"version": "0.4.2",
 	"vendor": "drnull",
 	"icon": "icon.png",
-	"miniicon": "miniicon.png",
 	"noWindow": "true",
 	"theme": "light",
 	"removable": "true"

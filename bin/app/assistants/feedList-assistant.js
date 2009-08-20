@@ -1,6 +1,6 @@
 function FeedListAssistant() {
 	this.appController = Mojo.Controller.getAppController();
-	this.stageController = this.appController.getStageController(PrePod.MainStageName);
+	this.stageController = this.appController.getStageController(DrPodder.MainStageName);
 }
 
 FeedListAssistant.prototype.cmdMenuModel = {
@@ -61,6 +61,8 @@ FeedListAssistant.prototype.setup = function() {
 
 	this.onBlurHandler = this.onBlur.bind(this);
 	this.onFocusHandler = this.onFocus.bind(this);
+	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
+	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 	this.onFocus();
 };
 
@@ -86,8 +88,6 @@ FeedListAssistant.prototype.activate = function(result) {
 	}
 
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
-	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
-	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
@@ -112,11 +112,11 @@ FeedListAssistant.prototype.activate = function(result) {
 			this.updateFeeds();
 		}
 	}
+
+	this.onFocus();
 };
 
 FeedListAssistant.prototype.deactivate = function() {
-	Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
-	Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 	Mojo.Event.stopListening(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.stopListening(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.stopListening(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
@@ -147,9 +147,9 @@ FeedListAssistant.prototype.onFocus = function() {
 		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	}
 
-	Util.closeDashboard(PrePod.DashboardStageName);
-	Util.closeDashboard(PrePod.DownloadingStageName);
-	Util.closeDashboard(PrePod.DownloadedStageName);
+	Util.closeDashboard(DrPodder.DashboardStageName);
+	Util.closeDashboard(DrPodder.DownloadingStageName);
+	Util.closeDashboard(DrPodder.DownloadedStageName);
 
 	this.cmdMenuModel.items[1].disabled = feedModel.updatingFeeds;
 	this.controller.modelChanged(this.cmdMenuModel);
@@ -167,6 +167,8 @@ FeedListAssistant.prototype.updateFeeds = function(feedIndex) {
 };
 
 FeedListAssistant.prototype.cleanup = function() {
+	Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
+	Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 	// this doesn't seem to actually save the feeds.  db has gone away maybe?
 	//DB.saveFeeds();
 	if (this.foregroundVolumeMarker) {
@@ -235,7 +237,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        //{label: feed.numDownloaded+" downloaded", command: 'viewDownloaded-cmd'},
 			        //{label: feed.numNew+" new", command: 'viewNew-cmd'},
 			        //{label: feed.numStarted+" started", command: 'viewStarted-cmd'},
-			        {label: "Mark Listened", command: 'listened-cmd'},
+			        {label: "Clear New", command: 'listened-cmd'},
 			        {label: "Edit Feed", command: 'edit-cmd'}
 			]});
 	} else if (targetClass.indexOf("download") === 0) {

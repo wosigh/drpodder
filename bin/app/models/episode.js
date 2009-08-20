@@ -94,7 +94,7 @@ Episode.prototype.save = function(ignore) {
 };
 
 Episode.prototype.setListened = function(ignore) {
-	if (!this.listened && this.enclosure) {
+	if (!this.listened) {
 		this.listened = true;
 		this.updateUIElements(ignore);
 		this.save(ignore);
@@ -103,7 +103,7 @@ Episode.prototype.setListened = function(ignore) {
 };
 
 Episode.prototype.setUnlistened = function(ignore) {
-	if (this.listened && this.enclosure) {
+	if (this.listened) {
 		this.listened = false;
 		this.updateUIElements(ignore);
 		this.save(ignore);
@@ -136,13 +136,13 @@ Episode.prototype.bookmark = function(pos) {
 	}
 };
 
-Episode.prototype.clearBookmark = function() {
+Episode.prototype.clearBookmark = function(ignore) {
 	if (this.position) {
 		this.position = 0;
 		this.bookmarkPercent = 0;
 		this.feedObject.episodeBookmarkCleared();
-		this.updateUIElements();
-		this.save();
+		this.updateUIElements(ignore);
+		this.save(ignore);
 	}
 };
 
@@ -150,7 +150,7 @@ Episode.prototype.download = function(silent) {
 	this.deleteFile();
 	if (!silent) {
 		Util.banner("Downloading: " + this.title);
-		Util.dashboard(PrePod.DownloadingStageName, "Downloading", this.title);
+		Util.dashboard(DrPodder.DownloadingStageName, "Downloading", this.title);
 	}
 	Mojo.Log.error("Downloading %s as %s", this.enclosure, this.getDownloadFilename());
 	if (this.enclosure) {
@@ -256,7 +256,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadActivity();
 		this.updateUIElements();
 		this.save();
-		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 		// if the user didn't do this, let them know what happened
 		this.feedObject.downloadFinished();
 		if (!event.aborted) {
@@ -279,8 +279,8 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.save();
 		this.feedObject.downloadFinished();
 
-		Util.dashboard(PrePod.DownloadedStageName, "Downloaded", this.title);
-		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
+		Util.dashboard(DrPodder.DownloadedStageName, "Downloaded", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.error("Redirecting...", event.target);
@@ -331,7 +331,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadActivity();
 		this.updateUIElements();
 		this.save();
-		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 		this.feedObject.downloadFinished();
 	} else if (this.downloading) {
 		var per = 0;
@@ -352,7 +352,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.deleteTempFile();
 		this.downloadCanceled = false;
 		Mojo.Log.error("Got the cancel event, but it has already been handled");
-		Util.removeMessage(PrePod.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 	} else {
 		this.deleteTempFile();
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);

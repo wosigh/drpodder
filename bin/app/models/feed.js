@@ -59,15 +59,15 @@ Feed.prototype.update = function(callback, url) {
 		this.url = "/proxy?url=" + encodeURIComponent(this.url);
 	}
 	*/
-	if (url) {
-		this.url = url;
+	if (!url) {
+		url = this.url;
 	}
 
 	var feedTitle = (this.title)?this.title:"Unknown feed title";
-	Util.dashboard(PrePod.DashboardStageName, "Updating Feed", feedTitle, true);
+	Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
 
 	//Mojo.Log.error("making ajax request");
-	var req = new Ajax.Request(this.url, {
+	var req = new Ajax.Request(url, {
 		method: 'get',
 		evalJSON : "false",
 		evalJS : "false",
@@ -458,7 +458,7 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 		}
 
 		// first time through
-		Util.banner("Updating PrePod Feeds");
+		Util.banner("Updating drPodder Feeds");
 		AppAssistant.powerService.activityStart(null, "FeedsUpdating");
 		this.updatingFeeds = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({
@@ -472,7 +472,6 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 		}.bind(this));
 	} else {
 		this.updatingFeeds = false;
-		DB.saveFeeds();
 		this.download();
 		Mojo.Controller.getAppController().sendToNotificationChain({
 			type: "feedsUpdating", value: false});
@@ -518,7 +517,7 @@ FeedModel.prototype.download = function() {
 			this._doDownload(eps);
 		}
 	} else {
-		Util.closeDashboard(PrePod.DashboardStageName);
+		Util.closeDashboard(DrPodder.DashboardStageName);
 		if (this.enabledWifi) {
 			AppAssistant.wifiService.setState(null, "disabled");
 		}
@@ -535,7 +534,7 @@ FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
 		Mojo.Log.error("Skipping %d episode download because wifi isn't connected", eps.length);
 		Util.banner(eps.length + " Download" + ((eps.length===1)?"":"s") +
 				            " pending WiFi");
-		Util.dashboard(PrePod.DashboardStageName, "Downloads pending WiFi",
+		Util.dashboard(DrPodder.DashboardStageName, "Downloads pending WiFi",
 						eps.map(function(e){return e.title;}), true);
 	}
 };
@@ -545,7 +544,7 @@ FeedModel.prototype._doDownload = function(eps) {
 		var e = eps[i];
 		e.download();
 	}
-	Util.closeDashboard(PrePod.DashboardStageName);
+	Util.closeDashboard(DrPodder.DashboardStageName);
 };
 
 var feedModel = new FeedModel();
