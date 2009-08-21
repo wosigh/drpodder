@@ -6,6 +6,7 @@ function AddFeedAssistant(feed) {
 
 	if (this.feed !== null) {
 		this.newFeed = false;
+		this.originalUrl = feed.url;
 		this.dialogTitle = "Edit Podcast XML Feed";
 		this.title = this.feed.title;
 		this.url = this.feed.url;
@@ -205,8 +206,8 @@ AddFeedAssistant.prototype.autoDownloadChanged = function(event) {
 };
 
 AddFeedAssistant.prototype.updateFields = function() {
-	this.feed.title = this.nameModel.value;
-	this.feed.albumArt = this.albumArtModel.value;
+	if (this.nameModel.value) {this.feed.title = this.nameModel.value;}
+	if (this.albumArtModel.value) {this.feed.albumArt = this.albumArtModel.value;}
 	this.feed.autoDownload = this.autoDownloadModel.value;
 	this.feed.autoDelete = this.autoDeleteModel.value;
 	this.feed.maxDownloads = this.maxDownloadsModel.value;
@@ -257,7 +258,7 @@ AddFeedAssistant.prototype.check = function(url) {
 		url = this.urlModel.value;
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
-	//Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
+	Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
@@ -265,11 +266,12 @@ AddFeedAssistant.prototype.check = function(url) {
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});
-	//Mojo.Log.error("finished making ajax request");
+	Mojo.Log.error("finished making ajax request");
 };
 
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	//Mojo.Log.error("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
+	Mojo.Log.error("checkSuccess");
 	var location = transport.getHeader("Location");
 	if (location) {
 		Mojo.Log.error("Redirection location=%s", location);
@@ -282,47 +284,55 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	var m = t.evaluate(transport);
 	Mojo.Log.info("Valid URL (Status ", m, " returned).");
 
-	// DEBUG - Work around due occasion Ajax XML error in response.
-	if (transport.responseXML === null && transport.responseText !== null) {
-		Mojo.Log.info("Request not in XML format - manually converting");
-		//var start = (new Date()).getTime();
-		transport.responseXML = new DOMParser().parseFromString(
-				transport.responseText, "text/xml");
-		//Mojo.Log.error("parse time: %d", (new Date()).getTime()-start);
+Mojo.Log.error("transport check");
+	Mojo.Log.error("transport.status=%s", transport.status);
+	if (transport.status) {
+		// DEBUG - Work around due occasion Ajax XML error in response.
+		if (transport.responseXML === null && transport.responseText !== null) {
+			Mojo.Log.info("Request not in XML format - manually converting");
+			//var start = (new Date()).getTime();
+			transport.responseXML = new DOMParser().parseFromString(
+					transport.responseText, "text/xml");
+			//Mojo.Log.error("parse time: %d", (new Date()).getTime()-start);
+		}
+
+		//  If a new feed, push the entered feed data on to the feedlist and
+		//  call processFeed to evaluate it.
+		if (this.newFeed) {
+			this.feed = new Feed();
+			this.feed.url = this.urlModel.value;
+			this.feed.interval = 60000;
+		} else {
+			this.feed.url = this.urlModel.value;
+
+			// need to clear out this feed (and probably delete downloaded episodes)
+			// maybe not clear them out, what if they need to move the feed somewhere else?
+			//this.feed.episodes = [];
+			//this.feed.numEpisodes = 0;
+			//this.feed.numNew = 0;
+			//this.feed.numStarted = 0;
+			//this.feed.numDownloaded = 0;
+			//this.feed.albumArt = null;
+		}
+
+		this.feed.gui = true;
+		feedStatus = this.feed.updateCheck(transport);
+		Mojo.Log.error("feedStatus:%d", feedStatus);
+		this.feed.gui = false;
 	}
 
-	//  If a new feed, push the entered feed data on to the feedlist and
-	//  call processFeed to evaluate it.
-	if (this.newFeed) {
-		this.feed = new Feed();
-		this.feed.url = this.urlModel.value;
-	} else {
-		this.feed.url = this.urlModel.value;
-
-		// need to clear out this feed (and probably delete downloaded episodes)
-		this.feed.episodes = [];
-		this.feed.numEpisodes = 0;
-		this.feed.numNew = 0;
-		this.feed.numStarted = 0;
-		this.feed.numDownloaded = 0;
-		this.feed.albumArt = null;
-	}
-	this.feed.interval = 60000;
-	this.updateFields();
-
-	this.feed.gui = true;
-	feedSuccess = this.feed.updateCheck(transport);
-	this.feed.gui = false;
-
-	if (feedSuccess <= 0) {
+	if (feedStatus < 0 || !transport.status) {
 		// Feed can't be processed - remove it but keep the dialog open
 		Mojo.Log.error("Error updating feed:", this.urlModel.value);
 		this.controller.get("dialogTitle").update("Error updating feed");
 		this.controller.getSceneScroller().mojo.revealTop(true);
 		this.controller.get("newFeedURL").mojo.focus();
 
+		Mojo.Log.error("resetButton");
 		this.resetButton();
+		Mojo.Log.error("resetButton done");
 	} else {
+		this.updateFields();
 		var results = {};
 		if (this.newFeed) {
 			feedModel.items.push(this.feed);
@@ -345,6 +355,7 @@ AddFeedAssistant.prototype.resetButton = function() {
 
 AddFeedAssistant.prototype.checkFailure = function(transport) {
 	// Prototype template object generates a string from return status
+	Mojo.Log.error("checkFailure");
 	var t = new Template("#{status}");
 	var m = t.evaluate(transport);
 
@@ -361,4 +372,12 @@ AddFeedAssistant.prototype.cancel = function() {
 	// TODO - Cancel Ajax request or Feed operation if in progress
 	this.controller.stopListening("okButton", Mojo.Event.tap, this.checkFeedHandler);
 	this.controller.stageController.popScene();
+};
+
+AddFeedAssistant.prototype.handleCommand = function(event) {
+	if (event.type === Mojo.Event.back) {
+		if (!this.newFeed) {
+			this.feed.url = this.originalUrl;
+		}
+	}
 };

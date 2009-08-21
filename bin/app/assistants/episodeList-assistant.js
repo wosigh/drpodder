@@ -406,6 +406,9 @@ EpisodeListAssistant.prototype.considerForNotification = function(params) {
 					this.updatePercent(params.episode);
 				}
 				break;
+			case "onFocus":
+				this.refresh();
+				break;
 		}
 	}
 };

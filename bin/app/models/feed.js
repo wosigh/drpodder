@@ -66,7 +66,7 @@ Feed.prototype.update = function(callback, url) {
 	var feedTitle = (this.title)?this.title:"Unknown feed title";
 	Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
 
-	//Mojo.Log.error("making ajax request");
+	Mojo.Log.error("making ajax request [%s]", url);
 	var req = new Ajax.Request(url, {
 		method: 'get',
 		evalJSON : "false",
@@ -123,6 +123,7 @@ Feed.prototype.getTitle = function(transport) {
 				var firstChild = node.firstChild;
 				if (firstChild) {
 					title = firstChild.nodeValue;
+					Mojo.Log.error("title: %s", title);
 				}
 			}
 		}
@@ -193,6 +194,9 @@ Feed.prototype.updateCheck = function(transport, callback) {
 
 	if (this.title === undefined || this.title === null || this.title === "") {
 		this.title = this.getTitle(transport);
+		if (!this.title) {
+			return UPDATECHECK_INVALID;
+		}
 	}
 
 	if (this.albumArt === undefined || this.albumArt === null || this.albumArt === "") {
@@ -235,7 +239,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	if (!nodes) {
 		// bring this back once feed add dialog is its own page
 		//Util.showError("Error parsing feed", "No items found in feed");
-		return false;
+		return UPDATECHECK_INVALID;
 	}
 
 	var result = nodes.iterateNext();

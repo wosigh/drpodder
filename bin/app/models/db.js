@@ -297,7 +297,6 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	}
 
 	this.db.transaction(function(transaction) {
-		Mojo.Log.error("@@@@@@@@@@ STARTED: db transaction for saving feed");
 		if (f.id === undefined) {f.id = null;}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay],
@@ -314,7 +313,6 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 					f.episodes[i].displayOrder = i;
 					this.saveEpisodeTransaction(f.episodes[i], transaction);
 				}
-				Mojo.Log.error("@@@@@@@@@@ ENDED: db transaction for saving feed");
 			}.bind(this),
 			function(transaction, error) {
 				Util.showError("Error Saving Feed", "There was an error saving feed: "+f.title);
