@@ -87,7 +87,7 @@ FeedListAssistant.prototype.activate = function(result) {
 			var feed = new Feed();
 			feed.title = result.feedToAdd.title;
 			feed.url = result.feedToAdd.url;
-			feed.update();
+			feed.update(function() {});
 			feedModel.add(feed);
 			result.feedAdded = true;
 		}

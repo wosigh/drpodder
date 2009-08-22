@@ -283,7 +283,10 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 
 DBClass.prototype.saveFeeds = function() {
 	for (var i=0; i<feedModel.items.length; i++) {
-		this.saveFeed(feedModel.items[i], i);
+		var feed = feedModel.items[i];
+		if (!feed.playlist) {
+			this.saveFeed(feed, i);
+		}
 	}
 };
 
