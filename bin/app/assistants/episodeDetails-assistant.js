@@ -372,13 +372,16 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 		case "canplaythrough":
 		case "canplay":
 			this.updateProgress();
-			if (this.autoPlay) {
-				this.audioObject.play();
-			}
-			if (!this.resuming) {
+			if (!this.resuming && !this.resume) {
+				if (this.autoPlay) {
+					this.audioObject.play();
+				}
 				this.cmdMenuModel.items[2].disabled = false;
 				this.refreshMenu();
 			}
+			break;
+		case "seeked":
+			this.resuming = false;
 			break;
 		/*
 		case "x-palm-success":

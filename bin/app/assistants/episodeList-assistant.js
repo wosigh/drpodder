@@ -56,7 +56,7 @@ EpisodeListAssistant.prototype.setup = function() {
 	}
 
 	this.viewMenuModel.items = [{items: [viewMenuPrev,
-										{label: this.feedObject.title, width: 200, command: "edit-cmd"},
+										{label: this.feedObject.title, width: 200, command: "feed-cmd"},
 										viewMenuNext]}];
 	this.controller.setupWidget(Mojo.Menu.viewMenu,
 								{}, this.viewMenuModel);
@@ -132,21 +132,10 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				}.bind(this));
 				break;
 			case "playFromNewest-cmd":
+				this.playFrom();
+				break;
 			case "playFromOldest-cmd":
-				var playlist = [];
-				for (var i=0,len=this.feedObject.episodes.length; i<len; ++i) {
-					var episode = this.feedObject.episodes[i];
-					if (!episode.listened && episode.enclosure) {
-						playlist.push(episode);
-					}
-				}
-				if (event.command === "playFromOldest-cmd") {playlist.reverse();}
-				if (playlist.length > 0) {
-					var e = playlist.shift();
-					this.stageController.pushScene("episodeDetails", e, {autoPlay: true, resume: true, playlist: playlist});
-				} else {
-					Util.showError("Error playing episodes", "No New Episodes found");
-				}
+				this.playFrom(true);
 				break;
 			case "feedPrev-cmd":
 				var feed = feedModel.items[this.feedObject.displayOrder-1];
@@ -156,7 +145,45 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				feed = feedModel.items[this.feedObject.displayOrder+1];
 				this.stageController.swapScene("episodeList", feed);
 				break;
+			case "feed-cmd":
+				this.controller.popupSubmenu({
+					onChoose: this.handleFeedPopup.bind(this),
+					manualPlacement: true,
+					popupClass: "titlePopup1",
+					//placeNear: event.originalEvent.target,
+					items: [{label: "Play from Newest", command: "playFromNewest-cmd"},
+							{label: "Play from Oldest", command: "playFromOldest-cmd"}]
+				});
+				break;
 		}
+	}
+};
+
+EpisodeListAssistant.prototype.handleFeedPopup = function(value) {
+	switch(value) {
+		case "playFromNewest-cmd":
+			this.playFrom();
+			break;
+		case "playFromOldest-cmd":
+			this.playFrom(true);
+			break;
+	}
+};
+
+EpisodeListAssistant.prototype.playFrom = function(oldest) {
+	var playlist = [];
+	for (var i=0,len=this.feedObject.episodes.length; i<len; ++i) {
+		var episode = this.feedObject.episodes[i];
+		if (!episode.listened && episode.enclosure) {
+			playlist.push(episode);
+		}
+	}
+	if (oldest) {playlist.reverse();}
+	if (playlist.length > 0) {
+		var e = playlist.shift();
+		this.stageController.pushScene("episodeDetails", e, {autoPlay: true, resume: true, playlist: playlist});
+	} else {
+		Util.showError("Error playing episodes", "No New Episodes found");
 	}
 };
 

@@ -66,7 +66,7 @@ Feed.prototype.update = function(callback, url) {
 	var feedTitle = (this.title)?this.title:"Unknown feed title";
 	Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
 
-	Mojo.Log.error("making ajax request [%s]", url);
+	//Mojo.Log.error("making ajax request [%s]", url);
 	var req = new Ajax.Request(url, {
 		method: 'get',
 		evalJSON : "false",

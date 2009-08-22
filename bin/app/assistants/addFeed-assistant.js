@@ -228,6 +228,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	// update the feed title and close the dialog. Otherwise update the feed.
 	if (!this.newFeed && this.feed !== null && this.feed.url === this.urlModel.value) {
 		this.updateFields();
+		DB.saveFeed(this.feed);
 		this.controller.stageController.popScene({feedChanged: true, feedIndex: feedModel.items.indexOf(this.feed)});
 	} else {
 		this.okButton.mojo.activate();
@@ -258,7 +259,7 @@ AddFeedAssistant.prototype.check = function(url) {
 		url = this.urlModel.value;
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
-	Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
+	//Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
@@ -266,12 +267,11 @@ AddFeedAssistant.prototype.check = function(url) {
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});
-	Mojo.Log.error("finished making ajax request");
+	//Mojo.Log.error("finished making ajax request");
 };
 
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	//Mojo.Log.error("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
-	Mojo.Log.error("checkSuccess");
 	var location = transport.getHeader("Location");
 	if (location) {
 		Mojo.Log.error("Redirection location=%s", location);
@@ -284,8 +284,6 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	var m = t.evaluate(transport);
 	Mojo.Log.info("Valid URL (Status ", m, " returned).");
 
-Mojo.Log.error("transport check");
-	Mojo.Log.error("transport.status=%s", transport.status);
 	if (transport.status) {
 		// DEBUG - Work around due occasion Ajax XML error in response.
 		if (transport.responseXML === null && transport.responseText !== null) {
@@ -317,7 +315,6 @@ Mojo.Log.error("transport check");
 
 		this.feed.gui = true;
 		feedStatus = this.feed.updateCheck(transport);
-		Mojo.Log.error("feedStatus:%d", feedStatus);
 		this.feed.gui = false;
 	}
 
@@ -328,9 +325,7 @@ Mojo.Log.error("transport check");
 		this.controller.getSceneScroller().mojo.revealTop(true);
 		this.controller.get("newFeedURL").mojo.focus();
 
-		Mojo.Log.error("resetButton");
 		this.resetButton();
-		Mojo.Log.error("resetButton done");
 	} else {
 		this.updateFields();
 		var results = {};
@@ -340,6 +335,7 @@ Mojo.Log.error("transport check");
 		} else {
 			results.feedChanged = true;
 			results.feedIndex = feedModel.items.indexOf(this.feed);
+			DB.saveFeed(this.feed);
 		}
 		this.controller.stageController.popScene(results);
 	}
@@ -348,14 +344,13 @@ Mojo.Log.error("transport check");
 AddFeedAssistant.prototype.resetButton = function() {
 	this.okButton.mojo.deactivate();
 	this.okButtonActive = false;
-	this.okButtonModel.buttonLabel = "OK";
+	this.okButtonModel.buttonLabel = this.okButtonValue;
 	this.okButtonModel.disabled = false;
 	this.controller.modelChanged(this.okButtonModel);
 };
 
 AddFeedAssistant.prototype.checkFailure = function(transport) {
 	// Prototype template object generates a string from return status
-	Mojo.Log.error("checkFailure");
 	var t = new Template("#{status}");
 	var m = t.evaluate(transport);
 
