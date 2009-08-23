@@ -110,6 +110,7 @@ PreferencesAssistant.prototype.wifi = function(event) {
 };
 
 PreferencesAssistant.prototype.limitToWifi = function(event) {
+	/*
 	if (!event.value) {
 		this.controller.showAlertDialog({
 			onChoose: function(value) {
@@ -137,6 +138,9 @@ PreferencesAssistant.prototype.limitToWifi = function(event) {
 		Prefs.limitToWifi = true;
 		Prefs.updated = true;
 	}
+	*/
+	Prefs.limitToWifi = event.value;
+	Prefs.updated = true;
 };
 
 PreferencesAssistant.prototype.albumArt = function(event) {
