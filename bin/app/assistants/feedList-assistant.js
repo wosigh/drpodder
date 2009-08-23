@@ -107,13 +107,10 @@ FeedListAssistant.prototype.activate = function(result) {
 	Mojo.Event.listen(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
 
-	if (Prefs.updated) {
-		if (Prefs.reload) {
-			delete Prefs.reload;
-			this.stageController.swapScene("feedList");
-		}
-		delete Prefs.updated;
+	if (Prefs.reload) {
+		delete Prefs.reload;
 		DB.writePrefs();
+		this.stageController.swapScene("feedList");
 	} else {
 		this.refresh();
 		var firstLoad = true;
@@ -142,17 +139,6 @@ FeedListAssistant.prototype.onBlur = function() {
 		this.foregroundVolumeMarker.cancel();
 		this.foregroundVolumeMarker = null;
 	}
-	if (feedModel.updatingFeeds) {
-		this.wasUpdatingFeeds = true;
-	} else {
-		for (var i=0, len=feedModel.items.length; i<len; ++i) {
-			if (feedModel.items[i].downloading) {
-				this.wasUpdatingFeeds = true;
-				break;
-			}
-
-		}
-	}
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "onBlur"});
 };
@@ -169,10 +155,7 @@ FeedListAssistant.prototype.onFocus = function() {
 	this.cmdMenuModel.items[1].disabled = feedModel.updatingFeeds;
 	this.controller.modelChanged(this.cmdMenuModel);
 
-	if (this.wasUpdatingFeeds) {
-		this.wasUpdatingFeeds = false;
-		this.refreshNow();
-	}
+	this.refreshNow();
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "onFocus"});
 };
@@ -344,7 +327,7 @@ FeedListAssistant.prototype.considerForNotification = function(params) {
 				this.cmdMenuModel.items[1].disabled = params.value;
 				this.controller.modelChanged(this.cmdMenuModel);
 				if (!params.value) {
-					this.refresh();
+					this.refreshNow();
 				}
 				break;
 		}

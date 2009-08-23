@@ -80,16 +80,15 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.stopListening(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
 	Mojo.Event.stopListening(this.controller.get('singleTap'),Mojo.Event.propertyChange,this.singleTapHandler);
+	DB.writePrefs();
 };
 
 PreferencesAssistant.prototype.enableNotifications = function(event) {
 	Prefs.enableNotifications = event.value;
-	Prefs.updated = true;
 };
 
 PreferencesAssistant.prototype.autoUpdate = function(event) {
 	Prefs.autoUpdate = event.value;
-	Prefs.updated = true;
 	if (Prefs.autoUpdate) {
 		Mojo.Controller.getAppController().assistant.setWakeup();
 		this.controller.get("updateIntervalDiv").show();
@@ -101,12 +100,10 @@ PreferencesAssistant.prototype.autoUpdate = function(event) {
 PreferencesAssistant.prototype.updateInterval = function(event) {
 	Prefs.updateInterval = event.value;
 	Mojo.Controller.getAppController().assistant.setWakeup();
-	Prefs.updated = true;
 };
 
 PreferencesAssistant.prototype.wifi = function(event) {
 	Prefs.enableWifi = event.value;
-	Prefs.updated = true;
 };
 
 PreferencesAssistant.prototype.limitToWifi = function(event) {
@@ -121,7 +118,6 @@ PreferencesAssistant.prototype.limitToWifi = function(event) {
 					this.limitToWifiModel.value = true;
 					Prefs.limitToWifi = true;
 				}
-				Prefs.updated = true;
 				this.controller.modelChanged(this.limitToWifiModel);
 			}.bind(this),
 			title: "Warning",
@@ -136,26 +132,21 @@ PreferencesAssistant.prototype.limitToWifi = function(event) {
 		});
 	} else {
 		Prefs.limitToWifi = true;
-		Prefs.updated = true;
 	}
 	*/
 	Prefs.limitToWifi = event.value;
-	Prefs.updated = true;
 };
 
 PreferencesAssistant.prototype.albumArt = function(event) {
 	Prefs.albumArt = event.value;
-	Prefs.updated = true;
 	Prefs.reload = true;
 };
 
 PreferencesAssistant.prototype.simple = function(event) {
 	Prefs.simple = !event.value;
-	Prefs.updated = true;
 	Prefs.reload = true;
 };
 
 PreferencesAssistant.prototype.singleTap = function(event) {
 	Prefs.singleTap = event.value;
-	Prefs.updated = true;
 };

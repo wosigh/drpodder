@@ -434,7 +434,7 @@ EpisodeListAssistant.prototype.considerForNotification = function(params) {
 				}
 				break;
 			case "onFocus":
-				this.refresh();
+				this.refreshNow();
 				break;
 		}
 	}

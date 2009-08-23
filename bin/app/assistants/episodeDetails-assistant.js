@@ -38,8 +38,8 @@ EpisodeDetailsAssistant.prototype.menuCommandItems = {
 	deleteFile:  {icon: "delete", command: "delete-cmd"},
 	skipForward: {iconPath: "images/menu-icon-music-forward.png", command: "skipForward-cmd"},
 	skipBack:    {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack-cmd"},
-	skipForward2:{iconPath: "images/menu-icon-music-forward.png", command: "skipForward2-cmd"},
-	skipBack2:   {iconPath: "images/menu-icon-music-rewind.png", command: "skipBack2-cmd"},
+	skipForward2:{iconPath: "images/menu-icon-music-forward2.png", command: "skipForward2-cmd"},
+	skipBack2:   {iconPath: "images/menu-icon-music-rewind2.png", command: "skipBack2-cmd"},
 	nil:         {icon: "", command: "", label: " "}
 };
 
