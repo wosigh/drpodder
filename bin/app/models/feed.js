@@ -462,7 +462,7 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 		}
 
 		// first time through
-		Util.banner("Updating drPodder Feeds");
+		Util.banner("Updating Feeds");
 		AppAssistant.powerService.activityStart(null, "FeedsUpdating");
 		this.updatingFeeds = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({

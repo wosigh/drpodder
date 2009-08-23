@@ -78,12 +78,13 @@
 	width: 38px;
 }
 
-.feedStatsNew {
-	color: red;
+.feedStatsDownloaded {
+	padding-top: 2px;
+	color: green;
 }
 
-.feedStatsDownloaded {
-	color: green;
+.feedStatsNew {
+	color: red;
 }
 
 .feedStatsStarted {
@@ -157,7 +158,7 @@
 }
 
 .episodeLine {
-	height: 50px;
+	/*height: 50px;*/
 }
 
 .episodeTitle {
@@ -165,12 +166,13 @@
 	margin-top: 4px;
 	/*height: 52px;*/
 	color: gray;
-	font-size: 80%;
+	font-size: 85%;
 }
 
 .episodeDetails {
 	margin-left: 20px;
-	font-size: 70%;
+	margin-bottom: 4px;
+	font-size: 75%;
 	color: gray;
 }
 
