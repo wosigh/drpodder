@@ -362,16 +362,19 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 		case "loadedmetadata":
 			this.disablePlay();
 			if (this.resume) {
-				//Mojo.Log.error("resuming playback at %d", this.episodeObject.position);
-				this.audioObject.currentTime = this.episodeObject.position;
 				this.resume = false;
 				this.resuming = true;
+				Mojo.Log.error("resuming playback at %d", this.episodeObject.position);
+				try {
+					this.audioObject.currentTime = this.episodeObject.position;
+				} catch (e) {
+					Mojo.Log.error("Error setting currentTime: ", e);
+				}
+				this.updateProgress();
 			}
-			this.updateProgress();
 			break;
 		case "canplaythrough":
 		case "canplay":
-			this.updateProgress();
 			if (!this.resuming && !this.resume) {
 				if (this.autoPlay) {
 					this.audioObject.play();
@@ -379,6 +382,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 				this.cmdMenuModel.items[2].disabled = false;
 				this.refreshMenu();
 			}
+			this.updateProgress();
 			break;
 		case "seeked":
 			this.resuming = false;

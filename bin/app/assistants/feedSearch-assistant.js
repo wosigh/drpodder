@@ -1,132 +1,3 @@
-function FeedSearchAssistant() {
-	this.searchService = "digitalPodcast";
-	this.searchServices = {"digitalPodcast": new DigitalPodcastSearch(),
-						   "googleListen": new GoogleListenSearch()};
-}
-
-FeedSearchAssistant.prototype.progressAttr = {
-	sliderProperty: "value",
-	progressStartProperty: "progressStart",
-	progressProperty: "progressEnd",
-	round: false,
-	updateInterval: 0.2
-};
-
-FeedSearchAssistant.prototype.setup = function() {
-	this.controller.setupWidget("feedSearchScroller", {}, {});
-
-	this.controller.setupWidget("searchProviderList",
-		{label: "Directory",
-		 choices: [{label: "Digital Podcast", value: "digitalPodcast"}]},
-		           //{label: "Google Listen", value: "googleListen"}]},
-		this.searchProviderModel = { value : "digitalPodcast" });
-
-	this.searchProvider = this.controller.get("searchProviderList");
-	this.searchProviderChangeHandler = this.searchProviderChange.bind(this);
-
-	this.controller.setupWidget("filterList",
-		{label: "Filter",
-		 choices: [{label: "No Filter", value: "nofilter"},
-				   {label: "No Adult", value: "noadult"},
-				   {label: "No Explicit", value: "noexplicit"},
-				   {label: "Clean", value: "clean"},
-				   {label: "Explicit", value: "explicit"},
-				   {label: "Adult", value: "adult"}]},
-		this.filterModel = { value : "nofilter" });
-
-	this.filter = this.controller.get("filterList");
-	this.filterDiv = this.controller.get("filterDiv");
-	this.filterChangeHandler = this.filterChange.bind(this);
-
-	this.controller.setupWidget("keywordField",
-		{
-			hintText : "Search Keyword",
-			autoFocus : true,
-			limitResize : true,
-			autoReplace : false,
-			textCase : Mojo.Widget.steModeLowerCase,
-			focusMode : Mojo.Widget.focusSelectMode,
-			requiresEnterKey: true
-		},
-		this.keywordModel = { value : ""});
-
-	this.keywordField = this.controller.get("keywordField");
-	this.keywordChangeHandler = this.keywordChange.bind(this);
-
-	this.listAttr = {
-		itemTemplate: "feedSearch/searchRowTemplate",
-		listTemplate: "feedSearch/searchListTemplate",
-		swipeToDelete: false,
-		reorderable: false,
-		renderLimit: 50
-	};
-
-	this.listModel = {items: []};
-
-	this.providerLabel = this.controller.get("providerLabel");
-	this.providerLabel.update(this.searchServices[this.searchService].getProviderLabel());
-
-	this.controller.setupWidget("feedSearchList", this.listAttr, this.listModel);
-	this.feedSearchList = this.controller.get("feedSearchList");
-	this.selectionHandler = this.selection.bindAsEventListener(this);
-
-};
-
-FeedSearchAssistant.prototype.activate = function() {
-	Mojo.Event.listen(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
-	Mojo.Event.listen(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
-	Mojo.Event.listen(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
-};
-
-FeedSearchAssistant.prototype.deactivate = function() {
-	Mojo.Event.stopListening(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
-	Mojo.Event.stopListening(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
-	Mojo.Event.stopListening(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
-};
-
-FeedSearchAssistant.prototype.cleanup = function() {
-};
-
-FeedSearchAssistant.prototype.searchProviderChange = function(event) {
-	this.searchService = this.searchProviderModel.value;
-	this.providerLabel.update(this.searchServices[this.searchService].getProviderLabel());
-	if (this.searchService === "digitalPodcast") {
-		this.filterDiv.show();
-	} else {
-		this.filterDiv.hide();
-	}
-};
-
-FeedSearchAssistant.prototype.filterChange = function(event) {
-};
-
-FeedSearchAssistant.prototype.keywordChange = function(event) {
-	if (event.value) {
-		var ss = this.searchServices[this.searchService];
-
-		this.listModel.items = [];
-		this.controller.modelChanged(this.listModel);
-		Mojo.View.getScrollerForElement(this.providerLabel).mojo.revealBottom(true);
-
-		ss.search(event.value, this.filterModel.value, function(results) {
-			var numFeeds = results.length;
-			this.listModel.items = results;
-
-			if (numFeeds > 0) {
-				this.controller.modelChanged(this.listModel);
-			} else {
-				Util.showError("No results found", "Please try a different keyword, or ask the service provider to add your feed.");
-			}
-		}.bind(this));
-	}
-};
-
-FeedSearchAssistant.prototype.selection = function(event) {
-	//Mojo.Log.error("You clicked on: [%s], [%s]", event.item.title, event.item.url);
-	this.controller.stageController.popScene({feedToAdd: event.item});
-};
-
-
 function DigitalPodcastSearch() {
 }
 
@@ -272,3 +143,132 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 
 	callback(results);
 };
+
+function FeedSearchAssistant() {
+	this.searchService = "digitalPodcast";
+	this.searchServices = {"digitalPodcast": new DigitalPodcastSearch(),
+						   "googleListen": new GoogleListenSearch()};
+}
+
+FeedSearchAssistant.prototype.progressAttr = {
+	sliderProperty: "value",
+	progressStartProperty: "progressStart",
+	progressProperty: "progressEnd",
+	round: false,
+	updateInterval: 0.2
+};
+
+FeedSearchAssistant.prototype.setup = function() {
+	this.controller.setupWidget("feedSearchScroller", {}, {});
+
+	this.controller.setupWidget("searchProviderList",
+		{label: "Directory",
+		 choices: [{label: "Digital Podcast", value: "digitalPodcast"}]},
+		           //{label: "Google Listen", value: "googleListen"}]},
+		this.searchProviderModel = { value : "digitalPodcast" });
+
+	this.searchProvider = this.controller.get("searchProviderList");
+	this.searchProviderChangeHandler = this.searchProviderChange.bind(this);
+
+	this.controller.setupWidget("filterList",
+		{label: "Filter",
+		 choices: [{label: "No Filter", value: "nofilter"},
+				   {label: "No Adult", value: "noadult"},
+				   {label: "No Explicit", value: "noexplicit"},
+				   {label: "Clean", value: "clean"},
+				   {label: "Explicit", value: "explicit"},
+				   {label: "Adult", value: "adult"}]},
+		this.filterModel = { value : "nofilter" });
+
+	this.filter = this.controller.get("filterList");
+	this.filterDiv = this.controller.get("filterDiv");
+	this.filterChangeHandler = this.filterChange.bind(this);
+
+	this.controller.setupWidget("keywordField",
+		{
+			hintText : "Search Keyword",
+			autoFocus : true,
+			limitResize : true,
+			autoReplace : false,
+			textCase : Mojo.Widget.steModeLowerCase,
+			focusMode : Mojo.Widget.focusSelectMode,
+			requiresEnterKey: true
+		},
+		this.keywordModel = { value : ""});
+
+	this.keywordField = this.controller.get("keywordField");
+	this.keywordChangeHandler = this.keywordChange.bind(this);
+
+	this.listAttr = {
+		itemTemplate: "feedSearch/searchRowTemplate",
+		listTemplate: "feedSearch/searchListTemplate",
+		swipeToDelete: false,
+		reorderable: false,
+		renderLimit: 50
+	};
+
+	this.listModel = {items: []};
+
+	this.providerLabel = this.controller.get("providerLabel");
+	this.providerLabel.update(this.searchServices[this.searchService].getProviderLabel());
+
+	this.controller.setupWidget("feedSearchList", this.listAttr, this.listModel);
+	this.feedSearchList = this.controller.get("feedSearchList");
+	this.selectionHandler = this.selection.bindAsEventListener(this);
+
+};
+
+FeedSearchAssistant.prototype.activate = function() {
+	Mojo.Event.listen(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
+	Mojo.Event.listen(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
+	Mojo.Event.listen(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
+};
+
+FeedSearchAssistant.prototype.deactivate = function() {
+	Mojo.Event.stopListening(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
+	Mojo.Event.stopListening(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
+	Mojo.Event.stopListening(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
+};
+
+FeedSearchAssistant.prototype.cleanup = function() {
+};
+
+FeedSearchAssistant.prototype.searchProviderChange = function(event) {
+	this.searchService = this.searchProviderModel.value;
+	this.providerLabel.update(this.searchServices[this.searchService].getProviderLabel());
+	if (this.searchService === "digitalPodcast") {
+		this.filterDiv.show();
+	} else {
+		this.filterDiv.hide();
+	}
+};
+
+FeedSearchAssistant.prototype.filterChange = function(event) {
+};
+
+FeedSearchAssistant.prototype.keywordChange = function(event) {
+	if (event.value) {
+		var ss = this.searchServices[this.searchService];
+
+		this.listModel.items = [];
+		this.controller.modelChanged(this.listModel);
+		Mojo.View.getScrollerForElement(this.providerLabel).mojo.revealBottom(true);
+
+		ss.search(event.value, this.filterModel.value, function(results) {
+			var numFeeds = results.length;
+			this.listModel.items = results;
+
+			if (numFeeds > 0) {
+				this.controller.modelChanged(this.listModel);
+			} else {
+				Util.showError("No results found", "Please try a different keyword, or ask the service provider to add your feed.");
+			}
+		}.bind(this));
+	}
+};
+
+FeedSearchAssistant.prototype.selection = function(event) {
+	//Mojo.Log.error("You clicked on: [%s], [%s]", event.item.title, event.item.url);
+	this.controller.stageController.popScene({feedToAdd: event.item});
+};
+

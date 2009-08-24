@@ -78,10 +78,10 @@ FeedListAssistant.prototype.setup = function() {
 	this.onFocusHandler = this.onFocus.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
-	this.onFocus();
 };
 
 FeedListAssistant.prototype.activate = function(result) {
+	this.active = true;
 	if (result) {
 		if (result.feedToAdd) {
 			var feed = new Feed();
@@ -112,7 +112,6 @@ FeedListAssistant.prototype.activate = function(result) {
 		DB.writePrefs();
 		this.stageController.swapScene("feedList");
 	} else {
-		this.refresh();
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
 			if (feedModel.items[i].episodes.length > 0) {
@@ -124,11 +123,11 @@ FeedListAssistant.prototype.activate = function(result) {
 			this.updateFeeds();
 		}
 	}
-
 	this.onFocus();
 };
 
 FeedListAssistant.prototype.deactivate = function() {
+	this.active = false;
 	Mojo.Event.stopListening(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.stopListening(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.stopListening(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
@@ -144,6 +143,10 @@ FeedListAssistant.prototype.onBlur = function() {
 };
 
 FeedListAssistant.prototype.onFocus = function() {
+	if (this.active) {
+		this.refreshNow();
+	}
+
 	if (!this.foregroundVolumeMarker) {
 		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	}
@@ -155,7 +158,6 @@ FeedListAssistant.prototype.onFocus = function() {
 	this.cmdMenuModel.items[1].disabled = feedModel.updatingFeeds;
 	this.controller.modelChanged(this.cmdMenuModel);
 
-	this.refreshNow();
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "onFocus"});
 };
