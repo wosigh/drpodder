@@ -263,6 +263,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		// update information for existing ones
 		var e = this.guid[episode.guid];
 		if (e === undefined) {
+			episode.newlyAddedEpisode = true;
 			episode.feedId = this.id;
 			episode.feedObject = this;
 			// record the title of the topmost episode
@@ -535,11 +536,19 @@ FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
 	} else {
 		// popup banner saying that we couldn't download episodes
 		// because wifi wasn't enabled, maybe even do a "click to retry"
-		Mojo.Log.error("Skipping %d episode download because wifi isn't connected", eps.length);
-		Util.banner(eps.length + " Download" + ((eps.length===1)?"":"s") +
-				            " pending WiFi");
-		Util.dashboard(DrPodder.DashboardStageName, "Downloads pending WiFi",
-						eps.map(function(e){return e.title;}), true);
+		var newEps = eps.filter(function(e){return e.newlyAddedEpisode;});
+		if (newEps.length) {
+			Mojo.Log.error("Skipping %d episode download because wifi isn't connected", newEps.length);
+			Util.banner(newEps.length + " Download" + ((newEps.length===1)?"":"s") +
+								" pending WiFi");
+			Util.dashboard(DrPodder.DashboardStageName, "Downloads pending WiFi",
+							newEps.map(function(e){return e.title;}), true);
+		} else {
+			Util.closeDashboard(DrPodder.DashboardStageName);
+			if (this.enabledWifi) {
+				AppAssistant.wifiService.setState(null, "disabled");
+			}
+		}
 	}
 };
 

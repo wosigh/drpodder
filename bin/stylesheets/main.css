@@ -255,6 +255,13 @@
 }
 
 .titlePopup1 {
-	top: 34px;
-	left: 60px;
+  top: 34px;
+  left: 60px;
+}
+
+.playbackStatusMessage {
+  margin-top: -26px;
+  height: 20px;
+  width: 100%;
+  text-align: center;
 }
