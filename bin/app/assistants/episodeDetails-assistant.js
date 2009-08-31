@@ -376,7 +376,7 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-//	Mojo.Log.error("AudioEvent: %j", event);
+	Mojo.Log.error("AudioEvent: %j", event);
 	switch (event.type) {
 		//case "stalled":
 			//this.stalled = true;
@@ -400,13 +400,13 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 		*/
 		case "canplay":
 			if (this.resume) {
-				this.resume = false;
 				Mojo.Log.error("resuming playback at %d", this.episodeObject.position);
 				try {
 					this.setStatus("Seeking");
 					this.audioObject.currentTime = this.episodeObject.position;
+					this.resume = false;
 				} catch (e) {
-					Mojo.Log.error("Error setting currentTime: ", e);
+					Mojo.Log.error("Error setting currentTime: %j", e);
 				}
 			} else {
 				this.setStatus("");
