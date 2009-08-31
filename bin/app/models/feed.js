@@ -21,6 +21,9 @@ function Feed(init) {
 		this.replacements = init.replacements;
 		this.downloading = init.downloading;
 		this.downloadCount = init.downloadCount;
+		this.viewFilter = init.viewFilter;
+		this.username = init.username;
+		this.password = init.password;
 
 		this.numEpisodes = init.numEpisodes;
 		this.numNew = init.numNew;
@@ -42,11 +45,23 @@ function Feed(init) {
 		this.replacements = "";
 		this.downloading = false;
 		this.downloadCount = 0;
+		this.viewFilter = "New";
+		this.username = null;
+		this.password = null;
 
 		this.numEpisodes = 0;
 		this.numNew = 0;
 		this.numDownloaded = 0;
 		this.numStarted = 0;
+	}
+
+	this.playlists = [];
+
+	for (var i=0; i<feedModel.items.length; i++) {
+		var f = feedModel.items[i];
+		if (f.playlist && (f.feedIds.length === 0 || f.feedIds.some(function(id) {return this.id === id;}.bind(this)))) {
+			this.playlists.push(f.id);
+		}
 	}
 }
 
@@ -68,7 +83,7 @@ Feed.prototype.update = function(callback, url) {
 
 	//Mojo.Log.error("making ajax request [%s]", url);
 	var req = new Ajax.Request(url, {
-		method: 'get',
+		method: "get",
 		evalJSON : "false",
 		evalJS : "false",
 		onFailure: this.checkFailure.bind(this, callback),
@@ -277,6 +292,12 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			episode.updateUIElements(true);
 			newEpisodeCount++;
 			updateCheckStatus = UPDATECHECK_UPDATES;
+			for (var j=0; j<this.playlists.length; ++j) {
+				var pf = feedModel.getFeedById(this.playlists[j]);
+				pf.episodes.splice(0,0,episode);
+				if (!episode.listened) {++pf.numNew; }
+				pf.guid[episode.guid] = episode;
+			}
 		} else {
 			// it already exists, check that the enclosure url is up to date
 			e.title = episode.title;
@@ -358,6 +379,10 @@ Feed.prototype.listened = function(ignore) {
 	if (!ignore) {
 		this.updated();
 		this.updatedEpisodes();
+		this.playlists.forEach(function(p) {
+			feedModel.getFeedById(p).updated();
+			feedModel.getFeedById(p).updatedEpisodes();
+		});
 	}
 	this.save();
 };
@@ -369,6 +394,10 @@ Feed.prototype.unlistened = function(ignore) {
 	if (!ignore) {
 		this.updated();
 		this.updatedEpisodes();
+		this.playlists.forEach(function(p) {
+			feedModel.getFeedById(p).updated();
+			feedModel.getFeedById(p).updatedEpisodes();
+		});
 	}
 	this.save();
 };
@@ -376,47 +405,80 @@ Feed.prototype.unlistened = function(ignore) {
 Feed.prototype.downloadingEpisode = function(ignore) {
 	this.downloadCount++;
 	this.downloading = true;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).downloadingEpisode(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.downloadFinished = function(ignore) {
 	this.downloadCount--;
 	this.downloading = (this.downloadCount > 0);
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).downloadFinished(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeListened = function(ignore) {
 	this.numNew--;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).episodeListened(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeUnlistened = function(ignore) {
 	this.numNew++;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).episodeUnlistened(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeDownloaded = function(ignore) {
 	this.numDownloaded++;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).episodeDownloaded(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeDeleted = function(ignore) {
 	this.numDownloaded--;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).episodeDeleted(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeBookmarked = function(ignore) {
 	this.numStarted++;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).episodeBookmarked(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeBookmarkCleared = function(ignore) {
 	this.numStarted--;
+	this.playlists.forEach(function(p) {
+		feedModel.getFeedById(p).episodeBookmarkCleared(ignore);
+	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.save = function() {
 	DB.saveFeed(this);
+	if (this.playlist) {
+		if (this.feedIds.length > 0) {
+			this.feedIds.forEach(function(p) {
+				feedModel.getFeedById(p).save();
+			});
+		} else {
+			DB.saveFeeds();
+		}
+	}
 };
 
 Feed.prototype.updated = function() {
@@ -429,8 +491,6 @@ Feed.prototype.updatedEpisodes = function() {
 		type: "feedEpisodesUpdated", feed: this});
 };
 
-
-var FeedUtil = new Feed();
 
 function FeedModel(init) {
 }
@@ -472,6 +532,12 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 	}
 	if (feedIndex < this.items.length) {
 		var feed = this.items[feedIndex];
+
+		while (feed.playlist) {
+			++feedIndex;
+			feed = this.items[feedIndex];
+		}
+
 		feed.update(function() {
 			this.updateFeeds(feedIndex+1);
 		}.bind(this));

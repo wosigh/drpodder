@@ -39,7 +39,7 @@ FeedListAssistant.prototype.setup = function() {
 		swipeToDelete: true,
 		reorderable: true,
 		renderLimit: 40,
-		formatters: {"albumArt": this.albumArtFormatter.bind(this)}
+		formatters: {"albumArt": this.albumArtFormatter.bind(this), "details": this.detailsFormatter.bind(this)}
 	};
 
 
@@ -209,11 +209,20 @@ FeedListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 	if (albumArt) {
 		formatted = "/var/luna/data/extractfs" +
 						encodeURIComponent(albumArt) +
-						":0:0:58:58:3";
+						":0:0:56:56:3";
 	}
 
 	return formatted;
 };
+
+FeedListAssistant.prototype.detailsFormatter = function(details, model) {
+	var formatted = details;
+	if (formatted) {
+		formatted = model.replace(details);
+	}
+	return formatted;
+};
+
 
 FeedListAssistant.prototype.handleSelection = function(event) {
 	var targetClass = event.originalEvent.target.className;
@@ -221,6 +230,10 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 	var feedIndex = event.index;
 	var feed = feedModel.items[feedIndex];
 	if (targetClass.indexOf("feedStats") === 0) {
+		var editCmd = {label: "Edit Feed", command: "edit-cmd"};
+		if (feed.playlist) {
+			editCmd = {label: "Edit Playlist", command: "editplaylist-cmd"};
+		}
 		// popup menu:
 		// last update date/time
 		// next update date/time
@@ -238,7 +251,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        //{label: feed.numNew+" new", command: 'viewNew-cmd'},
 			        //{label: feed.numStarted+" started", command: 'viewStarted-cmd'},
 			        {label: "Clear New", command: 'listened-cmd'},
-			        {label: "Edit Feed", command: 'edit-cmd'}
+			        editCmd
 			]});
 	} else if (targetClass.indexOf("download") === 0) {
 		this.controller.popupSubmenu({
@@ -256,6 +269,9 @@ FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 	switch(command) {
 		case "edit-cmd":
 			this.stageController.pushScene("addFeed", feed);
+			break;
+		case "editplaylist-cmd":
+			//this.stageController.pushScene("addFeed", feed);
 			break;
 		case "listened-cmd":
 			feed.listened();

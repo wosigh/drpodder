@@ -353,10 +353,12 @@ EpisodeDetailsAssistant.prototype.setStatus = function(message, maxDisplay) {
 	this.statusIter = 2;
 	this.statusDiv.update(message);
 	if (message) {
+		this.statusDiv.show();
 		if (!this.statusTimerID) {
 			this.statusTimerID = this.controller.window.setInterval(this.statusTimer.bind(this), 400);
 		}
 	} else {
+		this.statusDiv.hide();
 		if (this.statusTimerID) {
 			this.controller.window.clearInterval(this.statusTimerID);
 			this.statusTimerID = null;
