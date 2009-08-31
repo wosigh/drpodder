@@ -47,7 +47,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 		// fix error with 60sec podcast
 		//this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
 	}
-	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
+	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate") || new Date();
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
 	if (this.guid === undefined) {
 		this.guid = this.link + this.title + this.getDateString();

@@ -13,16 +13,10 @@
 	margin-top: 0px;
 }
 
-.feedlist-icon-container {
-    width: 58px;
-	height: 58px;
-    margin-top: 0px;
-}
-
 .feedlist-icon {
-    width: 58px;
-    height: 58px;
-	padding-right: 10px;
+    margin-top: 1px;
+	width: 56px;
+    height: 56px;
 }
 
 .feedLine {
@@ -75,11 +69,11 @@
 .feedStatsNew,
 .feedStatsDownloaded,
 .feedStatsStarted {
-	width: 38px;
+	width: 55px;
+	text-align: right;
 }
 
 .feedStatsDownloaded {
-	padding-top: 2px;
 	color: green;
 }
 
@@ -92,6 +86,9 @@
 }
 
 .feedStatsIcon {
+	padding-top: 2px;
+	padding-left: 2px;
+	margin-left: 2px;
 	display: inline-block;
 	float: right;
 }
@@ -162,7 +159,7 @@
 }
 
 .episodeTitle {
-	margin-left: 10px;
+	padding-left: 2px;
 	margin-top: 4px;
 	/*height: 52px;*/
 	color: gray;
@@ -170,7 +167,7 @@
 }
 
 .episodeDetails {
-	margin-left: 20px;
+	padding-left: 12px;
 	margin-bottom: 4px;
 	font-size: 75%;
 	color: gray;
@@ -182,9 +179,10 @@
 	outline-width: 2px;
 }
 
+.bookmarkDonePlaylist,
+.bookmarkDone,
+.progressDonePlaylist,
 .progressDone {
-	background-color: yellow;
-	z-index: -1;
 	position: absolute;
 	left: 0px;
 	width: 0%;
@@ -194,17 +192,29 @@
 	float: left;
 }
 
+.progressDonePlaylist,
+.progressDone {
+	background-color: yellow;
+	z-index: -1;
+}
+
+.bookmarkDonePlaylist,
 .bookmarkDone {
 	background-color: lightblue;
 	z-index: -2;
-	position: absolute;
-	left: 0px;
-	width: 0%;
-	height: 52px;
-	margin-top: -4px;
-	display: inline-block;
-	float: left;
 }
+
+.progressDonePlaylist,
+.bookmarkDonePlaylist {
+	left: 55px;
+}
+
+.episodelist-icon {
+    margin-top: -2px;
+    width: 48px;
+    height: 48px;
+}
+
 
 .dashboard-icon-drpodder {
   background: url(../images/dashboard-icon.png);
@@ -260,8 +270,20 @@
 }
 
 .playbackStatusMessage {
-  margin-top: -26px;
-  height: 20px;
+  /*
+  z-index: 999;
+  position: absolute;
+  opacity: 0.85;
+  display: inline-block;
+  padding-top: 10px;
+  margin-top: 75px;
+  margin-left: 25%;
+  background-color: darkgray;
+  height: 40px;
+  width: 50%;
+  */
+  margin-top: -22px;
+  height: 18px;
   width: 100%;
   text-align: center;
 }

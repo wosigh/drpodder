@@ -1,6 +1,6 @@
 function EpisodeListAssistant(feedObject) {
 	this.feedObject = feedObject;
-	this.episodeModel = {items: feedObject.episodes};
+	this.episodeModel = {items: []};
 
 	this.appController = Mojo.Controller.getAppController();
 	this.stageController = this.appController.getStageController(DrPodder.MainStageName);
@@ -24,16 +24,20 @@ EpisodeListAssistant.prototype.menuModel = {
 		{label: "Edit Feed", command: "edit-cmd"},
 		{label: "Mark all as New", command: "unlistened-cmd"},
 		{label: "Mark all as Old", command: "listened-cmd"},
-		{label: "Play from Newest", command: "playFromNewest-cmd"},
-		{label: "Play from Oldest", command: "playFromOldest-cmd"},
+		{label: "Play from Top", command: "playFromNewest-cmd"},
+		{label: "Play from Bottom", command: "playFromOldest-cmd"},
 		{label: "About...", command: "about-cmd"}
 	]
 };
 
-EpisodeListAssistant.prototype.cmdMenuModel = {
+EpisodeListAssistant.prototype.filterMenuModel = {
 	items: [
-		{},
-		{icon: "refresh", command: "refresh-cmd"}
+		{label: "ALL", command: "filter-all-cmd"},
+		{label: "New", command: "filter-new-cmd"},
+		{label: "Old", command: "filter-old-cmd"},
+		{label: "Downloaded", command: "filter-downloaded-cmd"},
+		{label: "Downloading", command: "filter-downloading-cmd"},
+		{label: "Paused", command: "filter-paused-cmd"}
 	]
 };
 
@@ -42,8 +46,59 @@ EpisodeListAssistant.prototype.viewMenuModel = {
 	items: []
 };
 
+EpisodeListAssistant.prototype.filterEpisodes = function() {
+	var filterFunc = function(e) {return !e.listened;};
+	switch (this.feedObject.viewFilter) {
+		case "ALL":
+			filterFunc = function(e) {return true;};
+			break;
+		case "Old":
+			filterFunc = function(e) {return e.listened;};
+			break;
+		case "Downloaded":
+			filterFunc = function(e) {return e.downloaded;};
+			break;
+		case "Downloading":
+			filterFunc = function(e) {return e.downloading;};
+			break;
+		case "Paused":
+			filterFunc = function(e) {return e.position;};
+			break;
+		case "New":
+			break;
+		default:
+			break;
+	}
+
+	var newModel = this.feedObject.episodes.filter(filterFunc);
+	var refreshNeeded = false;
+	if (newModel.length !== this.episodeModel.items.length) {
+		refreshNeeded = true;
+	} else {
+		for (var i=0,len=newModel.length; i<len; ++i) {
+			if (this.episodeModel.items[i] !== newModel[i]) {
+				refreshNeeded = true;
+				break;
+			}
+		}
+	}
+
+	if (refreshNeeded) {
+		this.episodeModel.items = newModel;
+		this.refresh();
+	}
+};
+
 EpisodeListAssistant.prototype.setup = function() {
+	this.cmdMenuModel = {
+		items: [
+			{label: "View: " + this.feedObject.viewFilter, submenu: "filter-menu"},
+			{icon: "refresh", command: "refresh-cmd"}
+		]
+	};
+
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
+	this.controller.setupWidget("filter-menu", this.handleCommand, this.filterMenuModel);
 
 	var viewMenuPrev = {icon: "", command: "", label: " "};
 	var viewMenuNext = {icon: "", command: "", label: " "};
@@ -61,21 +116,21 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.viewMenu,
 								{}, this.viewMenuModel);
 
+	var itemTemplate ="episodeList/episodeRowTemplate";
+	if (this.feedObject.playlist) {
+		itemTemplate = "episodeList/playlistRowTemplate";
+	}
+
 	this.episodeAttr = {
-		itemTemplate: "episodeList/episodeRowTemplate",
+		itemTemplate: itemTemplate,
 		listTemplate: "episodeList/episodeListTemplate",
 		renderLimit: 40,
 		reorderable: false,
 		swipeToDelete: true,
+		// preventDeleteProperty: "noDelete", // based on !listened || downloaded || position
 		// autoconfirmDelete: true,
-		// doesn't exist yet preventDeleteProperty: "downloaded",
-		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this)}};
-
-
-	// things to move somewhere else...
-	// check to see that episode.file exists and wasn't deleted...
-	// http://developer.palm.com/distribution/viewtopic.php?f=16&t=133
-
+		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this),
+		             "albumArt": this.albumArtFormatter.bind(this)}};
 
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
 	this.episodeList = this.controller.get("episodeListWgt");
@@ -93,7 +148,21 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.needRefresh = false;
 };
 
+EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
+	var formatted = albumArt;
+
+	if (formatted) {
+		formatted = "/var/luna/data/extractfs" +
+						encodeURIComponent(albumArt) +
+						":0:0:48:48:3";
+	}
+
+	return formatted;
+};
+
+
 EpisodeListAssistant.prototype.activate = function(changes) {
+	this.filterEpisodes();
 	this.refreshNow();
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
@@ -151,12 +220,38 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 					manualPlacement: true,
 					popupClass: "titlePopup1",
 					//placeNear: event.originalEvent.target,
-					items: [{label: "Play from Newest", command: "playFromNewest-cmd"},
-							{label: "Play from Oldest", command: "playFromOldest-cmd"}]
+					items: [{label: "Play from Top", command: "playFromNewest-cmd"},
+							{label: "Play from Bottom", command: "playFromOldest-cmd"}]
 				});
+				break;
+			case "filter-all-cmd":
+				this.handleFilterCommand("ALL");
+				break;
+			case "filter-new-cmd":
+				this.handleFilterCommand("New");
+				break;
+			case "filter-old-cmd":
+				this.handleFilterCommand("Old");
+				break;
+			case "filter-downloaded-cmd":
+				this.handleFilterCommand("Downloaded");
+				break;
+			case "filter-downloading-cmd":
+				this.handleFilterCommand("Downloading");
+				break;
+			case "filter-paused-cmd":
+				this.handleFilterCommand("Paused");
 				break;
 		}
 	}
+};
+
+EpisodeListAssistant.prototype.handleFilterCommand = function(filter) {
+	this.feedObject.viewFilter = filter;
+	this.cmdMenuModel.items[0].label = "View: " + filter;
+	this.controller.modelChanged(this.cmdMenuModel);
+	this.filterEpisodes();
+	DB.saveFeed(this.feedObject);
 };
 
 EpisodeListAssistant.prototype.handleFeedPopup = function(value) {
@@ -172,8 +267,8 @@ EpisodeListAssistant.prototype.handleFeedPopup = function(value) {
 
 EpisodeListAssistant.prototype.playFrom = function(oldest) {
 	var playlist = [];
-	for (var i=0,len=this.feedObject.episodes.length; i<len; ++i) {
-		var episode = this.feedObject.episodes[i];
+	for (var i=0,len=this.episodeModel.items.length; i<len; ++i) {
+		var episode = this.episodeModel.items[i];
 		if (!episode.listened && episode.enclosure) {
 			playlist.push(episode);
 		}
@@ -189,8 +284,8 @@ EpisodeListAssistant.prototype.playFrom = function(oldest) {
 
 EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 	var formatted = title;
-	if (title) {
-		formatted = this.feedObject.replace(title);
+	if (formatted) {
+		formatted = this.feedObject.replace(formatted);
 	}
 	return formatted;
 };
@@ -199,8 +294,8 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var formatted = pubDate;
 	var d_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 	var m_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	if (pubDate) {
-		var d = new Date(pubDate);
+	if (formatted) {
+		var d = new Date(formatted);
 		var y = d.getFullYear();
 		var m = d.getMonth();
 		var dom=d.getDate();
@@ -404,36 +499,54 @@ EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
 
 EpisodeListAssistant.prototype.updatePercent = function(episode) {
 	//Mojo.Log.error("Setting percent to:", episode.downloadingPercent);
-	var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episode.displayOrder);
-	var nodes = node.getElementsByClassName("progressDone");
-	nodes[0].style.width = episode.downloadingPercent + "%";
+	var episodeIndex = this.episodeModel.items.indexOf(episode);
+	if (episodeIndex !== -1) {
+		var node = this.controller.get("episodeListWgt").mojo.getNodeByIndex(episodeIndex);
+		var nodes;
+		if (this.feedObject.playlist) {
+            nodes = node.getElementsByClassName("progressDonePlaylist");
+		} else {
+			nodes = node.getElementsByClassName("progressDone");
+		}
+		nodes[0].style.width = episode.downloadingPercent + "%";
+	}
+};
+
+EpisodeListAssistant.prototype.eventApplies = function(ef) {
+	return (ef === this.feedObject || (
+		this.feedObject.playlist && (this.feedObject.feedIds.length === 0 ||
+									 this.feedObject.feedIds.some(function(f) {return ef.id == f;}))
+	));
 };
 
 EpisodeListAssistant.prototype.considerForNotification = function(params) {
 	if (params) {
 		switch (params.type) {
 			case "feedEpisodesUpdated":
-				if (params.feed === this.feedObject) {
-					this.refresh();
+				if (this.eventApplies(params.feed)) {
+					this.filterEpisodes();
+					this.refreshNow();
 				}
 				break;
 			case "episodeUpdated":
-				if (params.episode.feedObject === this.feedObject) {
+				if (this.eventApplies(params.episode.feedObject)) {
 					var episodeIndex = params.episodeIndex;
 					if (episodeIndex === undefined) {
 						episodeIndex = this.episodeModel.items.indexOf(params.episode);
 					}
 					if (episodeIndex !== -1) {
 						this.episodeList.mojo.noticeUpdatedItems(episodeIndex, [params.episode]);
+						this.filterEpisodes();
 					}
 				}
 				break;
 			case "downloadProgress":
-				if (params.episode.feedObject === this.feedObject) {
+				if (this.eventApplies(params.episode.feedObject)) {
 					this.updatePercent(params.episode);
 				}
 				break;
 			case "onFocus":
+				this.filterEpisodes();
 				this.refreshNow();
 				break;
 		}
