@@ -24,15 +24,6 @@ initialize = function() {
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
-	/*
-	var viewWhatsNew = {icon: "", command: "whatsNew-cmd", label: "What's New"};
-
-	this.viewMenuModel.items = [viewWhatsNew];
-	this.controller.setupWidget(Mojo.Menu.viewMenu,
-								{}, this.viewMenuModel);
-	*/
-
-
 	this.feedAttr = {
 		itemTemplate: "feedList/feedRowTemplate",
 		listTemplate: "feedList/feedListTemplate",
@@ -138,6 +129,8 @@ FeedListAssistant.prototype.onBlur = function() {
 		this.foregroundVolumeMarker.cancel();
 		this.foregroundVolumeMarker = null;
 	}
+	// well this is just retarded.  There's no way for somebody to be notified of the blur,
+	// since we are deactivated.  Boooooo
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "onBlur"});
 };

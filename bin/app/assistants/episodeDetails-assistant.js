@@ -143,6 +143,9 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 	this.statusDiv = this.controller.get("statusDiv");
 	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
+
+	this.onBlurHandler = this.onBlur.bind(this);
+	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 };
 
 EpisodeDetailsAssistant.prototype.activate = function() {
@@ -240,6 +243,7 @@ EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 		this.updateTimer = null;
 	}
 	if (bool) {
+		Mojo.Log.error("setTimer true");
 		this.updateTimer = this.controller.window.setInterval(this.updateProgress.bind(this), 500);
 	}
 };
@@ -378,7 +382,7 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	Mojo.Log.error("AudioEvent: %j", event);
+	//Mojo.Log.error("AudioEvent: %j", event);
 	switch (event.type) {
 		//case "stalled":
 			//this.stalled = true;
@@ -695,16 +699,19 @@ EpisodeDetailsAssistant.prototype.refreshMenu = function() {
 	this.controller.modelChanged(this.cmdMenuModel);
 };
 
+EpisodeDetailsAssistant.prototype.onBlur = function() {
+	this.setTimer(false);
+};
+
 EpisodeDetailsAssistant.prototype.considerForNotification = function(params) {
 	if (params) {
 		switch (params.type) {
-			case "onBlur":
-				this.setTimer(false);
-				break;
 			case "onFocus":
-				if (!this.audioObject.paused) {
+				if (this.audioObject && this.audioObject.paused === true) {
 					this.setTimer(true);
 				}
+				break;
+			case "shutupJSLint":
 				break;
 		}
 	}

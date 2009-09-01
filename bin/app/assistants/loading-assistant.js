@@ -32,6 +32,38 @@ LoadingAssistant.prototype.waitForFeedsReady = function() {
 	//this.controller.modelChanged(this.spinnerModel);
 	this.loadingDiv.update("Loading Feed List");
 	this.stageController.swapScene("feedList");
+
+/*
+	var url = "http://www.gamespot.com/misc/podcast/podcast.xml";
+	var request = new Ajax.Request("http://www.gamespot.com/misc/podcast/podcast.xml", {
+	//var request = new Ajax.Request("http://keithandthegirl.com/rss", {
+		method : "get",
+		evalJSON : "false",
+		evalJS : "false",
+		requestHeaders : {"Accept": 'text/plain',
+		                  "User-Agent": 'blah',
+		                  "user-agent": 'blah',
+		                  "User-agent": 'blah',
+		                  "Useragent": 'blah',
+		                  "useragent": 'blah',
+		                  "UserAgent": 'blah'},
+		onSuccess : function(transport) {Mojo.Log.error("success: %s", transport.responseXML);},
+		onFailure : function(transport) {Mojo.Log.error("failure");}
+	});
+
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.open("GET", url);
+	xmlhttp.onreadystatechange = function(state) {
+		Mojo.Log.error("state changed");
+		Mojo.Log.error("state=%j", state);
+	};
+	xmlhttp.setRequestHeader("User-Agent", "blah");
+	xmlhttp.setRequestHeader("foo", "bar");
+	xmlhttp.send(null);
+
+*/
+
+
 };
 
 LoadingAssistant.prototype.considerForNotification = function(params) {
