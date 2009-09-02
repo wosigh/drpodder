@@ -282,7 +282,8 @@ DBClass.prototype.loadFeeds = function() {
 	playlist.playlist = true;
 	playlist.displayOrder = 1;
 	playlist.feedIds = [1,2,3,4,5,6,12,19];
-	//playlist.feedIds = [1,2,3];
+	//playlist.feedIds = [1,2,3,7,8];
+	//playlist.feedIds = [1,4,10,12];
 	playlist.playlists = [];
 	playlist.viewFilter = "New";
 	playlist.details = undefined;
@@ -312,36 +313,8 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 			f.episodes = [];
 			f.guid = [];
 			feedModel.add(f);
-			f.displayOrder = feedModel.items.length-1;
-			f.playlists = [];
+			f.displayOrder = i;
 		}
-
-		for (i=0; i<feedModel.items.length; i++) {
-			f = feedModel.items[i];
-			if (f.playlist) {
-				if (f.feedIds.length) {
-					for (var j=0; j<f.feedIds.length; j++) {
-						var feedId = f.feedIds[j];
-						//feedModel.ids[feedId].playlists.push(f.id);
-						feedModel.getFeedById(feedId).playlists.push(f.id);
-					}
-				} else {
-					for (j=0; j<feedModel.items.length; j++) {
-						var g = feedModel.items[j];
-						if (!g.playlist) {
-							g.playlists.push(f.id);
-						}
-					}
-				}
-			}
-		}
-
-		/*
-		for (i=0; i<feedModel.items.length; i++) {
-			f = feedModel.items[i];
-			Mojo.Log.error("f[%d].playlists = %s", f.id, f.playlists);
-		}
-		*/
 
 		this.loadEpisodes();
 	} else {
@@ -378,13 +351,13 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				e.albumArt = f.albumArt;
 				if (e.enclosure === "undefined") {e.enclosure = null;}
 				if (e.type === "undefined") {e.type = null;}
-				if (e.pubDate === "undefined") {e.pubDate = null;}
+				if (e.pubDate === "undefined" || e.pubDate === null) {e.pubDate = new Date();}
+				else { e.pubDate = new Date(e.pubDate); }
 				if (e.description === "undefined") {e.description = null;}
-				if (f.details === undefined) {f.details = e.title;}
-				f.episodes.push(e);
-				f.guid[e.guid] = e;
-				++f.numEpisodes;
-				if (!e.listened) {++f.numNew;}
+				f.insertEpisodeTop(e);
+				//f.episodes.push(e);
+				//f.guid[e.guid] = e;
+				//if (!e.listened) {++f.numNew;}
 				if (e.downloaded) {++f.numDownloaded;}
 				if (e.position !== 0) {
 					++f.numStarted;
@@ -402,13 +375,11 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						e.downloadingCallback.bind(e));
 				}
 
-				for (var j=0; j<f.playlists.length; ++j) {
-					var pf = feedModel.getFeedById(f.playlists[j]);
-					pf.episodes.push(e);
-					if (pf.details === undefined) {pf.details = e.title;}
-					pf.guid[e.guid] = e;
-					++pf.numEpisodes;
-					if (!e.listened) {++pf.numNew;}
+				f.playlists.forEach(function(pf) {
+					pf.insertEpisodeTop(e);
+					//pf.episodes.push(e);
+					//pf.guid[e.guid] = e;
+					//if (!e.listened) {++pf.numNew;}
 					if (e.downloaded) {++pf.numDownloaded;}
 					if (e.position !== 0) {
 						++pf.numStarted;
@@ -417,7 +388,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						pf.downloading = true;
 						pf.downloadCount++;
 					}
-				}
+				});
 
 				e.updateUIElements(true);
 			}
@@ -426,6 +397,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	for (i=0; i<feedModel.items.length; i++) {
 		f = feedModel.items[i];
 		f.episodes.sort(this.sortEpisodes);
+		if (f.episodes.length > 0) { f.details = f.episodes[0].title; }
 	}
 	//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 	this.callback();
@@ -433,7 +405,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 
 DBClass.prototype.sortEpisodes = function(a,b) {
 	//Mojo.Log.error("sortEpisodes(%s,%s)", a.pubDate, b.pubDate);
-	return (new Date(b.pubDate)-new Date(a.pubDate));
+	return (b.pubDate - a.pubDate);
 };
 
 DBClass.prototype.saveFeeds = function() {

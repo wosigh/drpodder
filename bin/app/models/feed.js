@@ -2,6 +2,11 @@ var UPDATECHECK_INVALID = -1;
 var UPDATECHECK_NOUPDATES = 0;
 var UPDATECHECK_UPDATES = 1; // maybe number of updates would be better?
 
+function FeedModel(init) {
+}
+
+var feedModel = new FeedModel();
+
 function Feed(init) {
 	if (init) {
 		this.id = init.id;
@@ -25,7 +30,6 @@ function Feed(init) {
 		this.username = init.username;
 		this.password = init.password;
 
-		this.numEpisodes = init.numEpisodes;
 		this.numNew = init.numNew;
 		this.numDownloaded = init.numDownloaded;
 		this.numStarted = init.numStarted;
@@ -49,47 +53,102 @@ function Feed(init) {
 		this.username = null;
 		this.password = null;
 
-		this.numEpisodes = 0;
 		this.numNew = 0;
 		this.numDownloaded = 0;
 		this.numStarted = 0;
 	}
 
 	this.playlists = [];
+	this.feedIds = [];
 
-	for (var i=0; i<feedModel.items.length; i++) {
-		var f = feedModel.items[i];
+	feedModel.items.forEach(function (f) {
 		if (f.playlist && (f.feedIds.length === 0 || f.feedIds.some(function(id) {return this.id === id;}.bind(this)))) {
-			this.playlists.push(f.id);
+			this.playlists.push(f);
 		}
-	}
+	}.bind(this));
 }
 
 Feed.prototype.update = function(callback, url) {
 	this.updating = true;
 	this.updated();
-	/*
-	if (Mojo.Host.current === Mojo.Host.mojoHost) {
-		// same original policy means we need to use the proxy on mojo-host
-		this.url = "/proxy?url=" + encodeURIComponent(this.url);
+
+	if (this.playlist) {
+		this.updateFeedIds(0, callback);
+	} else {
+		if (!url) {
+			url = this.url;
+		}
+
+		var feedTitle = (this.title)?this.title:"Unknown feed title";
+		Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
+
+		//Mojo.Log.error("making ajax request [%s]", url);
+		var req = new Ajax.Request(url, {
+			method: "get",
+			evalJSON : "false",
+			evalJS : "false",
+			onFailure: this.checkFailure.bind(this, callback),
+			onSuccess: this.checkSuccess.bind(this, callback)
+		});
+		//Mojo.Log.error("finished making ajax request");
+	}
+};
+
+Feed.prototype.updateFeedIds = function(feedIndex, callback) {
+	if (!feedIndex) { feedIndex = 0; }
+
+	/* if somehow, a playlist can point to other playlists... we should update them
+	while (feedIndex < this.feedIds.length &&
+		   feedModel.getFeedById(this.feedIds[feedIndex]).playlist) {
+		++feedIndex;
 	}
 	*/
-	if (!url) {
-		url = this.url;
+
+	if (feedIndex < this.feedIds.length) {
+		var feed = feedModel.getFeedById(this.feedIds[feedIndex]);
+
+		feed.update(function() {
+			feed.updated();
+			feed.updatedEpisodes();
+			this.updateFeedIds(feedIndex+1, callback);
+		}.bind(this));
+	} else {
+		this.updating = false;
+		callback();
 	}
-
-	var feedTitle = (this.title)?this.title:"Unknown feed title";
-	Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
-
-	//Mojo.Log.error("making ajax request [%s]", url);
-	var req = new Ajax.Request(url, {
-		method: "get",
-		evalJSON : "false",
-		evalJS : "false",
-		onFailure: this.checkFailure.bind(this, callback),
-		onSuccess: this.checkSuccess.bind(this, callback)
+};
+Feed.prototype.download = function(callback, url) {
+	this.getEpisodesToDownload().forEach(function (e) {
+		e.download();
 	});
-	//Mojo.Log.error("finished making ajax request");
+};
+
+Feed.prototype.getEpisodesToDownload = function() {
+	var eps = [];
+	if (this.playlist) {
+		this.feedIds.forEach(function (fid) {
+			eps = eps.concat(feedModel.getFeedById(fid).getEpisodesToDownload());
+		});
+	} else if (this.autoDownload) {
+		var downloaded = 0;
+		this.episodes.forEach(function (e) {
+			if (e.downloaded) {
+				if (this.maxDownloads > 0 && downloaded > this.maxDownloads &&
+					!e.position) {
+					e.deleteFile();
+				} else {
+					++downloaded;
+				}
+			} else if (e.downloading) {
+				++downloaded;
+			} else if ((this.maxDownloads == "0" || downloaded < this.maxDownloads) &&
+					   !e.listened && !e.downloadTicket && e.enclosure) {
+				eps.push(e);
+				++downloaded;
+			}
+		}.bind(this));
+	}
+	return eps;
 };
 
 Feed.prototype.checkFailure = function(callback, transport) {
@@ -104,7 +163,6 @@ Feed.prototype.checkSuccess = function(callback, transport) {
 	//Mojo.Log.error("check success %d", (new Date()).getTime()-this.ajaxStartDate);
 	var location = transport.getHeader("Location");
 	if (location) {
-		Mojo.Log.error("Redirection location=%s", location);
 		this.update(callback, location);
 	} else {
 		this.updateCheck(transport);
@@ -201,10 +259,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	this.lastModified = lastModified;
 	var itemPath = "/rss/channel/item";
 
-	// this isn't the best way to keep things unique, maybe should use guid
-	var topEpisodeTitle = "-a-title-that-will-never-match-anything-";
-	if (this.episodes.length > 0) {topEpisodeTitle = this.episodes[0].title;}
-
 	this.validateXML(transport);
 
 	if (this.title === undefined || this.title === null || this.title === "") {
@@ -246,13 +300,11 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	//var numItems = Util.xpath("/rss/channel/item[last()]/@index", transport.responseXML).value;
 	// how would I get the number of item entries?
 
-
 	//var start = (new Date()).getTime();
 	nodes = document.evaluate(itemPath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
 	//Mojo.Log.error("document evaluate: %d", (new Date()).getTime() - start);
 
 	if (!nodes) {
-		// bring this back once feed add dialog is its own page
 		//Util.showError("Error parsing feed", "No items found in feed");
 		return UPDATECHECK_INVALID;
 	}
@@ -260,9 +312,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	var result = nodes.iterateNext();
 	var newEpisodeCount = 0;
 	var noEnclosureCount = 0;
-	// debugging, we only want to update 5 or so at a time, so that we can watch the list grow
-	//var newToKeep = Math.floor(Math.random()*4+1);
-	// end debugging
 	//while (result && this.episodes.length < this.maxDisplay) {
 
 	while (result) {
@@ -273,30 +322,18 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		//Mojo.Log.error("loadFromXML: %d", (new Date()).getTime() - start2);
 
 
-		// what really needs to happen here:
-		// check based on guid each of the episodes, add new ones to the top of the array
-		// update information for existing ones
 		var e = this.guid[episode.guid];
 		if (e === undefined) {
 			episode.newlyAddedEpisode = true;
 			episode.feedId = this.id;
 			episode.feedObject = this;
-			// record the title of the topmost episode
-			if (newEpisodeCount === 0) {
-				this.details = episode.title;
-			}
-			// insert the new episodes at the head of the list
-			this.episodes.splice(newEpisodeCount, 0, episode);
-			this.guid[episode.guid] = episode;
+			episode.albumArt = this.albumArt;
+			this.insertEpisodeSorted(episode);
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
 			episode.updateUIElements(true);
-			newEpisodeCount++;
 			updateCheckStatus = UPDATECHECK_UPDATES;
 			for (var j=0; j<this.playlists.length; ++j) {
-				var pf = feedModel.getFeedById(this.playlists[j]);
-				pf.episodes.splice(0,0,episode);
-				if (!episode.listened) {++pf.numNew; }
-				pf.guid[episode.guid] = episode;
+				this.playlists[j].insertEpisodeSorted(episode);
 			}
 		} else {
 			// it already exists, check that the enclosure url is up to date
@@ -313,18 +350,33 @@ Feed.prototype.updateCheck = function(transport, callback) {
 
 	//this.episodes.splice(this.maxDisplay);
 
-	// debugging
-	//if (newEpisodeCount > newToKeep) {
-		//this.episodes.splice(0, newEpisodeCount-newToKeep);
-		//this.lastModified = null;
-		//newEpisodeCount = newToKeep;
-	//}
-	// end debugging
-
-	this.numNew += newEpisodeCount;
-	this.numNew -= noEnclosureCount;
-
 	return updateCheckStatus;
+};
+
+Feed.prototype.insertEpisodeTop = function(episode) {
+	this.episodes.splice(0, 0, episode);
+	this.guid[episode.guid] = episode;
+	if (!episode.listened) { ++this.numNew; }
+};
+
+Feed.prototype.insertEpisodeSorted = function(episode) {
+	var added = false;
+	for (var i=0, len=this.episodes.length; i<=len; ++i) {
+		if (episode.pubDate > this.episodes[i].pubDate) {
+			if (i===0) {this.details = episode.title;}
+			this.episodes.splice(i, 0, episode);
+			added = true;
+			break;
+		}
+	}
+	if (!added) {
+		if (this.episodes.length === 0) {
+			this.details = episode.title;
+		}
+		this.episodes.push(episode);
+	}
+	this.guid[episode.guid] = episode;
+	if (!episode.listened) { ++this.numNew; }
 };
 
 Feed.prototype.downloadCallback = function(episode, event) {
@@ -379,9 +431,9 @@ Feed.prototype.listened = function(ignore) {
 	if (!ignore) {
 		this.updated();
 		this.updatedEpisodes();
-		this.playlists.forEach(function(p) {
-			feedModel.getFeedById(p).updated();
-			feedModel.getFeedById(p).updatedEpisodes();
+		this.playlists.forEach(function(f) {
+			f.updated();
+			f.updatedEpisodes();
 		});
 	}
 	this.save();
@@ -394,9 +446,9 @@ Feed.prototype.unlistened = function(ignore) {
 	if (!ignore) {
 		this.updated();
 		this.updatedEpisodes();
-		this.playlists.forEach(function(p) {
-			feedModel.getFeedById(p).updated();
-			feedModel.getFeedById(p).updatedEpisodes();
+		this.playlists.forEach(function(f) {
+			f.updated();
+			f.updatedEpisodes();
 		});
 	}
 	this.save();
@@ -405,8 +457,8 @@ Feed.prototype.unlistened = function(ignore) {
 Feed.prototype.downloadingEpisode = function(ignore) {
 	this.downloadCount++;
 	this.downloading = true;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).downloadingEpisode(ignore);
+	this.playlists.forEach(function(f) {
+		f.downloadingEpisode(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
@@ -414,56 +466,56 @@ Feed.prototype.downloadingEpisode = function(ignore) {
 Feed.prototype.downloadFinished = function(ignore) {
 	this.downloadCount--;
 	this.downloading = (this.downloadCount > 0);
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).downloadFinished(ignore);
+	this.playlists.forEach(function(f) {
+		f.downloadFinished(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeListened = function(ignore) {
 	this.numNew--;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).episodeListened(ignore);
+	this.playlists.forEach(function(f) {
+		f.episodeListened(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeUnlistened = function(ignore) {
 	this.numNew++;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).episodeUnlistened(ignore);
+	this.playlists.forEach(function(f) {
+		f.episodeUnlistened(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeDownloaded = function(ignore) {
 	this.numDownloaded++;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).episodeDownloaded(ignore);
+	this.playlists.forEach(function(f) {
+		f.episodeDownloaded(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeDeleted = function(ignore) {
 	this.numDownloaded--;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).episodeDeleted(ignore);
+	this.playlists.forEach(function(f) {
+		f.episodeDeleted(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeBookmarked = function(ignore) {
 	this.numStarted++;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).episodeBookmarked(ignore);
+	this.playlists.forEach(function(f) {
+		f.episodeBookmarked(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
 
 Feed.prototype.episodeBookmarkCleared = function(ignore) {
 	this.numStarted--;
-	this.playlists.forEach(function(p) {
-		feedModel.getFeedById(p).episodeBookmarkCleared(ignore);
+	this.playlists.forEach(function(f) {
+		f.episodeBookmarkCleared(ignore);
 	});
 	if (!ignore) {this.updated();}
 };
@@ -490,10 +542,6 @@ Feed.prototype.updatedEpisodes = function() {
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "feedEpisodesUpdated", feed: this});
 };
-
-
-function FeedModel(init) {
-}
 
 FeedModel.prototype.items = [];
 FeedModel.prototype.ids = [];
@@ -530,13 +578,14 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 			type: "feedsUpdating", value: true});
 		feedIndex = 0;
 	}
+
+	while (feedIndex < this.items.length &&
+		   this.items[feedIndex].playlist) {
+		++feedIndex;
+	}
+
 	if (feedIndex < this.items.length) {
 		var feed = this.items[feedIndex];
-
-		while (feed.playlist) {
-			++feedIndex;
-			feed = this.items[feedIndex];
-		}
 
 		feed.update(function() {
 			this.updateFeeds(feedIndex+1);
@@ -552,29 +601,9 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 
 FeedModel.prototype.getEpisodesToDownload = function() {
 	var eps = [];
-	for (var i=0, len=this.items.length; i<len; ++i) {
-		var feed = this.items[i];
-		if (feed.autoDownload) {
-			var downloaded = 0;
-			for (var j=0, len2=feed.episodes.length; j<len2; ++j) {
-				var e = feed.episodes[j];
-				if (e.downloaded) {
-					if (feed.maxDownloads > 0 && downloaded > feed.maxDownloads &&
-						!e.position) {
-						e.deleteFile();
-					} else {
-						++downloaded;
-					}
-				} else if (e.downloading) {
-					++downloaded;
-				} else if ((feed.maxDownloads == "0" || downloaded < feed.maxDownloads) &&
-						   !e.listened && !e.downloadTicket && e.enclosure) {
-					eps.push(e);
-					++downloaded;
-				}
-			}
-		}
-	}
+	this.items.forEach(function (f) {
+		eps = eps.concat(f.getEpisodesToDownload());
+	});
 	return eps;
 };
 
@@ -619,11 +648,9 @@ FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
 };
 
 FeedModel.prototype._doDownload = function(eps) {
-	for (var i=0, len=eps.length; i<len; ++i) {
-		var e = eps[i];
+	eps.forEach(function (e) {
 		e.download();
-	}
+	});
 	Util.closeDashboard(DrPodder.DashboardStageName);
 };
 
-var feedModel = new FeedModel();

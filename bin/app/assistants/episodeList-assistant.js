@@ -130,7 +130,9 @@ EpisodeListAssistant.prototype.setup = function() {
 		// preventDeleteProperty: "noDelete", // based on !listened || downloaded || position
 		// autoconfirmDelete: true,
 		formatters: {"title": this.titleFormatter.bind(this), "pubDate": this.pubDateFormatter.bind(this),
-		             "albumArt": this.albumArtFormatter.bind(this)}};
+		             "albumArt": this.albumArtFormatter.bind(this),
+					 "bookmarkPercent": this.bookmarkPercentFormatter.bind(this),
+					 "downloadingPercent": this.downloadingPercentFormatter.bind(this)}};
 
 	this.controller.setupWidget("episodeListWgt", this.episodeAttr, this.episodeModel);
 	this.episodeList = this.controller.get("episodeListWgt");
@@ -146,6 +148,22 @@ EpisodeListAssistant.prototype.setup = function() {
 
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
+};
+
+EpisodeListAssistant.prototype.downloadingPercentFormatter = function(downloadingPercent, model) {
+	var formatted = downloadingPercent;
+	if (formatted && this.feedObject.playlist) {
+		formatted = "" + (formatted * 0.82);
+	}
+	return formatted;
+};
+
+EpisodeListAssistant.prototype.bookmarkPercentFormatter = function(bookmarkPercent, model) {
+	var formatted = bookmarkPercent;
+	if (formatted && this.feedObject.playlist) {
+		formatted = "" + (formatted * 0.82);
+	}
+	return formatted;
 };
 
 EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
@@ -198,6 +216,7 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				this.feedObject.update(function() {
 					this.cmdMenuModel.items[1].disabled = false;
 					this.controller.modelChanged(this.cmdMenuModel);
+					this.feedObject.download();
 				}.bind(this));
 				break;
 			case "playFromNewest-cmd":
@@ -295,7 +314,7 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var d_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 	var m_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	if (formatted) {
-		var d = new Date(formatted);
+		var d = formatted;
 		var y = d.getFullYear();
 		var m = d.getMonth();
 		var dom=d.getDate();
@@ -505,10 +524,11 @@ EpisodeListAssistant.prototype.updatePercent = function(episode) {
 		var nodes;
 		if (this.feedObject.playlist) {
             nodes = node.getElementsByClassName("progressDonePlaylist");
+			nodes[0].style.width = episode.downloadingPercent*0.82 + "%";
 		} else {
 			nodes = node.getElementsByClassName("progressDone");
+			nodes[0].style.width = episode.downloadingPercent + "%";
 		}
-		nodes[0].style.width = episode.downloadingPercent + "%";
 	}
 };
 

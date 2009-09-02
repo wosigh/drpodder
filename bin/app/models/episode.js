@@ -41,13 +41,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	this.link = Util.xmlTagValue(xmlObject, "link");
 	this.description = Util.xmlTagValue(xmlObject, "encoded") || Util.xmlTagValue(xmlObject, "description") || "";
 	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
-	if (this.enclosure !== undefined && this.enclosure !== null) {
-		// fix stupid redirect url's BOL has started to use
-		//this.enclosure = this.enclosure.replace(/.*http\:\/\//, "http://");
-		// fix error with 60sec podcast
-		//this.enclosure = this.enclosure.replace("ref=p_itune", "ref=p_itunes");
-	}
-	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate") || new Date();
+	this.pubDate = new Date(Util.xmlTagValue(xmlObject, "pubDate"));
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
 	if (this.guid === undefined) {
 		this.guid = this.link + this.title + this.getDateString();
@@ -162,7 +156,7 @@ Episode.prototype.download = function(silent) {
 };
 
 Episode.prototype.getDateString = function() {
-	var date = new Date(this.pubDate);
+	var date = this.pubDate;
 	if (date === undefined || date === null || isNaN(date)) {
 		date = new Date();
 	}

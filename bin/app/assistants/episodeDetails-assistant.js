@@ -59,7 +59,7 @@ EpisodeDetailsAssistant.prototype.viewMenuModel = {
 };
 
 EpisodeDetailsAssistant.prototype.setup = function() {
-	this.controller.setupWidget("bodyScroller", {}, {});
+	this.controller.setupWidget("bodyScroller", {mode: "dominant"}, {});
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
 	this.controller.update(this.controller.get("episodeDetailsDescription"), this.episodeObject.description);
 
@@ -513,7 +513,12 @@ EpisodeDetailsAssistant.prototype.pauseGUI = function() {
 };
 
 EpisodeDetailsAssistant.prototype.doSkip = function(secs) {
+	//Mojo.Log.error("@@@@@@@@@@@@@@@@@@@@@@@@@@ before skip");
+	//for (var p in this.audioObject) {Mojo.Log.error("audioObject[%s]=%s", p, this.audioObject[p]);}
 	this.audioObject.currentTime += secs;
+	//Mojo.Log.error("@@@@@@@@@@@@@@@@@@@@@@@@@@ after skip");
+	//for (var p in this.audioObject) {Mojo.Log.error("audioObject[%s]=%s", p, this.audioObject[p]);}
+	//Mojo.Log.error("@@@@@@@@@@@@@@@@@@@@@@@@@@ skip done");
 	this.updateProgressLabels();
 	this.controller.modelChanged(this.progressModel);
 	this.bookmark();
@@ -534,8 +539,11 @@ EpisodeDetailsAssistant.prototype.progressChange = function(event) {
 
 EpisodeDetailsAssistant.prototype.sliderDragEnd = function(event) {
 	this.setStatus("Seeking");
-	this.audioObject.currentTime = event.value * this.audioObject.duration;
-	this.bookmark();
+	Mojo.Log.error("sliderDragEnd: ", event.value);
+	if (event.value !== undefined) {
+		this.audioObject.currentTime = event.value * this.audioObject.duration;
+		this.bookmark();
+	}
 	if (this.wasPlaying) {
 		this.audioObject.play();
 	}
