@@ -261,6 +261,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 		if (this.episodeObject.file) {
 			Mojo.Log.error("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
 			this.audioObject.src = this.episodeObject.file;
+			// autoplay=false
 			this.progressModel.progressStart = 0;
 			this.progressModel.progressEnd = 1;
 			this.controller.modelChanged(this.progressModel);
@@ -279,7 +280,6 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	} catch (f) {
 	}
 	this.bookmark();
-	this.setTimer(false);
 	this.cmdMenuModel.items[0] = {};
 	this.cmdMenuModel.items[1] = {};
 	this.cmdMenuModel.items[3] = {};
@@ -457,7 +457,6 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			this.pauseGUI();
 			break;
 		case "ended":
-			this.setTimer(false);
 			this.episodeObject.clearBookmark();
 			this.backToList();
 			break;

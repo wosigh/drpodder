@@ -394,11 +394,10 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 			}
 		}
 	}
-	for (i=0; i<feedModel.items.length; i++) {
-		f = feedModel.items[i];
+	feedModel.items.forEach(function(f) {
 		f.episodes.sort(this.sortEpisodes);
 		if (f.episodes.length > 0) { f.details = f.episodes[0].title; }
-	}
+	});
 	//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 	this.callback();
 };
@@ -437,9 +436,9 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 				if (f.id === null) {
 					f.id = results.insertId;
 					feedModel.ids[f.id] = f;
-					for (var j=0; j<f.episodes.length; j++) {
-						f.episodes[j].feedId = f.id;
-					}
+					f.episodes.forEach(function(e) {
+						e.feedId = f.id;
+					});
 				}
 				for (var i=0; i<f.episodes.length; i++) {
 					f.episodes[i].displayOrder = i;
@@ -489,15 +488,14 @@ DBClass.prototype.removeFeed = function(f) {
 	var removeFeedSQL = "DELETE FROM feed WHERE id=?";
 	var removeEpisodesSQL = "DELETE FROM episode WHERE feedId=?";
 
-	for (var i=0; i<f.episodes.length; i++) {
-		var episode = f.episodes[i];
-		if (episode.downloading) {
-			episode.cancelDownload();
+	f.episodes.forEach(function(e) {
+		if (e.downloading) {
+			e.cancelDownload();
 		}
-		if (episode.downloaded) {
-			episode.deleteFile(false);
+		if (e.downloaded) {
+			e.deleteFile(false);
 		}
-	}
+	});
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(removeEpisodesSQL, [f.id],

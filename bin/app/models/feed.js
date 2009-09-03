@@ -332,9 +332,9 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
-			for (var j=0; j<this.playlists.length; ++j) {
-				this.playlists[j].insertEpisodeSorted(episode);
-			}
+			this.playlists.forEach(function(pf) {
+				pf.insertEpisodeSorted(episode);
+			});
 		} else {
 			// it already exists, check that the enclosure url is up to date
 			e.title = episode.title;
@@ -387,12 +387,12 @@ Feed.prototype.downloadCallback = function(episode, event) {
 
 Feed.prototype.replace = function(title) {
 	var arr = this.getReplacementsArray();
-	for (var i=0; i<arr.length; i++) {
-		if (!arr[i].fromRegexp) {
-			arr[i].fromRegexp = new RegExp(arr[i].from, "g");
+	arr.forEach(function(a) {
+		if (!a.fromRegexp) {
+			a.fromRegexp = new RegExp(a.from, "g");
 		}
-		title = title.replace(arr[i].fromRegexp, arr[i].to);
-	}
+		title = title.replace(a.fromRegexp, a.to);
+	});
 	return title;
 };
 
@@ -415,19 +415,19 @@ Feed.prototype.getReplacementsArray = function() {
 Feed.prototype.setReplacements = function(arr) {
 	var replacements;
 	this.replacements = "";
-	for (var i=0; i<arr.length; i++) {
-		if (arr[i].from.length > 0) {
+	arr.forEach(function(a) {
+		if (a.from.length > 0) {
 			if (this.replacements.length > 0) { this.replacements += ",";}
-			this.replacements += arr[i].from.replace(/,/g,"#COMMA#") + "," +
-			                     arr[i].to.replace(/,/g,"#COMMA#");
+			this.replacements += a.from.replace(/,/g,"#COMMA#") + "," +
+			                     a.to.replace(/,/g,"#COMMA#");
 		}
-	}
+	}.bind(this));
 };
 
 Feed.prototype.listened = function(ignore) {
-	for (var i=0; i<this.episodes.length; i++) {
-		this.episodes[i].setListened(true);
-	}
+	this.episodes.forEach(function(e) {
+		e.setListened(true);
+	});
 	if (!ignore) {
 		this.updated();
 		this.updatedEpisodes();
@@ -440,9 +440,9 @@ Feed.prototype.listened = function(ignore) {
 };
 
 Feed.prototype.unlistened = function(ignore) {
-	for (var i=0; i<this.episodes.length; i++) {
-		this.episodes[i].setUnlistened(true);
-	}
+	this.episodes.forEach(function(e) {
+		e.setUnlistened(true);
+	});
 	if (!ignore) {
 		this.updated();
 		this.updatedEpisodes();
@@ -653,4 +653,3 @@ FeedModel.prototype._doDownload = function(eps) {
 	});
 	Util.closeDashboard(DrPodder.DashboardStageName);
 };
-
