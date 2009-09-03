@@ -281,9 +281,9 @@ DBClass.prototype.loadFeeds = function() {
 	playlist.albumArt = "/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png";
 	playlist.playlist = true;
 	playlist.displayOrder = 1;
-	playlist.feedIds = [1,2,3,4,5,6,12,19];
+//	playlist.feedIds = [1,2,3,4,5,6,12,19];
 	//playlist.feedIds = [1,2,3,7,8];
-	//playlist.feedIds = [1,4,10,12];
+	playlist.feedIds = [1,4,10,12];
 	playlist.playlists = [];
 	playlist.viewFilter = "New";
 	playlist.details = undefined;
@@ -312,8 +312,8 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 			f.numStarted = 0;
 			f.episodes = [];
 			f.guid = [];
+			f.displayOrder = feedModel.items.length;
 			feedModel.add(f);
-			f.displayOrder = i;
 		}
 
 		this.loadEpisodes();
@@ -375,21 +375,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						e.downloadingCallback.bind(e));
 				}
 
-				f.playlists.forEach(function(pf) {
-					pf.insertEpisodeTop(e);
-					//pf.episodes.push(e);
-					//pf.guid[e.guid] = e;
-					//if (!e.listened) {++pf.numNew;}
-					if (e.downloaded) {++pf.numDownloaded;}
-					if (e.position !== 0) {
-						++pf.numStarted;
-					}
-					if (e.downloadTicket) {
-						pf.downloading = true;
-						pf.downloadCount++;
-					}
-				});
-
+				this.initPlaylistEpisode(f.playlists, e);
 				e.updateUIElements(true);
 			}
 		}
@@ -397,13 +383,30 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	feedModel.items.forEach(function(f) {
 		f.episodes.sort(this.sortEpisodes);
 		if (f.episodes.length > 0) { f.details = f.episodes[0].title; }
-	});
+	}.bind(this));
 	//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 	this.callback();
 };
 
+DBClass.prototype.initPlaylistEpisode = function(playlists, e) {
+	playlists.forEach(function(pf) {
+		pf.insertEpisodeTop(e);
+		if (e.downloaded) {++pf.numDownloaded;}
+		if (e.position !== 0) {
+			++pf.numStarted;
+		}
+		if (e.downloadTicket) {
+			pf.downloading = true;
+			pf.downloadCount++;
+		}
+	});
+};
+
 DBClass.prototype.sortEpisodes = function(a,b) {
-	//Mojo.Log.error("sortEpisodes(%s,%s)", a.pubDate, b.pubDate);
+//	Mojo.Log.error("sortEpisodes(%s,%s)", a.pubDate, b.pubDate);
+	if (b.pubDate === a.pubDate) {
+		return a.displayOrder - b.displayOrder;
+	}
 	return (b.pubDate - a.pubDate);
 };
 

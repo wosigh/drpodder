@@ -321,7 +321,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		episode.loadFromXML(result);
 		//Mojo.Log.error("loadFromXML: %d", (new Date()).getTime() - start2);
 
-
 		var e = this.guid[episode.guid];
 		if (e === undefined) {
 			episode.newlyAddedEpisode = true;
@@ -332,9 +331,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
-			this.playlists.forEach(function(pf) {
-				pf.insertEpisodeSorted(episode);
-			});
+			this.addToPlaylists(episode);
 		} else {
 			// it already exists, check that the enclosure url is up to date
 			e.title = episode.title;
@@ -351,6 +348,12 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	//this.episodes.splice(this.maxDisplay);
 
 	return updateCheckStatus;
+};
+
+Feed.prototype.addToPlaylists = function(episode) {
+	this.playlists.forEach(function(pf) {
+		pf.insertEpisodeSorted(episode);
+	});
 };
 
 Feed.prototype.insertEpisodeTop = function(episode) {

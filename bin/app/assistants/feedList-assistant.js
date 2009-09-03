@@ -5,10 +5,17 @@ function FeedListAssistant() {
 
 FeedListAssistant.prototype.cmdMenuModel = {
 	items: [
-		{icon: "new", command: "add-cmd"},
+		{icon: "new", submenu: "add-menu"},
 		{icon: "refresh", command: "refresh-cmd", disabled: true}
 	]
 };
+
+FeedListAssistant.prototype.addMenuModel = {
+	items: [{label: "Search...", command: "feed-search"},
+	        {label: "Dynamic Playlist...", command: "add-playlist"},
+	        {label: "Enter feed URL...", command: "add-feed"}]
+};
+
 
 FeedListAssistant.prototype.viewMenuModel = {
 	visible: true,
@@ -23,6 +30,7 @@ initialize = function() {
 
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
+	this.controller.setupWidget("add-menu", this.handleCommand, this.addMenuModel);
 
 	this.feedAttr = {
 		itemTemplate: "feedList/feedRowTemplate",
@@ -282,22 +290,14 @@ FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 FeedListAssistant.prototype.handleCommand = function(event) {
     if (event.type == Mojo.Event.command) {
         switch (event.command) {
-			case "add-cmd":
-				this.controller.popupSubmenu({
-					onChoose: function(command) {
-						switch (command) {
-							case "add-feed":
-								this.stageController.pushScene("addFeed", null);
-								break;
-							case "feed-search":
-								this.stageController.pushScene("feedSearch", this, null);
-								break;
-						}
-					}.bind(this),
-					placeNear: event.originalEvent.target,
-					items: [{label: "Search...", command: "feed-search"},
-					        {label: "Enter feed URL...", command: "add-feed"}]
-				});
+			case "add-playlist":
+				this.stageController.pushScene("addPlaylist", null);
+				break;
+			case "add-feed":
+				this.stageController.pushScene("addFeed", null);
+				break;
+			case "feed-search":
+				this.stageController.pushScene("feedSearch", this, null);
 				break;
 			case "refresh-cmd":
 				this.updateFeeds();

@@ -174,12 +174,6 @@
 	color: gray;
 }
 
-.episodeSelected {
-	outline-style: inset;
-	outline-color: blue;
-	outline-width: 2px;
-}
-
 .bookmarkDonePlaylist,
 .bookmarkDone,
 .progressDonePlaylist,
@@ -287,4 +281,11 @@
   height: 18px;
   width: 100%;
   text-align: center;
+}
+
+.feedSelected {
+	outline-style: inset;
+	outline-color: blue;
+	outline-width: 2px;
+	width: 100%;
 }

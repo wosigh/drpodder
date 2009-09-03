@@ -382,7 +382,7 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	//Mojo.Log.error("AudioEvent: %j", event);
+	Mojo.Log.error("AudioEvent: %j", event);
 	switch (event.type) {
 		//case "stalled":
 			//this.stalled = true;
@@ -714,7 +714,7 @@ EpisodeDetailsAssistant.prototype.considerForNotification = function(params) {
 	if (params) {
 		switch (params.type) {
 			case "onFocus":
-				if (this.audioObject && this.audioObject.paused === true) {
+				if (this.audioObject && this.audioObject.paused !== true) {
 					this.setTimer(true);
 				}
 				break;

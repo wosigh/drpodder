@@ -85,7 +85,7 @@ EpisodeListAssistant.prototype.filterEpisodes = function() {
 
 	if (refreshNeeded) {
 		this.episodeModel.items = newModel;
-		this.refresh();
+		this.refreshNow();
 	}
 };
 
@@ -180,8 +180,8 @@ EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 
 
 EpisodeListAssistant.prototype.activate = function(changes) {
+	this.refresh();
 	this.filterEpisodes();
-	this.refreshNow();
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);
@@ -544,8 +544,8 @@ EpisodeListAssistant.prototype.considerForNotification = function(params) {
 		switch (params.type) {
 			case "feedEpisodesUpdated":
 				if (this.eventApplies(params.feed)) {
+					this.refresh();
 					this.filterEpisodes();
-					this.refreshNow();
 				}
 				break;
 			case "episodeUpdated":
@@ -566,8 +566,8 @@ EpisodeListAssistant.prototype.considerForNotification = function(params) {
 				}
 				break;
 			case "onFocus":
+				this.refresh();
 				this.filterEpisodes();
-				this.refreshNow();
 				break;
 		}
 	}
