@@ -18,17 +18,6 @@ EpisodeListAssistant.prototype.items = [];
 	//});
 
 EpisodeListAssistant.prototype.menuAttr = {omitDefaultItems: true};
-EpisodeListAssistant.prototype.menuModel = {
-	visible: true,
-	items: [
-		{label: "Edit Feed", command: "edit-cmd"},
-		{label: "Mark all as New", command: "unlistened-cmd"},
-		{label: "Mark all as Old", command: "listened-cmd"},
-		{label: "Play from Top", command: "playFromNewest-cmd"},
-		{label: "Play from Bottom", command: "playFromOldest-cmd"},
-		{label: "About...", command: "about-cmd"}
-	]
-};
 
 EpisodeListAssistant.prototype.filterMenuModel = {
 	items: [
@@ -96,6 +85,23 @@ EpisodeListAssistant.prototype.setup = function() {
 			{icon: "refresh", command: "refresh-cmd"}
 		]
 	};
+
+	this.menuModel = {
+		visible: true,
+		items: [
+			{label: "Edit Feed", command: "edit-cmd"},
+			{label: "Mark all as New", command: "unlistened-cmd"},
+			{label: "Mark all as Old", command: "listened-cmd"},
+			{label: "Play from Top", command: "playFromNewest-cmd"},
+			{label: "Play from Bottom", command: "playFromOldest-cmd"},
+			{label: "About...", command: "about-cmd"}
+		]
+	};
+
+	if (this.feedObject.playlist) {
+		this.menuModel.items[0].label = "Edit Playlist";
+
+	}
 
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 	this.controller.setupWidget("filter-menu", this.handleCommand, this.filterMenuModel);
@@ -208,7 +214,11 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				this.feedObject.listened();
 				break;
 			case "edit-cmd":
-				this.stageController.pushScene("addFeed", this.feedObject);
+				if (this.feedObject.playlist) {
+					this.stageController.pushScene("addPlaylist", this.feedObject);
+				} else {
+					this.stageController.pushScene("addFeed", this.feedObject);
+				}
 				break;
 			case "refresh-cmd":
 				this.cmdMenuModel.items[1].disabled = true;

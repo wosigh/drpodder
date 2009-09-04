@@ -272,7 +272,7 @@ FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 			this.stageController.pushScene("addFeed", feed);
 			break;
 		case "editplaylist-cmd":
-			//this.stageController.pushScene("addFeed", feed);
+			this.stageController.pushScene("addPlaylist", feed);
 			break;
 		case "listened-cmd":
 			feed.listened();

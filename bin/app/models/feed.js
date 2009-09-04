@@ -96,6 +96,14 @@ Feed.prototype.update = function(callback, url) {
 
 Feed.prototype.updateFeedIds = function(feedIndex, callback) {
 	if (!feedIndex) { feedIndex = 0; }
+	var feedIds = this.feedIds;
+	if (feedIds.length === 0) {
+		feedModel.items.forEach(function(f) {
+			if (!f.playlist) {
+				feedIds.push(f.id);
+			}
+		});
+	}
 
 	/* if somehow, a playlist can point to other playlists... we should update them
 	while (feedIndex < this.feedIds.length &&
@@ -196,7 +204,7 @@ Feed.prototype.getTitle = function(transport) {
 				var firstChild = node.firstChild;
 				if (firstChild) {
 					title = firstChild.nodeValue;
-					Mojo.Log.error("title: %s", title);
+					//Mojo.Log.error("title: %s", title);
 				}
 			}
 		}
@@ -350,9 +358,29 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	return updateCheckStatus;
 };
 
+Feed.prototype.sortEpisodes = function() {
+	this.episodes.sort(this.sortEpisodesFunc);
+	if (this.episodes.length > 0) { this.details = this.episodes[0].title; }
+	this.updated();
+	this.updatedEpisodes();
+};
+
+Feed.prototype.sortEpisodesFunc = function(a,b) {
+	if (b.pubDate === a.pubDate) {
+		return a.displayOrder - b.displayOrder;
+	}
+	return (b.pubDate - a.pubDate);
+};
+
 Feed.prototype.addToPlaylists = function(episode) {
 	this.playlists.forEach(function(pf) {
 		pf.insertEpisodeSorted(episode);
+	});
+};
+
+Feed.prototype.addToPlaylistsTop = function(episode) {
+	this.playlists.forEach(function(pf) {
+		pf.insertEpisodeTop(episode);
 	});
 };
 
@@ -360,13 +388,23 @@ Feed.prototype.insertEpisodeTop = function(episode) {
 	this.episodes.splice(0, 0, episode);
 	this.guid[episode.guid] = episode;
 	if (!episode.listened) { ++this.numNew; }
+	if (episode.downloaded) {++this.numDownloaded;}
+	if (episode.position !== 0) {
+		++this.numStarted;
+	}
+	if (episode.downloadTicket) {
+		this.downloading = true;
+		++this.downloadCount;
+	}
 };
 
 Feed.prototype.insertEpisodeSorted = function(episode) {
 	var added = false;
-	for (var i=0, len=this.episodes.length; i<=len; ++i) {
+	for (var i=0, len=this.episodes.length; i<len; ++i) {
 		if (episode.pubDate > this.episodes[i].pubDate) {
-			if (i===0) {this.details = episode.title;}
+			if (i===0) {
+				this.details = episode.title;
+			}
 			this.episodes.splice(i, 0, episode);
 			added = true;
 			break;
@@ -380,6 +418,8 @@ Feed.prototype.insertEpisodeSorted = function(episode) {
 	}
 	this.guid[episode.guid] = episode;
 	if (!episode.listened) { ++this.numNew; }
+	this.updated();
+	this.updatedEpisodes();
 };
 
 Feed.prototype.downloadCallback = function(episode, event) {
