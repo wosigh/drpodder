@@ -77,39 +77,34 @@ DBClass.prototype.waitForFeeds = function(callback) {
 			type: "updateLoadingMessage", message: "Error Opening Database"});
 		Mojo.Log.error("Error opening feed db");
 	} else {
-		// here, check a cookie, and if we have a dbVersion, check if it is the latest,
-		// if not, run the migration sql statements
-		// otherwise, run the old initDB script
-
-		var dbCookie = new Mojo.Model.Cookie("dbInfo");
-		var dbInfo = dbCookie.get();
-
-		// ok, so uninstall deletes the db but not the cookie
-		if (dbInfo) {
-			if (this.dbVersions[0].version === dbInfo.version) {
-				// yay, no db operations needed, just open and go
-				Mojo.Log.error("DB Found at correct version");
-				Mojo.Controller.getAppController().sendToNotificationChain({
-					type: "updateLoadingMessage", message: "Loading"});
-				this.loadFeeds();
-			} else {
-				Mojo.Log.error("DB Found wrong version");
-				Mojo.Controller.getAppController().sendToNotificationChain({
-					type: "updateLoadingMessage", message: "Upgrading Database"});
-				// upgrade the db
-				// dbInfo.version = this.dbVersions[0].version;
-				// dbCookie.put(dbInfo);
-			}
-		} else {
-			Mojo.Log.error("DB Found no version, running init");
-			Mojo.Controller.getAppController().sendToNotificationChain({
-				type: "updateLoadingMessage", message: "Creating Database"});
-			this.initDB();
-			dbInfo = {};
-			dbInfo.version = this.dbVersions[0].version;
-			dbCookie.put(dbInfo);
-		}
-
+		this.db.transaction(function(transaction) {
+			transaction.executeSql("SELECT version FROM version", [],
+				function(transaction, results) {
+					var version;
+					if (results.rows.length > 0) {
+						version = results.rows.item(0).version;
+					}
+					Mojo.Log.info("DB Version: %s", version);
+					// check if version is latest
+					if (this.dbVersions[0].version === version) {
+						Mojo.Controller.getAppController().sendToNotificationChain({
+							type: "updateLoadingMessage", message: "Loading"});
+						this.loadFeeds();
+					} else {
+						Mojo.Controller.getAppController().sendToNotificationChain({
+							type: "updateLoadingMessage", message: "Upgrading Database"});
+						// dbInfo.version = this.dbVersions[0].version;
+						// dbCookie.put(dbInfo);
+					}
+				}.bind(this),
+				function(transaction, error) {
+					Mojo.Log.error("Error getting db version: %j", error);
+					// call init
+					Mojo.Controller.getAppController().sendToNotificationChain({
+						type: "updateLoadingMessage", message: "Creating Database"});
+					this.initDB();
+				}.bind(this));
+		}.bind(this));
 	}
 };
 
@@ -159,6 +154,12 @@ DBClass.prototype.initDB = function() {
 	var alterFeedTable3 = "ALTER TABLE feed ADD COLUMN viewFilter TEXT";
 	var alterFeedTable4 = "ALTER TABLE feed ADD COLUMN username TEXT";
 	var alterFeedTable5 = "ALTER TABLE feed ADD COLUMN password TEXT";
+	// should put in a line to create an 'All' and 'Favorites' playlist
+	var createVersionTable = "CREATE TABLE version (version TEXT)";
+	var populateVersionTable = "INSERT INTO version (version) VALUES ('0.4')";
+	var allPlaylist = "INSERT INTO feed (title, url, albumArt, viewFilter) VALUES " +
+	                  "('All', 'drPodder://'," +
+	                  "'/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png', 'New')"
 	var loadFeeds = this.loadFeeds.bind(this);
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
@@ -244,15 +245,35 @@ DBClass.prototype.initDB = function() {
 		transaction.executeSql(alterFeedTable5, [],
 			function(transaction, results) {
 				Mojo.Log.info("Feed table altered");
-				loadFeeds();
 			},
 			function(transaction, error) {
 				if (error.message === "duplicate column name: password") {
 					Mojo.Log.info("Feed table previously altered");
-					loadFeeds();
 				} else {
 					Mojo.Log.error("Error altering feed table: %j", error);
 				}
+			});
+		transaction.executeSql(createVersionTable, [],
+			function(transaction, results) {
+				Mojo.Log.info("Version table created");
+			},
+			function(transaction, error) {
+				Mojo.Log.error("Error creating version table");
+			});
+		transaction.executeSql(populateVersionTable, [],
+			function(transaction, results) {
+				Mojo.Log.info("Version table populated");
+			},
+			function(transaction, error) {
+				Mojo.Log.error("Error populating version table");
+			});
+		transaction.executeSql(allPlaylist, [],
+			function(transaction, results) {
+				Mojo.Log.info("Created all playlist");
+				loadFeeds();
+			},
+			function(transaction, error) {
+				Mojo.Log.error("Error creating all playlist");
 			});
 	});
 };
@@ -262,6 +283,7 @@ DBClass.prototype.loadFeeds = function() {
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage", message: "Loading Feeds"});
 
+	/*
 	var playlist = new Feed();
 	playlist.id = 1000000;
 	playlist.title = "All";
@@ -290,6 +312,7 @@ DBClass.prototype.loadFeeds = function() {
 	playlist.details = undefined;
 
 	feedModel.add(playlist);
+	*/
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(loadSQL, [],
@@ -397,7 +420,6 @@ DBClass.prototype.saveFeeds = function() {
 };
 
 DBClass.prototype.saveFeed = function(f, displayOrder) {
-	if (f.playlist) {return;}
 	var saveFeedSQL = "INSERT OR REPLACE INTO feed (id, displayOrder, title, url, albumArt, " +
 	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements, maxDisplay, " +
 					  "viewFilter, username, password) " +
@@ -409,6 +431,10 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 
 	this.db.transaction(function(transaction) {
 		if (f.id === undefined) {f.id = null;}
+		if (f.playlist) {
+			f.url = "drPodder://" + f.feedIds.join(",");
+			Mojo.Log.error("Saving Playlist: url=%s", f.url);
+		}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay,
 											 f.viewFilter, f.username, f.password],
@@ -417,13 +443,17 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 				if (f.id === null) {
 					f.id = results.insertId;
 					feedModel.ids[f.id] = f;
-					f.episodes.forEach(function(e) {
-						e.feedId = f.id;
-					});
+					if (!f.playlist) {
+						f.episodes.forEach(function(e) {
+							e.feedId = f.id;
+						});
+					}
 				}
-				for (var i=0; i<f.episodes.length; i++) {
-					f.episodes[i].displayOrder = i;
-					this.saveEpisodeTransaction(f.episodes[i], transaction);
+				if (!f.playlist) {
+					for (var i=0; i<f.episodes.length; i++) {
+						f.episodes[i].displayOrder = i;
+						this.saveEpisodeTransaction(f.episodes[i], transaction);
+					}
 				}
 			}.bind(this),
 			function(transaction, error) {

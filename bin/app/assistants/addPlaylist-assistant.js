@@ -101,12 +101,6 @@ AddPlaylistAssistant.prototype.listTap = function(event){
 AddPlaylistAssistant.prototype.includeAllChanged = function(event) {
 	if (event.value) {
 		this.feedListDiv.hide();
-		/*
-		this.feedModel.items.forEach(function(f) {
-			f.selected = false;
-		});
-		this.controller.modelChanged(this.feedModel);
-		*/
 	} else {
 		this.feedListDiv.show();
 	}
@@ -164,6 +158,7 @@ AddPlaylistAssistant.prototype.handleCommand = function(event) {
 							results.feedChanged = true;
 							results.feedIndex = feedModel.items.indexOf(this.feed);
 						}
+						DB.saveFeed(this.feed);
 						this.controller.stageController.popScene(results);
 					} else {
 						Util.showError("No Playlist Title", "Please enter a Title for the Playlist");

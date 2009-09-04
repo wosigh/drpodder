@@ -33,6 +33,26 @@ function Feed(init) {
 		this.numNew = init.numNew;
 		this.numDownloaded = init.numDownloaded;
 		this.numStarted = init.numStarted;
+
+		if (this.url.indexOf("drPodder://") === 0) {
+			this.playlist = true;
+			var feedIds = this.url.substring(11);
+			if (feedIds.length === 0) {
+				this.feedIds = [];
+			} else {
+				this.feedIds = feedIds.split(",");
+			}
+			feedModel.items.forEach(function (f) {
+				if (this.feedIds.length === 0 ||
+					this.feedIds.some(function(id) {return f.id == id;}.bind(this))) {
+					f.playlists.push(this);
+					f.episodes.forEach(function(e) {
+						this.insertEpisodeTop(e);
+					}.bind(this));
+				}
+			}.bind(this));
+		}
+
 	} else {
 		this.url = null;
 		this.title = null;
@@ -56,16 +76,18 @@ function Feed(init) {
 		this.numNew = 0;
 		this.numDownloaded = 0;
 		this.numStarted = 0;
+		this.feedIds = [];
 	}
 
 	this.playlists = [];
-	this.feedIds = [];
 
-	feedModel.items.forEach(function (f) {
-		if (f.playlist && (f.feedIds.length === 0 || f.feedIds.some(function(id) {return this.id === id;}.bind(this)))) {
-			this.playlists.push(f);
-		}
-	}.bind(this));
+	if (!this.playlist) {
+		feedModel.items.forEach(function (f) {
+			if (f.playlist && (f.feedIds.length === 0 || f.feedIds.some(function(id) {return this.id == id;}.bind(this)))) {
+				this.playlists.push(f);
+			}
+		}.bind(this));
+	}
 }
 
 Feed.prototype.update = function(callback, url) {
