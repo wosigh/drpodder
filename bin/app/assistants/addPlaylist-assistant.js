@@ -27,7 +27,7 @@ function AddPlaylistAssistant(feed) {
 	feedModel.items.forEach(function (f) {
 		if (!f.playlist) {
 			var listItem = {id:f.id, title:f.title, selected:false};
-			if (this.feed.feedIds.some(function(testId) {return testId === f.id;})) {
+			if (this.feed.feedIds.some(function(testId) {return testId == f.id;})) {
 				listItem.selected = true;
 			}
 			this.feedModel.items.push(listItem);
@@ -142,7 +142,7 @@ AddPlaylistAssistant.prototype.handleCommand = function(event) {
 
 						feedIds.forEach(function(fid) {
 							var f = feedModel.getFeedById(fid);
-							f.playlists.push(this);
+							f.playlists.push(this.feed);
 							f.episodes.forEach(function(e) {
 								this.feed.insertEpisodeTop(e);
 							}.bind(this));

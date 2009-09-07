@@ -444,6 +444,18 @@ Feed.prototype.insertEpisodeSorted = function(episode) {
 	this.updatedEpisodes();
 };
 
+Feed.prototype.removePlaylist = function(f) {
+	this.playlists = this.playlists.filter(function(pf) {return pf !== f;});
+};
+
+Feed.prototype.removeFeedFromPlaylist = function(f) {
+	this.feedIds = this.feedIds.filter(function(fid) {return f.id !== fid;});
+	this.episodes = this.episodes.filter(function(e) {return e.feedObject.id !== f.id;})
+	if (this.episodes.length > 0) { this.details = this.episodes[0].title; }
+	this.updated();
+	this.updatedEpisodes();
+};
+
 Feed.prototype.downloadCallback = function(episode, event) {
 	if (event.returnValue) {
 		episode.downloadTicket = event.ticket;

@@ -159,7 +159,7 @@ DBClass.prototype.initDB = function() {
 	var populateVersionTable = "INSERT INTO version (version) VALUES ('0.4')";
 	var allPlaylist = "INSERT INTO feed (title, url, albumArt, viewFilter) VALUES " +
 	                  "('All', 'drPodder://'," +
-	                  "'/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png', 'New')"
+	                  "'/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png', 'New')";
 	var loadFeeds = this.loadFeeds.bind(this);
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
@@ -507,6 +507,16 @@ DBClass.prototype.removeFeed = function(f) {
 			e.deleteFile(false);
 		}
 	});
+
+	if (f.playlist) {
+		f.feedIds.forEach(function(fid) {
+			feedModel.getFeedById(fid).removePlaylist(f);
+		});
+	} else {
+		f.playlists.forEach(function(pf) {
+			pf.removeFeedFromPlaylist(f);
+		});
+	}
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(removeEpisodesSQL, [f.id],
