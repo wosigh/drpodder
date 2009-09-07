@@ -314,7 +314,7 @@ EpisodeListAssistant.prototype.playFrom = function(oldest) {
 EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 	var formatted = title;
 	if (formatted) {
-		formatted = this.feedObject.replace(formatted);
+		formatted = model.feedObject.replace(formatted);
 	}
 	return formatted;
 };

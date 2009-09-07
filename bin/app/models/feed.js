@@ -344,6 +344,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	var noEnclosureCount = 0;
 	//while (result && this.episodes.length < this.maxDisplay) {
 
+	Feed.newDate = new Date();
 	while (result) {
 		// construct a new Episode based on the current item from XML
 		var episode = new Episode();
