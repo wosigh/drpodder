@@ -341,8 +341,6 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 		}
 
 		this.loadEpisodes();
-	} else {
-		this.defaultFeeds();
 	}
 };
 
@@ -403,6 +401,8 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				e.updateUIElements(true);
 			}
 		}
+	} else {
+		this.defaultFeeds();
 	}
 	feedModel.items.forEach(function(f) {
 		f.sortEpisodes();
