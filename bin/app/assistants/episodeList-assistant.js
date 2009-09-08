@@ -36,30 +36,31 @@ EpisodeListAssistant.prototype.viewMenuModel = {
 };
 
 EpisodeListAssistant.prototype.filterEpisodes = function() {
-	var filterFunc = function(e) {return !e.listened;};
-	switch (this.feedObject.viewFilter) {
-		case "ALL":
-			filterFunc = function(e) {return true;};
-			break;
-		case "Old":
-			filterFunc = function(e) {return e.listened;};
-			break;
-		case "Downloaded":
-			filterFunc = function(e) {return e.downloaded;};
-			break;
-		case "Downloading":
-			filterFunc = function(e) {return e.downloading;};
-			break;
-		case "Paused":
-			filterFunc = function(e) {return e.position;};
-			break;
-		case "New":
-			break;
-		default:
-			break;
+	var newModel = this.feedObject.episodes;
+	if (this.feedObject.viewFilter !== "ALL") {
+		var filterFunc = function(e) {return !e.listened;};
+		switch (this.feedObject.viewFilter) {
+			case "Old":
+				filterFunc = function(e) {return e.listened;};
+				break;
+			case "Downloaded":
+				filterFunc = function(e) {return e.downloaded;};
+				break;
+			case "Downloading":
+				filterFunc = function(e) {return e.downloading;};
+				break;
+			case "Paused":
+				filterFunc = function(e) {return e.position;};
+				break;
+			case "New":
+				break;
+			default:
+				break;
+		}
+		newModel = this.feedObject.episodes.filter(filterFunc);
 	}
 
-	var newModel = this.feedObject.episodes.filter(filterFunc);
+
 	var refreshNeeded = false;
 	if (newModel.length !== this.episodeModel.items.length) {
 		refreshNeeded = true;
