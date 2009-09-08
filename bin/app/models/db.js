@@ -499,20 +499,20 @@ DBClass.prototype.removeFeed = function(f) {
 	var removeFeedSQL = "DELETE FROM feed WHERE id=?";
 	var removeEpisodesSQL = "DELETE FROM episode WHERE feedId=?";
 
-	f.episodes.forEach(function(e) {
-		if (e.downloading) {
-			e.cancelDownload();
-		}
-		if (e.downloaded) {
-			e.deleteFile(false);
-		}
-	});
-
 	if (f.playlist) {
 		f.feedIds.forEach(function(fid) {
 			feedModel.getFeedById(fid).removePlaylist(f);
 		});
 	} else {
+		f.episodes.forEach(function(e) {
+			if (e.downloading) {
+				e.cancelDownload();
+			}
+			if (e.downloaded) {
+				e.deleteFile(false);
+			}
+		});
+	
 		f.playlists.forEach(function(pf) {
 			pf.removeFeedFromPlaylist(f);
 		});
