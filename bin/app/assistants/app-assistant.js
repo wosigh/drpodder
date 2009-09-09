@@ -178,13 +178,15 @@ AppAssistant.prototype.handleCommand = function(event) {
 							  "<br><br>&lt;opml version='1.1'>&lt;body><br>";
 				for (var i=0; i<feedModel.items.length; i++) {
 					var feed = feedModel.items[i];
-					message += "&lt;outline text='" + feed.title.replace(/&/g, "&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
-					message += " type='rss' xmlUrl='" + feed.url.replace(/&/g, "&amp;amp;") + "'";
-					message += " autoDownload='" + feed.autoDownload + "'";
-					message += " autoDelete='" + feed.autoDelete + "'";
-					message += " maxDownloads='" + feed.maxDownloads + "'";
-					message += " replacements='" + feed.replacements.replace(/&/g,"&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
-					message += "/><br>";
+					if (!feed.playlist) {
+						message += "&lt;outline text='" + feed.title.replace(/&/g, "&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
+						message += " type='rss' xmlUrl='" + feed.url.replace(/&/g, "&amp;amp;") + "'";
+						message += " autoDownload='" + feed.autoDownload + "'";
+						message += " autoDelete='" + feed.autoDelete + "'";
+						message += " maxDownloads='" + feed.maxDownloads + "'";
+						message += " replacements='" + feed.replacements.replace(/&/g,"&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
+						message += "/><br>";
+					}
 				}
 				message += "&lt;/body>&lt;/opml>";
 				AppAssistant.applicationManagerService.email("drPodder OPML Export", message);

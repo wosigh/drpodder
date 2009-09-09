@@ -299,7 +299,7 @@ EpisodeListAssistant.prototype.playFrom = function(oldest) {
 	var playlist = [];
 	for (var i=0,len=this.episodeModel.items.length; i<len; ++i) {
 		var episode = this.episodeModel.items[i];
-		if (!episode.listened && episode.enclosure) {
+		if (episode.enclosure) {
 			playlist.push(episode);
 		}
 	}

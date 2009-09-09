@@ -152,13 +152,16 @@ AddPlaylistAssistant.prototype.handleCommand = function(event) {
 
 						var results = {};
 						if (this.newFeed) {
-							feedModel.items.push(this.feed);
-							results.feedAdded = true;
+							//feedModel.items.push(this.feed);
+							feedModel.items.unshift(this.feed);
+							results.feedChanged = true;
+							results.feedIndex = 0;
+							DB.saveFeeds();
 						} else {
 							results.feedChanged = true;
 							results.feedIndex = feedModel.items.indexOf(this.feed);
+							DB.saveFeed(this.feed);
 						}
-						DB.saveFeed(this.feed);
 						this.controller.stageController.popScene(results);
 					} else {
 						Util.showError("No Playlist Title", "Please enter a Title for the Playlist");

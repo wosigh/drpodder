@@ -433,7 +433,6 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 		if (f.id === undefined) {f.id = null;}
 		if (f.playlist) {
 			f.url = "drPodder://" + f.feedIds.join(",");
-			Mojo.Log.error("Saving Playlist: url=%s", f.url);
 		}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay,
@@ -512,7 +511,7 @@ DBClass.prototype.removeFeed = function(f) {
 				e.deleteFile(false);
 			}
 		});
-	
+
 		f.playlists.forEach(function(pf) {
 			pf.removeFeedFromPlaylist(f);
 		});

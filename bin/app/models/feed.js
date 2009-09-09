@@ -98,11 +98,12 @@ Feed.prototype.update = function(callback, url) {
 		this.updateFeedIds(0, callback);
 	} else {
 		if (!url) {
+			var feedTitle = (this.title)?this.title:"Unknown feed title";
+			Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
+			Mojo.Log.error("Update: ", feedTitle, "(", this.url, ")");
+
 			url = this.url;
 		}
-
-		var feedTitle = (this.title)?this.title:"Unknown feed title";
-		Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
 
 		//Mojo.Log.error("making ajax request [%s]", url);
 		var req = new Ajax.Request(url, {
@@ -323,8 +324,6 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	}
 
 
-	Mojo.Log.error("Update: ", this.title, "(", this.url, ")");
-
 	//need to evaluate difference between iterator processing and xpath processing
 	// although, the real slowdown seems to be in getting the xml from the server (probably the parsing of the xml)
 	//var numItems = Util.xpath("/rss/channel/item[last()]/@index", transport.responseXML).value;
@@ -451,7 +450,7 @@ Feed.prototype.removePlaylist = function(f) {
 
 Feed.prototype.removeFeedFromPlaylist = function(f) {
 	this.feedIds = this.feedIds.filter(function(fid) {return f.id !== fid;});
-	this.episodes = this.episodes.filter(function(e) {return e.feedObject.id !== f.id;})
+	this.episodes = this.episodes.filter(function(e) {return e.feedObject.id !== f.id;});
 	if (this.episodes.length > 0) { this.details = this.episodes[0].title; }
 	this.updated();
 	this.updatedEpisodes();
