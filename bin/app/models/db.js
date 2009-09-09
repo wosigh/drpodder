@@ -339,9 +339,8 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 			f.displayOrder = feedModel.items.length;
 			feedModel.add(f);
 		}
-
-		this.loadEpisodes();
 	}
+	this.loadEpisodes();
 };
 
 DBClass.prototype.loadEpisodes = function() {

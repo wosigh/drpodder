@@ -289,3 +289,17 @@
 	outline-width: 2px;
 	width: 100%;
 }
+
+.palm-row.selected {
+  -webkit-border-image: url(../images/selection-gradient-default.png) 24 20 24 20 repeat repeat;
+}
+
+.palm-group .palm-row.selected.first {
+  -webkit-border-image: url(../images/selection-gradient-first.png) 24 20 24 20 repeat repeat;
+}
+.palm-group .palm-row.selected.single {
+  -webkit-border-image: url(../images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
+}
+.palm-group .palm-row.selected.last {
+  -webkit-border-image: url(../images/selection-gradient-last.png) 24 20 24 20 repeat repeat;
+}

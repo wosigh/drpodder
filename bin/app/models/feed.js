@@ -449,9 +449,22 @@ Feed.prototype.removePlaylist = function(f) {
 };
 
 Feed.prototype.removeFeedFromPlaylist = function(f) {
-	this.feedIds = this.feedIds.filter(function(fid) {return f.id !== fid;});
-	this.episodes = this.episodes.filter(function(e) {return e.feedObject.id !== f.id;});
+	var playlistCount = this.feedIds.length;
+	this.feedIds = this.feedIds.filter(function(fid) {return f.id != fid;});
+	this.episodes = this.episodes.filter(function(e) {return e.feedObject.id != f.id;});
+	this.details = null;
 	if (this.episodes.length > 0) { this.details = this.episodes[0].title; }
+	this.numNew = 0;
+	this.numDownloaded = 0;
+	this.numStarted = 0;
+	this.downloadCount = 0;
+	this.downloading = false;
+	this.episodes.forEach(function(e) {
+		if (!e.listened) {++this.numNew;}
+		if (e.downloaded) {++this.numDownloaded;}
+		if (e.position) {++this.numStarted;}
+		if (e.downloading) {++this.downloadCount; this.downloading = true;}
+	}.bind(this));
 	this.updated();
 	this.updatedEpisodes();
 };
@@ -598,15 +611,17 @@ Feed.prototype.episodeBookmarkCleared = function(ignore) {
 };
 
 Feed.prototype.save = function() {
-	DB.saveFeed(this);
 	if (this.playlist) {
 		if (this.feedIds.length > 0) {
+			DB.saveFeed(this);
 			this.feedIds.forEach(function(p) {
 				feedModel.getFeedById(p).save();
 			});
 		} else {
 			DB.saveFeeds();
 		}
+	} else {
+		DB.saveFeed(this);
 	}
 };
 
