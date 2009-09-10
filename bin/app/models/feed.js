@@ -694,7 +694,9 @@ FeedModel.prototype.updateFeeds = function(feedIndex) {
 FeedModel.prototype.getEpisodesToDownload = function() {
 	var eps = [];
 	this.items.forEach(function (f) {
-		eps = eps.concat(f.getEpisodesToDownload());
+		if (!f.playlist) {
+			eps = eps.concat(f.getEpisodesToDownload());
+		}
 	});
 	return eps;
 };
