@@ -357,11 +357,11 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			episode.feedId = this.id;
 			episode.feedObject = this;
 			episode.albumArt = this.albumArt;
-			this.insertEpisodeSorted(episode);
+			this.insertEpisodeTop(episode);
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
-			this.addToPlaylists(episode);
+			this.addToPlaylistsTop(episode);
 		} else {
 			// it already exists, check that the enclosure url is up to date
 			e.title = episode.title;
@@ -373,6 +373,10 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		}
 		result = nodes.iterateNext();
 	}
+	this.sortEpisodes();
+	this.playlists.forEach(function(f) {
+		f.sortEpisodes();
+	});
 	//Mojo.Log.error("documentProcessing: %d", (new Date()).getTime() - start);
 
 	//this.episodes.splice(this.maxDisplay);
@@ -407,7 +411,11 @@ Feed.prototype.addToPlaylistsTop = function(episode) {
 };
 
 Feed.prototype.insertEpisodeTop = function(episode) {
-	this.episodes.splice(0, 0, episode);
+	try {
+		this.episodes.unshift(episode);
+	} catch (e) {
+		Mojo.Log.error("Feed[%s]:Error unshifting episode: %j", this.title, e);
+	}
 	this.guid[episode.guid] = episode;
 	if (!episode.listened) { ++this.numNew; }
 	if (episode.downloaded) {++this.numDownloaded;}

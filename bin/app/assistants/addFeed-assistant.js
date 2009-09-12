@@ -226,6 +226,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
+
 	if (!this.newFeed && this.feed !== null && this.feed.url === this.urlModel.value) {
 		this.updateFields();
 		DB.saveFeed(this.feed);
@@ -259,7 +260,7 @@ AddFeedAssistant.prototype.check = function(url) {
 		url = this.urlModel.value;
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
-	//Mojo.Log.error("making ajax request [%s]", this.urlModel.value);
+	//Mojo.Log.error("making ajax request [%s]", url);
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
