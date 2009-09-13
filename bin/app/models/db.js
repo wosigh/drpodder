@@ -359,6 +359,7 @@ DBClass.prototype.loadEpisodes = function() {
 
 DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	//Mojo.Log.error("episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
+	try {
 	if (results.rows.length > 0) {
 		var oldFeedId = -1;
 		var f = null;
@@ -406,6 +407,9 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	feedModel.items.forEach(function(f) {
 		f.sortEpisodes();
 	}.bind(this));
+	} catch (exceptionCaught) {
+		Mojo.Log.error("Error loading episodes: %j", exceptionCaught);
+	}
 	//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 	this.callback();
 };

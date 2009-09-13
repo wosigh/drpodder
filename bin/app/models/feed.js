@@ -413,10 +413,10 @@ Feed.prototype.addToPlaylistsTop = function(episode) {
 Feed.prototype.insertEpisodeTop = function(episode) {
 	try {
 		this.episodes.unshift(episode);
+		this.guid[episode.guid] = episode;
 	} catch (e) {
 		Mojo.Log.error("Feed[%s]:Error unshifting episode: %j", this.title, e);
 	}
-	this.guid[episode.guid] = episode;
 	if (!episode.listened) { ++this.numNew; }
 	if (episode.downloaded) {++this.numDownloaded;}
 	if (episode.position !== 0) {
