@@ -90,11 +90,13 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.menuModel = {
 		visible: true,
 		items: [
+			Mojo.Menu.editItem,
 			{label: "Edit Feed", command: "edit-cmd"},
 			{label: "Mark all as New", command: "unlistened-cmd"},
 			{label: "Mark all as Old", command: "listened-cmd"},
 			{label: "Play from Top", command: "playFromNewest-cmd"},
 			{label: "Play from Bottom", command: "playFromOldest-cmd"},
+			Mojo.Menu.helpItem,
 			{label: "About...", command: "about-cmd"}
 		]
 	};

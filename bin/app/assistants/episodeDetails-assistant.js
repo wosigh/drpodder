@@ -24,6 +24,8 @@ EpisodeDetailsAssistant.prototype.menuAttr = {omitDefaultItems: true};
 EpisodeDetailsAssistant.prototype.menuModel = {
 	visible: true,
 	items: [
+		Mojo.Menu.editItem,
+		Mojo.Menu.helpItem,
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -61,8 +63,11 @@ EpisodeDetailsAssistant.prototype.viewMenuModel = {
 EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.setupWidget("bodyScroller", {mode: "dominant"}, {});
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
-	this.controller.update(this.controller.get("episodeDetailsDescription"), this.episodeObject.description);
 
+
+	DB.getEpisodeDescription(this.episodeObject, function(description) {
+		this.controller.update(this.controller.get("episodeDetailsDescription"), description);
+	}.bind(this));
 	/*
 	var viewMenuPrev = {icon: "", command: "", label: " "};
 	var viewMenuNext = {icon: "", command: "", label: " "};

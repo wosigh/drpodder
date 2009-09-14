@@ -5,7 +5,8 @@ function Episode(init) {
 		this.feedId = init.feedId;
 		this.title = init.title;
 		this.link = init.link;
-		this.description = init.description;
+		//this.description = init.description;
+		this.description = null;
 		this.enclosure = init.enclosure;
 		this.pubDate = init.pubDate;
 		this.guid = init.guid;

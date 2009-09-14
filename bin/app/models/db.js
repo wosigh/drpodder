@@ -343,8 +343,26 @@ DBClass.prototype.loadFeedsSuccess = function(transaction, results) {
 	this.loadEpisodes();
 };
 
+DBClass.prototype.getEpisodeDescription = function(e, callback) {
+	var sql = "SELECT description FROM episode WHERE id=?";
+	this.db.transaction(function(transaction) {
+		transaction.executeSql(sql, [e.id],
+			function(transaction, results) {
+				if (results.rows.length > 0) {
+					var item = results.rows.item(0);
+					callback(item.description);
+				}
+			},
+			function(transaction, error) {
+				Mojo.Log.error("Error retrieving episode description for %d: %j", e.id, error);
+				callback("Error loading description from database.  Please restart drPodder.");
+			});
+	});
+};
+
 DBClass.prototype.loadEpisodes = function() {
-	var loadSQL = "SELECT * FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
+	//var loadSQL = "SELECT * FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
+	var loadSQL = "SELECT id, feedId, displayOrder, title, enclosure, guid, link, position, pubDate, downloadTicket, downloaded, listened, file, length, type FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage",
 		message: "Loading Episodes"});
@@ -365,40 +383,51 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 		var f = null;
 		for (var i=0, len=results.rows.length; i<len; ++i) {
 			var item = results.rows.item(i);
-			f = feedModel.getFeedById(item.feedId);
-			//if (f.episodes.length < f.maxDisplay) {
-			if (f) {
-				var e = new Episode(item);
-				e.feedObject = f;
-				e.albumArt = f.albumArt;
-				if (e.enclosure === "undefined") {e.enclosure = null;}
-				if (e.type === "undefined") {e.type = null;}
-				if (e.pubDate === "undefined" || e.pubDate === null) {e.pubDate = new Date();}
-				else { e.pubDate = new Date(e.pubDate); }
-				if (e.description === "undefined") {e.description = null;}
-				f.insertEpisodeTop(e);
-				//f.episodes.push(e);
-				//f.guid[e.guid] = e;
-				//if (!e.listened) {++f.numNew;}
-				//if (e.downloaded) {++f.numDownloaded;}
-				if (e.position !== 0) {
-					//++f.numStarted;
-					if (e.length) {
-						e.bookmarkPercent = 100*e.position/e.length;
+			var attempts = 0;
+			var tryAgain = true;
+			while (tryAgain && attempts < 5) {
+				try {
+					f = feedModel.getFeedById(item.feedId);
+					//if (f.episodes.length < f.maxDisplay) {
+					if (f) {
+						var e = new Episode(item);
+						e.feedObject = f;
+						e.albumArt = f.albumArt;
+						if (e.enclosure === "undefined") {e.enclosure = null;}
+						if (e.type === "undefined") {e.type = null;}
+						if (e.pubDate === "undefined" || e.pubDate === null) {e.pubDate = new Date();}
+						else { e.pubDate = new Date(e.pubDate); }
+						if (e.description === "undefined") {e.description = null;}
+						f.addToPlaylistsTop(e);
+						f.insertEpisodeTop(e);
+						//f.episodes.push(e);
+						//f.guid[e.guid] = e;
+						//if (!e.listened) {++f.numNew;}
+						//if (e.downloaded) {++f.numDownloaded;}
+						if (e.position !== 0) {
+							//++f.numStarted;
+							if (e.length) {
+								e.bookmarkPercent = 100*e.position/e.length;
+							}
+						}
+
+						if (e.downloadTicket) {
+							e.downloading = true;
+							e.downloadActivity();
+							//f.downloading = true;
+							//f.downloadCount++;
+							e.downloadRequest = AppAssistant.downloadService.downloadStatus(null, e.downloadTicket,
+								e.downloadingCallback.bind(e));
+						}
+
+						e.updateUIElements(true);
 					}
+					tryAgain = false;
+				} catch (episodeException) {
+					Mojo.Log.error("Error adding episode(%d): %j", item.id, episodeException);
+					attempts++;
+					tryAgain = true;
 				}
-
-				if (e.downloadTicket) {
-					e.downloading = true;
-					e.downloadActivity();
-					//f.downloading = true;
-					//f.downloadCount++;
-					e.downloadRequest = AppAssistant.downloadService.downloadStatus(null, e.downloadTicket,
-						e.downloadingCallback.bind(e));
-				}
-
-				f.addToPlaylistsTop(e);
-				e.updateUIElements(true);
 			}
 		}
 	} else {
@@ -465,7 +494,11 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	}.bind(this));
 };
 
-DBClass.prototype.saveEpisodeSQL = "INSERT OR REPLACE INTO episode (id, feedId, displayOrder, title, description, " +
+DBClass.prototype.saveEpisodeSQL = "INSERT OR REPLACE INTO episode (id, feedId, displayOrder, title, " +
+	                     "enclosure, guid, link, pubDate, position, " +
+					     "downloadTicket, downloaded, listened, file, length, type) " +
+					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+DBClass.prototype.saveEpisodeSQLDescription = "INSERT OR REPLACE INTO episode (id, feedId, displayOrder, title, description, " +
 	                     "enclosure, guid, link, pubDate, position, " +
 					     "downloadTicket, downloaded, listened, file, length, type) " +
 					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -483,14 +516,23 @@ DBClass.prototype.saveEpisode = function(e, displayOrder) {
 
 DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 	if (e.id === undefined) {e.id = null;}
-	transaction.executeSql(this.saveEpisodeSQL, [e.id, e.feedId, e.displayOrder, e.title, e.description,
-										    e.enclosure, e.guid, e.link, e.pubDate, e.position,
-											e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type],
+	var sql = this.saveEpisodeSQL;
+	var params = [e.id, e.feedId, e.displayOrder, e.title,
+				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
+				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type];
+	if (e.description) {
+		sql = this.saveEpisodeSQLDescription;
+	    params = [e.id, e.feedId, e.displayOrder, e.title, e.description,
+				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
+				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type];
+	}
+	transaction.executeSql(sql, params,
 		function(transaction, results) {
 			Mojo.Log.info("Episode saved: %s, %d", e.title, e.listened);
 			if (e.id === null) {
 				e.id = results.insertId;
 			}
+			e.description = null;
 		},
 		function(transaction, error) {
 			Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);

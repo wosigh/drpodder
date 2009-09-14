@@ -19,11 +19,13 @@ AppAssistant.appMenuAttr = {omitDefaultItems: true};
 AppAssistant.appMenuModel = {
 	visible: true,
 	items: [
+		Mojo.Menu.editItem,
 		{label: "OPML",
 		 items: [{label: "Import from drpodder.xml", command: "import-cmd"},
 				 {label: "Export via email", command: "export-cmd"}]
 		},
 		{label: "Preferences", command: "prefs-cmd"},
+		Mojo.Menu.helpItem,
 		{label: "About...", command: "about-cmd"}
 	]
 };
