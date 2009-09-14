@@ -515,9 +515,9 @@ DBClass.prototype.saveEpisode = function(e, displayOrder) {
 };
 
 DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
-	var updateSQL = "UPDATE episode SET feedId=?, displayOrder=?, title=?, enclosure=?, guid=?, link=?, position=?, pubDate=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
-	var updateSQLDescription = "UPDATE episode SET feedId=?, displayOrder=?, title=?, description=?, enclosure=?, guid=?, link=?, position=?, pubDate=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
-	var insertSQL = "INSERT OR REPLACE INTO episode (feedId, displayOrder, title, description, " +
+	var updateSQL            = "UPDATE episode SET feedId=?, displayOrder=?, title=?,                enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
+	var updateSQLDescription = "UPDATE episode SET feedId=?, displayOrder=?, title=?, description=?, enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
+	var insertSQL = "INSERT INTO episode (feedId, displayOrder, title, description, " +
 	                     "enclosure, guid, link, pubDate, position, " +
 					     "downloadTicket, downloaded, listened, file, length, type) " +
 					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -526,7 +526,7 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
 				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type],
 			function(transaction, results) {
-				Mojo.Log.info("Episode saved: %s, %d", e.title, e.listened);
+				Mojo.Log.info("Episode saved: %s", e.title);
 				e.id = results.insertId;
 				e.description = null;
 			},
@@ -546,28 +546,13 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 		}
 		transaction.executeSql(sql, params,
 			function(transaction, results) {
-				Mojo.Log.info("Episode updated: %s, %d", e.title, e.listened);
+				Mojo.Log.info("Episode updated: %s", e.title);
 				e.description = null;
 			},
 			function(transaction, error) {
 				Mojo.Log.error("Episode update failed: (%s), %j", e.title, error);
 			});
-
 	}
-
-	transaction.executeSql(sql, params,
-		function(transaction, results) {
-			Mojo.Log.info("Episode saved: %s, %d", e.title, e.listened);
-			if (e.id === null) {
-				e.id = results.insertId;
-			}
-			if (e.description) {
-				e.description = null;
-			}
-		},
-		function(transaction, error) {
-			Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);
-		});
 };
 
 DBClass.prototype.removeFeed = function(f) {

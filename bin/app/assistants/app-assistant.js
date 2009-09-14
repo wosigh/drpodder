@@ -34,13 +34,13 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(DrPodder.MainStageName);
 		if (cardStageController) {
-			Mojo.Log.error("Main Stage exists");
+			Mojo.Log.info("Main Stage exists");
 			cardStageController.activate();
 		} else {
 			var pushMainScene = function(stageController) {
 				stageController.pushScene("loading");
 			};
-			Mojo.Log.error("Create Main Stage");
+			Mojo.Log.info("Create Main Stage");
 			var stageArguments = {name: DrPodder.MainStageName, lightweight: true};
 			this.controller.createStageWithCallback(stageArguments, pushMainScene.bind(this), "card");
 		}
