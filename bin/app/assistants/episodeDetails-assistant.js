@@ -25,7 +25,6 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	visible: true,
 	items: [
 		Mojo.Menu.editItem,
-		Mojo.Menu.helpItem,
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -287,7 +286,6 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	this.cmdMenuModel.items[3] = {};
 	this.cmdMenuModel.items[4] = {};
 	this.disablePlay(true);
-	this.autoPlay = true;
 	this.resume = true;
 	this.readyToPlay();
 };
@@ -401,11 +399,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			break;
 		case "play":
 			this.setStatus("");
-			//if (!this.autoPlay) {
-				//this.audioObject.pause();
-			//} else {
-				this.playGUI();
-			//}
+			this.playGUI();
 			break;
 		case "waiting":
 			this.setStatus("Buffering");
@@ -426,11 +420,6 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 				} catch (e) {
 					Mojo.Log.error("Error setting currentTime: %j", e);
 				}
-			//} else {
-				//this.setStatus("");
-				//if (this.autoPlay) {
-					//this.audioObject.play();
-				//}
 			}
 			if (!this.audioObject.autoplay) {
 				this.setStatus("");
@@ -512,6 +501,7 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.playGUI = function() {
+	this.autoPlay = true;
 	this.cmdMenuModel.items[0] = this.menuCommandItems.skipBack2;
 	this.cmdMenuModel.items[1] = this.menuCommandItems.skipBack;
 	this.cmdMenuModel.items[3] = this.menuCommandItems.skipForward;
@@ -521,6 +511,7 @@ EpisodeDetailsAssistant.prototype.playGUI = function() {
 };
 
 EpisodeDetailsAssistant.prototype.pauseGUI = function() {
+	this.autoPlay = false;
 	this.enablePlay();
 };
 
@@ -606,7 +597,6 @@ EpisodeDetailsAssistant.prototype.deleteFile = function() {
 };
 
 EpisodeDetailsAssistant.prototype.pause = function() {
-	//this.autoPlay = false;
 	try {
 		this.disablePause();
 		this.audioObject.pause();
@@ -618,7 +608,6 @@ EpisodeDetailsAssistant.prototype.pause = function() {
 };
 
 EpisodeDetailsAssistant.prototype.play = function() {
-	//this.autoPlay = true;
 	try {
 		if (this.isVideo()) {
 			if (this.isForeground) {

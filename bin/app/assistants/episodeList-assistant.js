@@ -96,7 +96,6 @@ EpisodeListAssistant.prototype.setup = function() {
 			{label: "Mark all as Old", command: "listened-cmd"},
 			{label: "Play from Top", command: "playFromNewest-cmd"},
 			{label: "Play from Bottom", command: "playFromOldest-cmd"},
-			Mojo.Menu.helpItem,
 			{label: "About...", command: "about-cmd"}
 		]
 	};

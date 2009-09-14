@@ -68,6 +68,67 @@ DigitalPodcastSearch.prototype.searchResults = function(callback, transport) {
 	callback(results);
 };
 
+function SpokenWordSearch() {
+}
+
+SpokenWordSearch.prototype.url = "http://#{username}:#{key}@api.spokenword.org/search/feeds.json?count=20&all=#{keyword}";
+SpokenWordSearch.prototype.providerLabel = "powered by <a href='http://www.spokenword.com'>Spoken Word</a>";
+
+SpokenWordSearch.prototype.getProviderLabel = function() {
+	return this.providerLabel;
+};
+
+SpokenWordSearch.prototype.search = function(keyword, filter, callback) {
+	//Mojo.Log.error("SpokenWordSearch.search(%s, %s)", keyword, filter);
+	var t = new Template(this.url);
+	var url = t.evaluate({keyword:encodeURI(keyword),
+						 username: "drnull",
+						 key: "b754f71f3732ca720ce6ee249440b40e"});
+
+	//Mojo.Log.error("url: %s", url);
+
+	var request = new Ajax.Request(url, {
+		method : "get",
+		evalJSON : "true",
+		evalJS : "false",
+		onFailure : function(transport) {
+			Mojo.Log.error("Error contacting search service: %d", transport.status);
+			Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		},
+		onSuccess : this.searchResults.bind(this, callback)
+	});
+
+};
+
+SpokenWordSearch.prototype.searchResults = function(callback, transport) {
+	//Mojo.Log.error("transport.status = %d", transport.status);
+	var results = [];
+
+	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
+		Mojo.Log.error("Error contacting search service: %d", transport.status);
+		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		return;
+	}
+
+	var json = transport.responseText.evalJSON(true);
+
+	var totalResults = json.count;
+
+	if (totalResults === undefined) {
+		Mojo.Log.error("Error contacting search service: result count not found");
+		Util.showError("Error contacting search service", "Result Count not found");
+		return;
+	}
+
+	json.feeds.forEach(function(f) {
+		var title = f.title;
+		var url = f.feedUrl;
+		results.push({title: title, url: url});
+	});
+
+	callback(results);
+};
+
 
 function GoogleListenSearch() {
 }
@@ -147,23 +208,17 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 function FeedSearchAssistant() {
 	this.searchService = "digitalPodcast";
 	this.searchServices = {"digitalPodcast": new DigitalPodcastSearch(),
+						   "spokenWord": new SpokenWordSearch(),
 						   "googleListen": new GoogleListenSearch()};
 }
-
-FeedSearchAssistant.prototype.progressAttr = {
-	sliderProperty: "value",
-	progressStartProperty: "progressStart",
-	progressProperty: "progressEnd",
-	round: false,
-	updateInterval: 0.2
-};
 
 FeedSearchAssistant.prototype.setup = function() {
 	this.controller.setupWidget("feedSearchScroller", {}, {});
 
 	this.controller.setupWidget("searchProviderList",
 		{label: "Directory",
-		 choices: [{label: "Digital Podcast", value: "digitalPodcast"}]},
+		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},//]},
+		           {label: "Spoken Word", value: "spokenWord"}]},
 		           //{label: "Google Listen", value: "googleListen"}]},
 		this.searchProviderModel = { value : "digitalPodcast" });
 
@@ -271,4 +326,3 @@ FeedSearchAssistant.prototype.selection = function(event) {
 	//Mojo.Log.error("You clicked on: [%s], [%s]", event.item.title, event.item.url);
 	this.controller.stageController.popScene({feedToAdd: event.item});
 };
-

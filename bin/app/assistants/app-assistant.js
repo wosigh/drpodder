@@ -25,7 +25,6 @@ AppAssistant.appMenuModel = {
 				 {label: "Export via email", command: "export-cmd"}]
 		},
 		{label: "Preferences", command: "prefs-cmd"},
-		Mojo.Menu.helpItem,
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -110,18 +109,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 				stageController.pushScene("preferences");
 				break;
 			case "about-cmd":
-				currentScene.showAlertDialog({
-					onChoose: function(value) {},
-					//title: "drPodder - v" + Mojo.Controller.appInfo.version,
-					message: "<div style='width=100%; font-size: 30px;'>drPodder - v" + Mojo.Controller.appInfo.version + "</div><HR>" +
-					         "Copyright 2009, Jamie Hatfield<BR>" +
-					         "Logo Design: <a href='http://jamie3d.com/'>Jamie Hamel-Smith</a><BR>" +
-							 "Original Logo Concept: <a href='http://www.userinterfaceicons.com/preview.php'>UII</a>",
-					allowHTMLMessage: true,
-					choices: [
-						{label: "OK", value:""}
-					]
-				});
+				stageController.pushScene("support");
 				break;
 			case "import-cmd":
 				var req = new Ajax.Request("/media/internal/drpodder.xml", {

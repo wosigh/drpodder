@@ -29,6 +29,8 @@
 	 "scenes": "dashboard"},
 	{"source": "app\/assistants\/feedSearch-assistant.js",
 	 "scenes": "feedSearch"},
-
+	{"source": "app\/assistants\/support-assistant.js",
+	 "scenes": "support"},
+	{"source": "javascript\/support_info.js"},
 	{"source": "\/usr\/palm\/frameworks\/media\/media.js"},
 ]

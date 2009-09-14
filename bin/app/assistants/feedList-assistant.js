@@ -101,6 +101,10 @@ FeedListAssistant.prototype.activate = function(result) {
 		}
 	}
 
+	if (this.foregroundVolumeMarker) {
+		this.foregroundVolumeMarker.cancel();
+		this.foregroundVolumeMarker = null;
+	}
 	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	Mojo.Event.listen(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
