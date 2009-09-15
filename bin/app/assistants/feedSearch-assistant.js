@@ -217,9 +217,10 @@ FeedSearchAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("searchProviderList",
 		{label: "Directory",
-		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},//]},
-		           {label: "Spoken Word", value: "spokenWord"}]},
-		           //{label: "Google Listen", value: "googleListen"}]},
+		 choices: [{label: "Digital Podcast", value: "digitalPodcast"}
+		           //{label: "Spoken Word", value: "spokenWord"}]
+		           //{label: "Google Listen", value: "googleListen"}]
+		]},
 		this.searchProviderModel = { value : "digitalPodcast" });
 
 	this.searchProvider = this.controller.get("searchProviderList");
