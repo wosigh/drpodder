@@ -11,9 +11,12 @@ FeedListAssistant.prototype.cmdMenuModel = {
 };
 
 FeedListAssistant.prototype.addMenuModel = {
-	items: [{label: "Search...", command: "feed-search"},
+	items: [{label: "Enter feed URL...", command: "add-feed"},
+			{label: "Search Directory...", command: "feed-search"},
+	        //{label: "Search podTrapper...", command: "pt-search"},
+	        //{label: "Search the Web...", command: "web-search"},
 	        {label: "Dynamic Playlist...", command: "add-playlist"},
-	        {label: "Enter feed URL...", command: "add-feed"}]
+	        ]
 };
 
 
@@ -302,6 +305,13 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "feed-search":
 				this.stageController.pushScene("feedSearch", this, null);
+				break;
+			case "web-search":
+				this.stageController.pushScene("webSearch", {startPage: "http://m.google.com/search"});
+				break;
+			case "pt-search":
+				this.stageController.pushScene("webSearch", {startPage: "http://ota.versatilemonkey.com/ptbrowse/browse.pl",
+											                 limitSite: "http://ota.versatilemonkey.com"});
 				break;
 			case "refresh-cmd":
 				this.updateFeeds();

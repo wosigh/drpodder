@@ -30,7 +30,7 @@ _APP_Copyright = '&copy; Copyright 2009 ' + _APP_PublisherName;
 //_APP_Support_URL = 'http://www.drpodder.com';   // label = "Support Website"
 _APP_Support_Email = {
 	address: 'support@drpodder.com',
-	subject: 'drPodder Support'
+	subject: 'Support'
 };        // label = "Send Email"
 //_APP_Support_Phone = '555-555-5555';        // label = _APP_Support_Phone
 
