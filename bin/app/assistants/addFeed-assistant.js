@@ -7,9 +7,13 @@ function AddFeedAssistant(feed) {
 	if (this.feed !== null) {
 		this.newFeed = false;
 		this.originalUrl = feed.url;
+		this.originalUsername = feed.username;
+		this.originalPassword = feed.password;
 		this.dialogTitle = "Edit Podcast XML Feed";
 		this.title = this.feed.title;
 		this.url = this.feed.url;
+		this.username = this.feed.username;
+		this.password = this.feed.password;
 		this.albumArt = this.feed.albumArt;
 		this.autoDownload = this.feed.autoDownload;
 		this.autoDelete = this.feed.autoDelete;
@@ -21,6 +25,8 @@ function AddFeedAssistant(feed) {
 		this.dialogTitle = "Add Podcast XML Feed";
 		this.title = null;
 		this.url = null;
+		this.username = null;
+		this.password = null;
 		this.albumArt = null;
 		this.autoDownload = false;
 		this.autoDelete = true;
@@ -29,7 +35,21 @@ function AddFeedAssistant(feed) {
 	}
 }
 
+AddFeedAssistant.prototype.menuAttr = {omitDefaultItems: true};
+
 AddFeedAssistant.prototype.setup = function() {
+	this.menuModel = {
+		visible: true,
+		items: [
+			Mojo.Menu.editItem,
+			{label: "Authentication", command: "authentication-cmd"},
+			Mojo.Menu.helpItem,
+			{label: "About...", command: "about-cmd"}
+		]
+	};
+
+	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
+
 	this.controller.get("dialogTitle").update(this.dialogTitle);
 	this.controller.setupWidget("newFeedURL",
 		{
@@ -41,6 +61,24 @@ AddFeedAssistant.prototype.setup = function() {
 			enterSubmits : false
 		},
 		this.urlModel = { value : this.url });
+
+	this.controller.setupWidget("username", {
+			hintText : $L("Username"),
+			limitResize : true,
+			autoReplace : false,
+			textCase : Mojo.Widget.steModeLowerCase,
+			enterSubmits : false
+		},
+		this.usernameModel = { value : this.username });
+
+	this.controller.setupWidget("password", {
+			hintText : $L("Password"),
+			limitResize : true,
+			autoReplace : false,
+			textCase : Mojo.Widget.steModeLowerCase,
+			enterSubmits : false
+		},
+		this.passwordModel = { value : this.password });
 
 	this.controller.setupWidget("newFeedName", {
 			hintText : $L("Title (Optional)"),
@@ -155,6 +193,11 @@ AddFeedAssistant.prototype.setup = function() {
 		this.controller.get("autoDownloadRow").addClassName("last");
 	}
 
+	if (!this.usernameModel.value) {
+		this.controller.get("usernameDiv").hide();
+		this.controller.get("passwordDiv").hide();
+	}
+
 	if (this.newFeed) {
 		this.controller.get("newFeedDiv").addClassName("last");
 		this.controller.get("albumArtDiv").hide();
@@ -222,12 +265,15 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	}
 
 	// Check entered URL and name to confirm that it is a valid feedlist
-	Mojo.Log.error("New Feed URL Request: ", this.urlModel.value);
+	Mojo.Log.error("New Feed URL Request: (%s:%s)%s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
 
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
 
-	if (!this.newFeed && this.feed !== null && this.feed.url === this.urlModel.value) {
+	if (!this.newFeed && this.feed !== null &&
+		this.feed.url === this.urlModel.value &&
+		this.feed.username === this.usernameModel.value &&
+		this.feed.password === this.passwordModel.value) {
 		this.updateFields();
 		DB.saveFeed(this.feed);
 		this.controller.stageController.popScene({feedChanged: true, feedIndex: feedModel.items.indexOf(this.feed)});
@@ -261,6 +307,12 @@ AddFeedAssistant.prototype.check = function(url) {
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
 	//Mojo.Log.error("making ajax request [%s]", url);
+	if (this.usernameModel.value) {
+		url = url.replace("http://", "http://" +
+						  encodeURIComponent(this.usernameModel.value) + ":" +
+						  encodeURIComponent(this.passwordModel.value) + "@");
+	}
+
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
@@ -300,9 +352,13 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 		if (this.newFeed) {
 			this.feed = new Feed();
 			this.feed.url = this.urlModel.value;
+			this.feed.username = this.usernameModel.value;
+			this.feed.password = this.passwordModel.value;
 			this.feed.interval = 60000;
 		} else {
 			this.feed.url = this.urlModel.value;
+			this.feed.username = this.usernameModel.value;
+			this.feed.password = this.passwordModel.value;
 
 			// need to clear out this feed (and probably delete downloaded episodes)
 			// maybe not clear them out, what if they need to move the feed somewhere else?
@@ -321,7 +377,7 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 
 	if (feedStatus < 0 || !transport.status) {
 		// Feed can't be processed - remove it but keep the dialog open
-		Mojo.Log.error("Error updating feed:", this.urlModel.value);
+		Mojo.Log.error("Error updating feed: (%s:%s) %s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
 		this.controller.get("dialogTitle").update("Error updating feed");
 		this.controller.getSceneScroller().mojo.revealTop(true);
 		this.controller.get("newFeedURL").mojo.focus();
@@ -358,10 +414,20 @@ AddFeedAssistant.prototype.checkFailure = function(transport) {
 	this.resetButton();
 
 	// Log error and put message in status area
-	Mojo.Log.error("Invalid URL (Status", m, "returned).");
-	this.controller.get("dialogTitle").update("Invalid URL Please Retry");
-	this.controller.getSceneScroller().mojo.revealTop(true);
-	this.controller.get("newFeedURL").mojo.focus();
+	if (transport.status === 401) {
+		if (this.usernameModel.value) {
+			Util.showError("Access Denied", "Please check your username and password to ensure they are correct.");
+		} else {
+			Util.showError("Authorization Required", "Please enter your username and password for this feed.");
+			this.controller.get("usernameDiv").show();
+			this.controller.get("passwordDiv").show();
+		}
+	} else {
+		Mojo.Log.error("Invalid URL (Status", m, "returned).");
+		this.controller.get("dialogTitle").update("Invalid URL Please Retry");
+		this.controller.getSceneScroller().mojo.revealTop(true);
+		this.controller.get("newFeedURL").mojo.focus();
+	}
 };
 
 AddFeedAssistant.prototype.cancel = function() {
@@ -371,9 +437,25 @@ AddFeedAssistant.prototype.cancel = function() {
 };
 
 AddFeedAssistant.prototype.handleCommand = function(event) {
-	if (event.type === Mojo.Event.back) {
+	if (event.type === Mojo.Event.command) {
+		switch (event.command) {
+			case "authentication-cmd":
+				this.controller.get("usernameDiv").toggle();
+				this.controller.get("passwordDiv").toggle();
+				if (!this.controller.get("usernameDiv").visible()) {
+					this.usernameModel.value = null;
+					this.passwordModel.value = null;
+					this.controller.modelChanged(this.usernameModel);
+					this.controller.modelChanged(this.passwordModel);
+				}
+			case "shutup-JSLint":
+				break;
+		}
+	} else	if (event.type === Mojo.Event.back) {
 		if (!this.newFeed) {
 			this.feed.url = this.originalUrl;
+			this.feed.username = this.originalUsername;
+			this.feed.password = this.originalPassword;
 		}
 	}
 };

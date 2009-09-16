@@ -25,6 +25,7 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	visible: true,
 	items: [
 		Mojo.Menu.editItem,
+		Mojo.Menu.helpItem,
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -144,6 +145,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	}
 
 	this.statusDiv = this.controller.get("statusDiv");
+	this.statusDiv.hide();
 	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
 
 	this.onBlurHandler = this.onBlur.bind(this);
@@ -266,9 +268,10 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 			this.progressModel.progressEnd = 1;
 			this.controller.modelChanged(this.progressModel);
 		} else {
-			Mojo.Log.error("Setting [%s] stream src to:[%s]", this.episodeObject.type, this.episodeObject.enclosure);
+			var url = this.episodeObject.getEnclosure();
+			Mojo.Log.error("Setting [%s] stream src to:[%s]", this.episodeObject.type, url);
 			this.setStatus("Connecting");
-			this.audioObject.src = this.episodeObject.enclosure;
+			this.audioObject.src = url;
 		}
 		this.audioObject.autoplay = this.autoPlay;
 		this.setTimer(true);
@@ -496,6 +499,21 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
             case "skipBack2-cmd":
 				this.doSkip(-60);
 				break;
+            case "about-cmd":
+				this.controller.showAlertDialog({
+						onChoose: function(value) {},
+						//title: "drPodder - v" + Mojo.Controller.appInfo.version,
+						message: "<div style='width=100%; font-size: 30px;'>drPodder - v" + Mojo.Controller.appInfo.version + "</div><HR>" +
+								"Copyright 2009, Jamie Hatfield<BR>" +
+								"Logo Design: <a href='http://jamie3d.com/'>Jamie Hamel-Smith</a><BR>" +
+								"Original Logo Concept: <a href='http://www.userinterfaceicons.com/preview.php'>UII</a>",
+						allowHTMLMessage: true,
+						choices: [
+							{label: "OK", value:""}
+						]
+					});
+				event.stopPropagation();
+				break;
 		}
 	}
 };
@@ -611,7 +629,7 @@ EpisodeDetailsAssistant.prototype.play = function() {
 	try {
 		if (this.isVideo()) {
 			if (this.isForeground) {
-				this.launchVideo(this.episodeObject.file || this.episodeObject.enclosure);
+				this.launchVideo(this.episodeObject.file || this.episodeObject.getEnclosure());
 				this.controller.window.setTimeout(this.enablePlay.bind(this), 10000);
 			}
 		} else {

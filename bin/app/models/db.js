@@ -101,7 +101,7 @@ DBClass.prototype.waitForFeeds = function(callback) {
 					Mojo.Log.error("Error getting db version: %j", error);
 					// call init
 					Mojo.Controller.getAppController().sendToNotificationChain({
-						type: "updateLoadingMessage", message: "Creating Database"});
+						type: "updateLoadingMessage", message: "Creating Database<BR>(WebOS v1.1+ Required)"});
 					this.initDB();
 				}.bind(this));
 		}.bind(this));

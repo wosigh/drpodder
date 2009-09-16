@@ -105,6 +105,13 @@ Feed.prototype.update = function(callback, url) {
 			url = this.url;
 		}
 
+		if (this.username) {
+			url = url.replace("http://", "http://" +
+							encodeURIComponent(this.username) + ":" +
+							encodeURIComponent(this.password) + "@");
+		}
+
+
 		//Mojo.Log.error("making ajax request [%s]", url);
 		var req = new Ajax.Request(url, {
 			method: "get",

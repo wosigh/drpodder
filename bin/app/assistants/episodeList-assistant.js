@@ -94,14 +94,13 @@ EpisodeListAssistant.prototype.setup = function() {
 			{label: "Edit Feed", command: "edit-cmd"},
 			{label: "Mark all as New", command: "unlistened-cmd"},
 			{label: "Mark all as Old", command: "listened-cmd"},
-			{label: "Play from Top", command: "playFromNewest-cmd"},
-			{label: "Play from Bottom", command: "playFromOldest-cmd"},
+			Mojo.Menu.helpItem,
 			{label: "About...", command: "about-cmd"}
 		]
 	};
 
 	if (this.feedObject.playlist) {
-		this.menuModel.items[0].label = "Edit Playlist";
+		this.menuModel.items[1].label = "Edit Playlist";
 
 	}
 

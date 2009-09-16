@@ -47,8 +47,10 @@
 
 .feedStatsSimpleBackground {
 	height: 40px;
-	width: 40px;
-	background-color: lightgray;
+	width: 45px;
+	-webkit-border-image: url(../images/simple-button.png) 3 3 3 3 stretch stretch;
+	-webkit-box-sizing: border-box;
+	border-width: 3px 3px 3px 3px;
 }
 
 .feedStatsSimpleNew {
@@ -58,12 +60,15 @@
 }
 
 .feedStatsContainer {
-	height: 60px;
+	height: 58px;
 	font-size: 14px;
 	margin-right: 9px;
 	margin-top: 0px;
 	display: inline-block;
 	float: right;
+	-webkit-border-image: url(../images/simple-button.png) 3 3 3 3 stretch stretch;
+	-webkit-box-sizing: border-box;
+	border-width: 3px 3px 3px 3px;
 }
 
 .feedStatsNew,
@@ -256,7 +261,7 @@
 }
 
 .loadingMessage {
-  top: 350px;
+  top: 335px;
 }
 
 .titlePopup1 {
@@ -265,21 +270,18 @@
 }
 
 .playbackStatusMessage {
-  /*
-  z-index: 999;
+  z-index: 1;
   position: absolute;
   opacity: 0.85;
   display: inline-block;
-  padding-top: 10px;
-  margin-top: 75px;
-  margin-left: 25%;
-  background-color: darkgray;
-  height: 40px;
-  width: 50%;
-  */
+  -webkit-border-image: url(../images/simple-button.png) 3 3 3 3 stretch stretch;
+  -webkit-box-sizing: border-box;
+  border-width: 3px 3px 3px 3px;
+
   margin-top: -22px;
-  height: 18px;
-  width: 100%;
+  height: 32px;
+  width: 50%;
+  margin-left: 25%;
   text-align: center;
 }
 
