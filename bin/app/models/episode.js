@@ -153,7 +153,7 @@ Episode.prototype.download = function(silent) {
 	}
 	var url = this.getEnclosure();
 	if (url) {
-		Mojo.Log.error("Downloading %s as %s", url, this.getDownloadFilename());
+		Mojo.Log.info("Downloading %s as %s", url, this.getDownloadFilename());
 		this.downloadRequest = AppAssistant.downloadService.download(null, url,
 																	Util.escapeSpecial(this.feedObject.title),
 																	this.getDownloadFilename(),
@@ -235,21 +235,20 @@ Episode.prototype.getDownloadFilename = function() {
 			ext = "flv";
 			break;
 		default:
-			Mojo.Log.error("Unknown enclosure type: " + this.type);
+			Mojo.Log.error("Unknown enclosure type[%s] for episode[%s]", this.type, this.title);
 	}
 
 	return Util.escapeSpecial(this.title) + "-" + this.getDateString() + "." + ext;
 };
 
-Episode.prototype.deleteTempFile = function() {
-	var filename = "/media/internal/PrePod/" + Util.escapeSpecial(this.feedObject.title);
-	filename += "/." + this.getDownloadFilename();
-	AppAssistant.mediaService.deleteFile(null, filename, function(event) {});
-};
-
 Episode.prototype.downloadingCallback = function(event) {
 	//Mojo.Log.error("downloadingCallback: %j", event);
-	if (event.returnValue) {
+	if (event.returnValue === false &&
+		event.errorCode === -1 &&
+		event.serviceName === "com.palm.downloadmanager") {
+		Mojo.Log.error("Error contacting downloadmanager");
+		Util.showError("Error Downloading Episode", "There was an error connecting to the download manager service.  Please ensure you are running WebOS 1.2");
+	} else 	if (event.returnValue) {
 		this.downloadCanceled = false;
 		this.downloadTicket = event.ticket;
 		this.downloadingPercent = 0;
@@ -261,9 +260,8 @@ Episode.prototype.downloadingCallback = function(event) {
 			this.downloadActivity();
 		}
 	} else if (this.downloading && event.completed === false) {
-		this.deleteTempFile();
 		this.downloading = false;
-		this.downloadTicket = 0;
+		this.downloadTicket = null;
 		this.downloadingPercent = 0;
 		this.downloadActivity();
 		this.updateUIElements();
@@ -282,8 +280,8 @@ Episode.prototype.downloadingCallback = function(event) {
 		}
 	} else if (this.downloading && event.completed && event.completionStatusCode === 200) {
 		//success!
-		Mojo.Log.error("Download complete!", this.title);
-		this.downloadTicket = 0;
+		Mojo.Log.warn("Download complete!", this.title);
+		// this.downloadTicket = 0; // we need to save the downloadTicket
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.downloadActivity();
@@ -300,8 +298,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
-		Mojo.Log.error("Redirecting...", event.target);
-		this.downloadTicket = 0;
+		Mojo.Log.warn("Redirecting...", event.target);
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.downloadActivity();
@@ -311,7 +308,6 @@ Episode.prototype.downloadingCallback = function(event) {
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
 			onFailure: function() {
-				this.deleteTempFile();
 				Util.showError("Error downloading " + this.title, "The redirection link could not be found.");
 				Mojo.Log.error("Couldn't find %s... strange", event.target);
 			}.bind(this),
@@ -323,12 +319,13 @@ Episode.prototype.downloadingCallback = function(event) {
 						redirect = matches[0];
 					}
 				} catch (e){
-					Mojo.Log.error("error with regex: (%s)", e);
+					Mojo.Log.error("error with regex: (%j)", e);
 					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
 				}
-				AppAssistant.mediaService.deleteFile(null, event.target, function(event) {});
+				AppAssistant.downloadService.deleteFile(null, this.downloadTicket, function(event) {});
+				this.downloadTicket = null;
 				if (redirect !== undefined) {
-					Mojo.Log.error("Attempting to download redirected link: [%s]", redirect);
+					Mojo.Log.warn("Attempting to download redirected link: [%s]", redirect);
 					this.downloadRequest = AppAssistant.downloadService.download(null, redirect,
 						Util.escapeSpecial(this.feedObject.title),
 						this.getDownloadFilename(),
@@ -341,8 +338,7 @@ Episode.prototype.downloadingCallback = function(event) {
 			}.bind(this)
 		});
 	} else if (event.returnValue === false) {
-		this.deleteTempFile();
-		this.downloadTicket = 0;
+		this.downloadTicket = null;
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.downloadActivity();
@@ -366,15 +362,13 @@ Episode.prototype.downloadingCallback = function(event) {
 				type: "downloadProgress", episode: this});
 		}
 	} else if (event.aborted || this.downloadCanceled) {
-		this.deleteTempFile();
 		this.downloadCanceled = false;
-		Mojo.Log.error("Got the cancel event, but it has already been handled");
+		Mojo.Log.warn("Got the cancel event, but it has already been handled");
 		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 	} else {
-		this.deleteTempFile();
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
 		Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
-		this.downloadTicket = 0;
+		this.downloadTicket = null;
 		// this.downloading = false; // must already be false
 		this.downloadingPercent = 0;
 		this.updateUIElements();
@@ -395,9 +389,10 @@ Episode.prototype.downloadActivity = function() {
 
 Episode.prototype.deleteFile = function(ignore) {
 	if (this.downloaded) {
-		AppAssistant.mediaService.deleteFile(null, this.file, function() {});
+		AppAssistant.downloadService.deleteFile(null, this.downloadTicket, function() {});
 		this.downloaded = false;
 		this.file = null;
+		this.downloadTicket = null;
 		this.updateUIElements(ignore);
 		this.save(ignore);
 		this.feedObject.episodeDeleted();
@@ -407,7 +402,7 @@ Episode.prototype.deleteFile = function(ignore) {
 Episode.prototype.cancelDownload = function(ignore) {
 	if (this.downloading) {
 		AppAssistant.downloadService.cancelDownload(null, this.downloadTicket, function() {});
-		this.downloadTicket = 0;
+		this.downloadTicket = null;
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.downloadActivity();
@@ -415,7 +410,7 @@ Episode.prototype.cancelDownload = function(ignore) {
 		this.save(ignore);
 		this.downloadCanceled = true;
 		this.feedObject.downloadFinished();
-		Mojo.Log.error("Canceling download");
+		Mojo.Log.warn("Canceling download");
 	}
 };
 

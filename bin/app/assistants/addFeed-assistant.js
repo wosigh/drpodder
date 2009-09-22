@@ -265,7 +265,7 @@ AddFeedAssistant.prototype.checkFeed = function() {
 	}
 
 	// Check entered URL and name to confirm that it is a valid feedlist
-	Mojo.Log.error("New Feed URL Request: (%s:%s)%s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
+	Mojo.Log.info("New Feed URL Request: (%s:%s)%s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
 
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
@@ -306,7 +306,7 @@ AddFeedAssistant.prototype.check = function(url) {
 		url = this.urlModel.value;
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
-	//Mojo.Log.error("making ajax request [%s]", url);
+	//Mojo.Log.info("making ajax request [%s]", url);
 	if (this.usernameModel.value) {
 		url = url.replace("http://", "http://" +
 						  encodeURIComponent(this.usernameModel.value) + ":" +
@@ -320,14 +320,14 @@ AddFeedAssistant.prototype.check = function(url) {
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});
-	//Mojo.Log.error("finished making ajax request");
+	//Mojo.Log.info("finished making ajax request");
 };
 
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
-	//Mojo.Log.error("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
+	//Mojo.Log.info("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
 	var location = transport.getHeader("Location");
 	if (location) {
-		Mojo.Log.error("Redirection location=%s", location);
+		Mojo.Log.warn("Redirection location=%s", location);
 		this.check(location);
 		return;
 	}

@@ -58,11 +58,9 @@ TODO:
   - ui improvements in general
   - per-feed abbreviations that will get shortened in episode names ("Buzz Out Loud 1025: Amazon's New Kicks" could be shortened to "BOL1025: Amazon's New Kicks")
 
-Notes:
-  - This program is named com.palm.drnull.prepod instead of org.webosinternals.drnull.prepod simply because there were some services that I depend on that Palm has choosen not to open to all 3rd party developers.  Until they open these services, this application must stay under the com.palm.* namespace.  A general warning:  Palm restricted some services to the com.palm.* namespace because some services contain "Dangerous Things".  If you do not trust a developer, do not install an application with a com.palm.* namespace.
-
 License:
-  - MIT License (LICENSE.txt)
+  - drPodder by Jamie Hatfield is licensed under a Creative Commons Attribution-Noncommercial-No Derivative Works 3.0 Unported License
+    http://creativecommons.org/licenses/by-nc-nd/3.0/
 
 Credits
   Thanks to Palm for making all of their applications use the same interfaces we use, so we could easily Use The Source to get API pointers!

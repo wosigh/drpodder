@@ -10,7 +10,7 @@ function AddPlaylistAssistant(feed) {
 	} else {
 		this.feed = new Feed();
 		this.feed.playlist = true;
-		this.feed.albumArt = "/var/usr/palm/applications/" + Mojo.Controller.appInfo.id + "/images/playlist-icon.png";
+		this.feed.albumArt = "images/playlist-icon.png";
 		this.feed.feedIds = [];
 		this.feed.playlists = [];
 		this.feed.viewFilter = "New";

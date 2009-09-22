@@ -28,7 +28,7 @@ DownloadService.prototype.download = function(sceneController, target, dir, file
 		onSuccess: callback,
 		onFailure: callback,
 		parameters: {"target": target,
-		             "targetDir": "/media/internal/PrePod/" + dir,
+		             "targetDir": "/media/internal/drPodder/" + dir,
 		             "targetFilename": filename,
 		             "keepFilenameOnRedirect": false,
 		             "subscribe": subscribe}});
@@ -50,7 +50,7 @@ DownloadService.prototype.downloadWhenEmpty = function(sceneController, target, 
 			if (event.count === 0) {
 				this.download(sceneController, target, callback, true);
 			} else {
-				Mojo.Log.error("Waiting for pending to empty before downloading:", target, "count:", event.count);
+				Mojo.Log.warn("Waiting for pending to empty before downloading:", target, "count:", event.count);
 				this.controller.window.setTimeout(this.downloadWhenEmpty.bind(this, sceneController, target, callback), 2000);
 			}
 		}.bind(this),
@@ -71,4 +71,13 @@ DownloadService.prototype.cancelDownload = function(sceneController, ticket, cal
 		onSuccess: callback,
 		onFailure: callback,
 		parameters: {ticket: ticket}});
+};
+
+DownloadService.prototype.deleteFile = function(sceneController, ticket, callback){
+    return this._serviceRequest(sceneController, this.URI, {
+        method: 'deleteDownloadedFile',
+        onSuccess: callback,
+        onFailure: callback,
+        parameters: {ticket: ticket}
+    });
 };

@@ -108,7 +108,7 @@ DBClass.prototype.waitForFeeds = function(callback) {
 	}
 };
 
-DBClass.prototype.dbName = "ext:PrePodFeeds";
+DBClass.prototype.dbName = "ext:drPodderFeeds";
 
 // db version number, followed by the sql statements required to bring it up to the latest version
 DBClass.prototype.dbVersions = [
@@ -130,7 +130,10 @@ DBClass.prototype.initDB = function() {
 	                      "interval INTEGER, " +
 	                      "lastModified TEXT, " +
 						  "replacements TEXT, " +
-						  "maxDisplay INTEGER)";
+						  "maxDisplay INTEGER, " +
+						  "viewFilter TEXT, " +
+						  "username TEXT, " +
+						  "password TEXT)";
 	var createEpisodeTable = "CREATE TABLE IF NOT EXISTS 'episode' " +
 	                         "(id INTEGER PRIMARY KEY, " +
 							 "feedId INTEGER, " +
@@ -148,18 +151,11 @@ DBClass.prototype.initDB = function() {
 	                         "file TEXT, " +
 	                         "length REAL, " +
 							 "type TEXT)";
-	var alterFeedTable = "ALTER TABLE feed ADD COLUMN replacements TEXT";
-	var alterEpisodeTable = "ALTER TABLE episode ADD COLUMN type TEXT";
-	var alterFeedTable2 = "ALTER TABLE feed ADD COLUMN maxDisplay INTEGER";
-	var alterFeedTable3 = "ALTER TABLE feed ADD COLUMN viewFilter TEXT";
-	var alterFeedTable4 = "ALTER TABLE feed ADD COLUMN username TEXT";
-	var alterFeedTable5 = "ALTER TABLE feed ADD COLUMN password TEXT";
-	// should put in a line to create an 'All' and 'Favorites' playlist
 	var createVersionTable = "CREATE TABLE version (version TEXT)";
 	var populateVersionTable = "INSERT INTO version (version) VALUES ('0.4')";
 	var allPlaylist = "INSERT INTO feed (title, url, albumArt, viewFilter) VALUES " +
 	                  "('All', 'drPodder://'," +
-	                  "'/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png', 'New')";
+	                  "'images/playlist-icon.png', 'New')";
 	var loadFeeds = this.loadFeeds.bind(this);
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
@@ -172,109 +168,22 @@ DBClass.prototype.initDB = function() {
 				Mojo.Log.info("Episode table created");
 			},
 			function(transaction, error) {Mojo.Log.error("Error creating episode table: %j", error);});
-		transaction.executeSql(alterFeedTable2, [],
-			function(transaction, results) {
-				Mojo.Log.info("Feed table altered");
-				transaction.executeSql("UPDATE feed SET maxDisplay=20", [],
-					function(transaction, results) {
-						Mojo.Log.info("Updating maxDisplay=20");
-					},
-					function(transaction, error) {Mojo.Log.error("Error updating maxDisplay: %j", error);});
-			},
-			function(transaction, error) {
-				if (error.message === "duplicate column name: maxDisplay") {
-					Mojo.Log.info("Feed table previously altered");
-				} else {
-					Mojo.Log.error("Error altering feed table: %j", error);
-				}
-			});
-		transaction.executeSql(alterEpisodeTable, [],
-			function(transaction, results) {
-				Mojo.Log.info("Episode table altered");
-			},
-			function(transaction, error) {
-				if (error.message === "duplicate column name: type") {
-					Mojo.Log.info("Feed table previously altered");
-				} else {
-					Mojo.Log.error("Error altering episode table: %j", error);
-				}
-			});
-		transaction.executeSql(alterFeedTable, [],
-			function(transaction, results) {
-				Mojo.Log.info("Feed table altered");
-				transaction.executeSql("UPDATE feed SET maxDownloads=1", [],
-					function(transaction, results) {
-						Mojo.Log.info("Updating maxDownloads=1");
-					},
-					function(transaction, error) {Mojo.Log.error("Error updating maxDownloads: %j", error);});
-			},
-			function(transaction, error) {
-				if (error.message === "duplicate column name: replacements") {
-					Mojo.Log.info("Feed table previously altered");
-				} else {
-					Mojo.Log.error("Error altering feed table: %j", error);
-				}
-			});
-		transaction.executeSql(alterFeedTable3, [],
-			function(transaction, results) {
-				Mojo.Log.info("Feed table altered");
-				transaction.executeSql("UPDATE feed SET viewFilter='New'", [],
-					function(transaction, results) {
-						Mojo.Log.info("Updating viewFilter='New'");
-					},
-					function(transaction, error) {Mojo.Log.error("Error updating viewFilter: %j", error);});
-			},
-			function(transaction, error) {
-				if (error.message === "duplicate column name: viewFilter") {
-					Mojo.Log.info("Feed table previously altered");
-				} else {
-					Mojo.Log.error("Error altering feed table: %j", error);
-				}
-			});
-		transaction.executeSql(alterFeedTable4, [],
-			function(transaction, results) {
-				Mojo.Log.info("Feed table altered");
-			},
-			function(transaction, error) {
-				if (error.message === "duplicate column name: username") {
-					Mojo.Log.info("Feed table previously altered");
-				} else {
-					Mojo.Log.error("Error altering feed table: %j", error);
-				}
-			});
-		transaction.executeSql(alterFeedTable5, [],
-			function(transaction, results) {
-				Mojo.Log.info("Feed table altered");
-			},
-			function(transaction, error) {
-				if (error.message === "duplicate column name: password") {
-					Mojo.Log.info("Feed table previously altered");
-				} else {
-					Mojo.Log.error("Error altering feed table: %j", error);
-				}
-			});
 		transaction.executeSql(createVersionTable, [],
 			function(transaction, results) {
 				Mojo.Log.info("Version table created");
 			},
-			function(transaction, error) {
-				Mojo.Log.error("Error creating version table");
-			});
+			function(transaction, error) {Mojo.Log.error("Error creating version table: %j", error);});
 		transaction.executeSql(populateVersionTable, [],
 			function(transaction, results) {
 				Mojo.Log.info("Version table populated");
 			},
-			function(transaction, error) {
-				Mojo.Log.error("Error populating version table");
-			});
+			function(transaction, error) {Mojo.Log.error("Error populating version table: %j", error);});
 		transaction.executeSql(allPlaylist, [],
 			function(transaction, results) {
 				Mojo.Log.info("Created all playlist");
 				loadFeeds();
 			},
-			function(transaction, error) {
-				Mojo.Log.error("Error creating all playlist");
-			});
+			function(transaction, error) {Mojo.Log.error("Error creating all playlist, %j", error);});
 	});
 };
 
@@ -282,37 +191,6 @@ DBClass.prototype.loadFeeds = function() {
 	var loadSQL = "SELECT * FROM feed ORDER BY displayOrder";
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage", message: "Loading Feeds"});
-
-	/*
-	var playlist = new Feed();
-	playlist.id = 1000000;
-	playlist.title = "All";
-	playlist.albumArt = "/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png";
-	playlist.playlist = true;
-	playlist.displayOrder = 0;
-	playlist.feedIds = [];
-	playlist.playlists = [];
-	playlist.viewFilter = "New";
-	playlist.details = undefined;
-
-	feedModel.add(playlist);
-
-	playlist = new Feed();
-	playlist.id = 1000001;
-	playlist.title = "Favorites";
-	playlist.albumArt = "/var/usr/palm/applications/com.palm.drnull.prepod/images/playlist-icon.png";
-	playlist.playlist = true;
-	playlist.displayOrder = 1;
-//	playlist.feedIds = [1,2,3,4,5,6,12,19];
-	//playlist.feedIds = [1,2,3,7,8];
-	//playlist.feedIds = [1,4,10,12];
-	playlist.feedIds = [1,2,3,4,5,6,7];
-	playlist.playlists = [];
-	playlist.viewFilter = "New";
-	playlist.details = undefined;
-
-	feedModel.add(playlist);
-	*/
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(loadSQL, [],
@@ -411,7 +289,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 							}
 						}
 
-						if (e.downloadTicket) {
+						if (e.downloadTicket && !e.downloaded) {
 							e.downloading = true;
 							e.downloadActivity();
 							//f.downloading = true;
@@ -462,6 +340,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 	}
 
 	this.db.transaction(function(transaction) {
+		Mojo.Log.info("Feed: %s", f.title);
 		if (f.id === undefined) {f.id = null;}
 		if (f.playlist) {
 			f.url = "drPodder://" + f.feedIds.join(",");
@@ -470,7 +349,6 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay,
 											 f.viewFilter, f.username, f.password],
 			function(transaction, results) {
-				Mojo.Log.error("Feed saved: %s", f.title);
 				if (f.id === null) {
 					f.id = results.insertId;
 					feedModel.ids[f.id] = f;
@@ -486,6 +364,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 						this.saveEpisodeTransaction(f.episodes[i], transaction);
 					}
 				}
+				Mojo.Log.info("Feed saved: %s", f.title);
 			}.bind(this),
 			function(transaction, error) {
 				Util.showError("Error Saving Feed", "There was an error saving feed: "+f.title);
@@ -580,10 +459,10 @@ DBClass.prototype.removeFeed = function(f) {
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(removeEpisodesSQL, [f.id],
-			function(transaction, results) {Mojo.Log.error("Episodes removed for feed %s", f.id);},
+			function(transaction, results) {Mojo.Log.info("Episodes removed for feed %s", f.id);},
 			function(transaction, error) { Mojo.Log.error("Episodes remove failed: (%s), %j", f.id, error);});
 		transaction.executeSql(removeFeedSQL, [f.id],
-			function(transaction, results) {Mojo.Log.error("Feed removed: %s", f.title);},
+			function(transaction, results) {Mojo.Log.info("Feed removed: %s", f.title);},
 			function(transaction, error) { Mojo.Log.error("Feed remove failed: (%s), %j", f.title, error);});
 	});
 };
@@ -606,7 +485,7 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.enableWifi === undefined) {Prefs.enableWifi = false;}
 	if (Prefs.limitToWifi === undefined) {Prefs.limitToWifi = true;}
 	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}
-	if (Prefs.simple === undefined) {Prefs.simple = true;}
+	if (Prefs.simple === undefined) {Prefs.simple = false;}
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
 	this.writePrefs();
 };

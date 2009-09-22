@@ -262,14 +262,14 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 		}
 	} else {
 		if (this.episodeObject.file) {
-			Mojo.Log.error("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
+			Mojo.Log.info("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
 			this.audioObject.src = this.episodeObject.file;
 			this.progressModel.progressStart = 0;
 			this.progressModel.progressEnd = 1;
 			this.controller.modelChanged(this.progressModel);
 		} else {
 			var url = this.episodeObject.getEnclosure();
-			Mojo.Log.error("Setting [%s] stream src to:[%s]", this.episodeObject.type, url);
+			Mojo.Log.info("Setting [%s] stream src to:[%s]", this.episodeObject.type, url);
 			this.setStatus("Connecting");
 			this.audioObject.src = url;
 		}
@@ -294,7 +294,7 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
-	//Mojo.Log.error("received mediaKeyPress: %j", event);
+	Mojo.Log.info("received mediaKeyPress: %j", event);
 	switch (event.key) {
 		case "togglePausePlay":
 			if (this.audioObject.paused) {
@@ -385,7 +385,7 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	//Mojo.Log.error("AudioEvent: %j", event);
+	Mojo.Log.info("AudioEvent: %j", event);
 	switch (event.type) {
 		//case "stalled":
 			//this.stalled = true;
@@ -415,7 +415,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 		*/
 		case "canplay":
 			if (this.resume) {
-				Mojo.Log.error("resuming playback at %d", this.episodeObject.position);
+				Mojo.Log.warn("resuming playback at %d", this.episodeObject.position);
 				try {
 					this.setStatus("Seeking");
 					this.audioObject.currentTime = this.episodeObject.position;
@@ -574,7 +574,7 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 };
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event) {
-	//Mojo.Log.error("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
+	Mojo.Log.info("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
 	if (isNaN(this.audioObject.currentTime) ||
 	    isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 		this.updateProgressLabelsValues("00:00", "00:00");

@@ -141,7 +141,7 @@ GoogleListenSearch.prototype.getProviderLabel = function() {
 };
 
 GoogleListenSearch.prototype.search = function(keyword, filter, callback) {
-	Mojo.Log.error("GoogleListenSearch.search(%s, %s)", keyword, filter);
+	Mojo.Log.info("GoogleListenSearch.search(%s, %s)", keyword, filter);
 	var t = new Template(this.url);
 	var url = t.evaluate({keyword:encodeURI(keyword), filter: filter});
 
@@ -171,7 +171,7 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 	}
 
 	for (i=0; i<transport.responseText.length; i+=100) {
-		Mojo.Log.error("%s", transport.responseText.substring(i, i+100));
+		Mojo.Log.info("%s", transport.responseText.substring(i, i+100));
 	}
 	/*
 	var doc = transport.responseXML;

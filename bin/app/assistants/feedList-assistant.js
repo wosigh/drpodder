@@ -108,7 +108,7 @@ FeedListAssistant.prototype.activate = function(result) {
 		this.foregroundVolumeMarker.cancel();
 		this.foregroundVolumeMarker = null;
 	}
-	this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
+	//this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	Mojo.Event.listen(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
@@ -156,7 +156,7 @@ FeedListAssistant.prototype.onFocus = function() {
 	}
 
 	if (!this.foregroundVolumeMarker) {
-		this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
+		//this.foregroundVolumeMarker = AppAssistant.mediaEventsService.markAppForeground();
 	}
 
 	Util.closeDashboard(DrPodder.DashboardStageName);
@@ -214,9 +214,9 @@ FeedListAssistant.prototype.refreshNow = function() {
 FeedListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 	var formatted = albumArt;
 
-	if (albumArt) {
+	if (formatted && formatted.indexOf("/") === 0) {
 		formatted = "/var/luna/data/extractfs" +
-						encodeURIComponent(albumArt) +
+						encodeURIComponent(formatted) +
 						":0:0:56:56:3";
 	}
 
@@ -226,7 +226,7 @@ FeedListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 FeedListAssistant.prototype.detailsFormatter = function(details, model) {
 	var formatted = details;
 	if (formatted) {
-		formatted = model.replace(details);
+		formatted = model.replace(formatted);
 	}
 	return formatted;
 };

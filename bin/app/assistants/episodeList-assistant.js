@@ -176,9 +176,9 @@ EpisodeListAssistant.prototype.bookmarkPercentFormatter = function(bookmarkPerce
 EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 	var formatted = albumArt;
 
-	if (formatted) {
+	if (formatted && formatted.indexOf("/") === 0) {
 		formatted = "/var/luna/data/extractfs" +
-						encodeURIComponent(albumArt) +
+						encodeURIComponent(formatted) +
 						":0:0:48:48:3";
 	}
 

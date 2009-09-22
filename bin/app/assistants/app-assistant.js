@@ -6,7 +6,6 @@ DrPodder.DownloadedStageName = "DrPodderDownloaded";
 
 function AppAssistant(){
 	AppAssistant.downloadService = new DownloadService();
-	AppAssistant.mediaService = new MediaDBService();
 	AppAssistant.applicationManagerService = new ApplicationManagerService();
 	AppAssistant.powerService = new PowerService();
 	AppAssistant.mediaEventsService = new MediaEventsService();
@@ -74,26 +73,26 @@ AppAssistant.prototype.handleLaunchParams = function(launchParams) {
 
 AppAssistant.prototype.setWakeup = function() {
 	// send wakeup from command line
-	// luna-send -n 1 palm://com.palm.applicationManager/open '{"id":"com.palm.drnull.prepod","params":{"action":"updateFeeds"}}'
+	// luna-send -n 1 palm://com.palm.applicationManager/open '{"id":"com.drnull.drpodder","params":{"action":"updateFeeds"}}'
 	// obviously, an update time preference needs to be here
 	if (Prefs.autoUpdate) {
 		this.wakeupRequest = new Mojo.Service.Request("palm://com.palm.power/timeout", {
 			method: "set",
 			parameters: {
-				"key": "com.palm.drnull.prepod.update",
+				"key": "com.drnull.drpodder.update",
 				"in": Prefs.updateInterval,
 				//"wakeup": true,
 				"uri": "palm://com.palm.applicationManager/open",
 				"params": {
-					"id": "com.palm.drnull.prepod",
+					"id": "com.drnull.drpodder",
 					"params": {"action": "updateFeeds"}
 				}
 			},
 			onSuccess: function(response) {
-				Mojo.Log.error("Alarm set success: %s", response.returnValue);
+				Mojo.Log.info("Alarm set success: %s", response.returnValue);
 			},
 			onFailure: function(response) {
-				Mojo.Log.error("Alarm set failure: %s:%s", response.returnValue, response.errorText);
+				Mojo.Log.info("Alarm set failure: %s:%s", response.returnValue, response.errorText);
 			}
 		});
 
@@ -135,7 +134,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 								var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
 								var replacements = Util.xmlGetAttributeValue(node, "replacements");
 								if (title !== undefined && url !== undefined) {
-									Mojo.Log.error("Importing feed: (%s)-[%s]", title, url);
+									Mojo.Log.info("Importing feed: (%s)-[%s]", title, url);
 									feed = new Feed();
 									feed.url = url;
 									feed.title = title;
@@ -146,7 +145,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 									feedModel.items.push(feed);
 									imported++;
 								} else {
-									Mojo.Log.error("Skipping import: (%s)-[%s]", title, url);
+									Mojo.Log.warn("Skipping import: (%s)-[%s]", title, url);
 								}
 								node = nodes.iterateNext();
 							}

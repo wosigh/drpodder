@@ -100,7 +100,7 @@ Feed.prototype.update = function(callback, url) {
 		if (!url) {
 			var feedTitle = (this.title)?this.title:"Unknown feed title";
 			Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
-			Mojo.Log.error("Update: ", feedTitle, "(", this.url, ")");
+			Mojo.Log.info("Update: ", feedTitle, "(", this.url, ")");
 
 			url = this.url;
 		}
@@ -243,7 +243,7 @@ Feed.prototype.getTitle = function(transport) {
 		if (this.gui) {
 			Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
 		}
-		Mojo.Log.error("Error finding feed title: %o", e);
+		Mojo.Log.error("Error finding feed title: %j", e);
 	}
 	if (!title) {
 		if (this.gui) {
@@ -278,7 +278,7 @@ Feed.prototype.getAlbumArt = function(transport) {
 			}
 		}
 	} catch (e) {
-		Mojo.Log.error("Error finding feed image: %o", e);
+		Mojo.Log.error("Error finding feed image: %j", e);
 	}
 
 	return imageUrl;
@@ -323,11 +323,11 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			null, this.albumArt, ".albumArt", newAlbumArt,
 			function(event) {
 				if (event.completed) {
+					this.albumArt = "/media/internal/drPodder/.albumArt/" + newAlbumArt;
 					Mojo.Controller.getAppController().sendToNotificationChain({
 						type: "feedUpdated", feed: this});
 				}
 			}.bind(this));
-		this.albumArt = "/media/internal/PrePod/.albumArt/" + newAlbumArt;
 	}
 
 
@@ -742,7 +742,7 @@ FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
 		// because wifi wasn't enabled, maybe even do a "click to retry"
 		var newEps = eps.filter(function(e){return e.newlyAddedEpisode;});
 		if (newEps.length) {
-			Mojo.Log.error("Skipping %d episode download because wifi isn't connected", newEps.length);
+			Mojo.Log.warn("Skipping %d episode download because wifi isn't connected", newEps.length);
 			Util.banner(newEps.length + " Download" + ((newEps.length===1)?"":"s") +
 								" pending WiFi");
 			Util.dashboard(DrPodder.DashboardStageName, "Downloads pending WiFi",

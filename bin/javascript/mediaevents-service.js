@@ -19,9 +19,11 @@ MediaEventsService.prototype.registerForMediaEvents = function(sceneController, 
 		parameters: {"appName": Mojo.appName, "subscribe": true}});
 };
 
+/*
 MediaEventsService.prototype.markAppForeground = function(sceneController, callback) {
 	return this._serviceRequest(sceneController, "palm://com.palm.audio/media", {
 		method: "lockVolumeKeys",
 		onSuccess: callback,
 		parameters: {"foregroundApp": true, "subscribe": true}});
 };
+*/

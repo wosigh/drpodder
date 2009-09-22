@@ -6,7 +6,7 @@ function Utilities(){
 Utilities.dump = function(obj){
     for (var key in obj) {
         if (obj.hasOwnProperty(key)) {
-            Mojo.Log.error("obj." + key + "=" + obj[key]);
+            Mojo.Log.warn("obj." + key + "=" + obj[key]);
         }
     }
 };

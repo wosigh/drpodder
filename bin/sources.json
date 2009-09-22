@@ -3,7 +3,6 @@
     {"source": "app\/assistants\/stage-assistant.js"},
     {"source": "app\/assistants\/loading-assistant.js",
      "scenes": "loading"},
-    {"source": "javascript\/mediadb-service.js"},
     {"source": "javascript\/download-service.js"},
     {"source": "javascript\/mediaevents-service.js"},
     {"source": "javascript\/utilities.js"},
