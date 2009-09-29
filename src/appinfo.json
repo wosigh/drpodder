@@ -1,0 +1,14 @@
+{
+  "id":"com.drnull.drpodder",
+  "version":"0.5.0",
+  "title":"drPodder",
+  "vendor":"drnull",
+  "vendorurl":"http://www.drpodder.com",
+  "main":"index.html",
+  "icon":"icon.png",
+  "miniicon":"miniicon.png",
+  "type":"web",
+  "theme":"light",
+  "noWindow":true,
+  "noDeprecatedStyles":true
+}

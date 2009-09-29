@@ -429,7 +429,7 @@ Feed.prototype.insertEpisodeTop = function(episode) {
 	if (episode.position !== 0) {
 		++this.numStarted;
 	}
-	if (episode.downloadTicket) {
+	if (episode.downloadTicket && !episode.downloaded) {
 		this.downloading = true;
 		++this.downloadCount;
 	}

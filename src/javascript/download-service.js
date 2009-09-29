@@ -30,7 +30,6 @@ DownloadService.prototype.download = function(sceneController, target, dir, file
 		parameters: {"target": target,
 		             "targetDir": "/media/internal/drPodder/" + dir,
 		             "targetFilename": filename,
-		             "keepFilenameOnRedirect": false,
 		             "subscribe": subscribe}});
 	//} else {
 	//return this.downloadWhenEmpty(sceneController, target, callback);

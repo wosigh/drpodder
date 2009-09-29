@@ -15,7 +15,7 @@ FeedListAssistant.prototype.addMenuModel = {
 			{label: "Search Directory...", command: "feed-search"},
 	        //{label: "Search podTrapper...", command: "pt-search"},
 	        //{label: "Search the Web...", command: "web-search"},
-	        {label: "Dynamic Playlist...", command: "add-playlist"},
+	        {label: "Dynamic Playlist...", command: "add-playlist"}
 	        ]
 };
 

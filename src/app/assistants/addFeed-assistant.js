@@ -448,6 +448,7 @@ AddFeedAssistant.prototype.handleCommand = function(event) {
 					this.controller.modelChanged(this.usernameModel);
 					this.controller.modelChanged(this.passwordModel);
 				}
+				break;
 			case "shutup-JSLint":
 				break;
 		}
