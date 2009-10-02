@@ -385,7 +385,8 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	Mojo.Log.info("AudioEvent: %j", event);
+	Mojo.Log.info("I.AudioEvent: %j", event);
+	Mojo.Log.error("E.AudioEvent: %j", event);
 	switch (event.type) {
 		//case "stalled":
 			//this.stalled = true;
