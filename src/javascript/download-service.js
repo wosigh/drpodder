@@ -14,6 +14,7 @@ DownloadService.prototype._serviceRequest = function(sceneController, uri, param
 	// the download manager currently has a bug where if you cancel a download
 	// with another download in the queue, it will then start the next download
 	// but the amountTotal will never be set to the filesize
+	// bug seems to be resolved now?
 
 	// possible solutions:
 	//  hold the download call until there are no downloads pending, thus never calling

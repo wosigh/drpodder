@@ -262,14 +262,14 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function(event) {
 		}
 	} else {
 		if (this.episodeObject.file) {
-			Mojo.Log.info("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
+			Mojo.Log.warn("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
 			this.audioObject.src = this.episodeObject.file;
 			this.progressModel.progressStart = 0;
 			this.progressModel.progressEnd = 1;
 			this.controller.modelChanged(this.progressModel);
 		} else {
 			var url = this.episodeObject.getEnclosure();
-			Mojo.Log.info("Setting [%s] stream src to:[%s]", this.episodeObject.type, url);
+			Mojo.Log.warn("Setting [%s] stream src to:[%s]", this.episodeObject.type, url);
 			this.setStatus("Connecting");
 			this.audioObject.src = url;
 		}
@@ -294,7 +294,7 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
-	Mojo.Log.info("received mediaKeyPress: %j", event);
+	Mojo.Log.warn("received mediaKeyPress: %j", event);
 	switch (event.key) {
 		case "togglePausePlay":
 			if (this.audioObject.paused) {
@@ -325,7 +325,7 @@ EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
 EpisodeDetailsAssistant.prototype.keyDownHandler = function(event) {
 	var key = event.originalEvent.keyCode;
 	switch (key) {
-		case 32:
+		case Mojo.Char.spaceBar:
 			//play/pause
 			if (this.audioObject.paused) {
 				this.play();
@@ -333,19 +333,19 @@ EpisodeDetailsAssistant.prototype.keyDownHandler = function(event) {
 				this.pause();
 			}
 			break;
-		case 190:
+		case Mojo.Char.period:
 			// ff1
 			this.doSkip(20);
 			break;
-		case 48:
+		case Mojo.Char.zero:
 			// fr1
 			this.doSkip(-20);
 			break;
-		case 17:
+		case Mojo.Char.sym:
 			// ff2
 			this.doSkip(60);
 			break;
-		case 0:
+		case Mojo.Char.shift:
 			// fr2
 			this.doSkip(-60);
 			break;
@@ -385,7 +385,7 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
-	Mojo.Log.info("I.AudioEvent: %j", event);
+	Mojo.Log.warn("W.AudioEvent: %j", event);
 	Mojo.Log.error("E.AudioEvent: %j", event);
 	switch (event.type) {
 		//case "stalled":
@@ -575,7 +575,7 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 };
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event) {
-	Mojo.Log.info("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
+	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
 	if (isNaN(this.audioObject.currentTime) ||
 	    isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 		this.updateProgressLabelsValues("00:00", "00:00");

@@ -29,6 +29,8 @@ function Feed(init) {
 		this.viewFilter = init.viewFilter;
 		this.username = init.username;
 		this.password = init.password;
+		this.hideFromOS = init.hideFromOS;
+		this.maxEpisodes = init.maxEpisodes;
 
 		this.numNew = init.numNew;
 		this.numDownloaded = init.numDownloaded;
@@ -72,6 +74,8 @@ function Feed(init) {
 		this.viewFilter = "New";
 		this.username = null;
 		this.password = null;
+		this.hideFromOS = 1;
+		this.maxEpisodes = 0;
 
 		this.numNew = 0;
 		this.numDownloaded = 0;
@@ -100,7 +104,7 @@ Feed.prototype.update = function(callback, url) {
 		if (!url) {
 			var feedTitle = (this.title)?this.title:"Unknown feed title";
 			Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
-			Mojo.Log.info("Update: ", feedTitle, "(", this.url, ")");
+			Mojo.Log.warn("Update: ", feedTitle, "(", this.url, ")");
 
 			url = this.url;
 		}
@@ -648,6 +652,14 @@ Feed.prototype.updated = function() {
 Feed.prototype.updatedEpisodes = function() {
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "feedEpisodesUpdated", feed: this});
+};
+
+Feed.prototype.getDownloadPath = function() {
+	var path=Util.escapeSpecial(this.title);
+	if (this.hideFromOS) {
+		path = '.' + path;
+	}
+	return path;
 };
 
 FeedModel.prototype.items = [];

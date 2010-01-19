@@ -153,9 +153,9 @@ Episode.prototype.download = function(silent) {
 	}
 	var url = this.getEnclosure();
 	if (url) {
-		Mojo.Log.info("Downloading %s as %s", url, this.getDownloadFilename());
+		Mojo.Log.warn("Downloading %s as %s", url, this.getDownloadFilename());
 		this.downloadRequest = AppAssistant.downloadService.download(null, url,
-																	Util.escapeSpecial(this.feedObject.title),
+																	this.feedObject.getDownloadPath(),
 																	this.getDownloadFilename(),
 																	this.downloadingCallback.bind(this));
 	}

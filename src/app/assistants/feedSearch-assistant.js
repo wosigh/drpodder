@@ -141,7 +141,7 @@ GoogleListenSearch.prototype.getProviderLabel = function() {
 };
 
 GoogleListenSearch.prototype.search = function(keyword, filter, callback) {
-	Mojo.Log.info("GoogleListenSearch.search(%s, %s)", keyword, filter);
+	Mojo.Log.warn("GoogleListenSearch.search(%s, %s)", keyword, filter);
 	var t = new Template(this.url);
 	var url = t.evaluate({keyword:encodeURI(keyword), filter: filter});
 
@@ -171,7 +171,7 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 	}
 
 	for (i=0; i<transport.responseText.length; i+=100) {
-		Mojo.Log.info("%s", transport.responseText.substring(i, i+100));
+		Mojo.Log.warn("%s", transport.responseText.substring(i, i+100));
 	}
 	/*
 	var doc = transport.responseXML;
@@ -218,8 +218,8 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.controller.setupWidget("searchProviderList",
 		{label: "Directory",
 		 choices: [{label: "Digital Podcast", value: "digitalPodcast"}
-		           //{label: "Spoken Word", value: "spokenWord"}]
-		           //{label: "Google Listen", value: "googleListen"}]
+		           //{label: "Spoken Word", value: "spokenWord"}
+		           //{label: "Google Listen", value: "googleListen"}
 		]},
 		this.searchProviderModel = { value : "digitalPodcast" });
 

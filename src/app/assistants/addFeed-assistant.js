@@ -17,6 +17,7 @@ function AddFeedAssistant(feed) {
 		this.albumArt = this.feed.albumArt;
 		this.autoDownload = this.feed.autoDownload;
 		this.autoDelete = this.feed.autoDelete;
+		this.hideFiles = this.feed.hideFromOS;
 		this.maxDownloads = this.feed.maxDownloads;
 		this.okButtonValue = "Update";
 		this.replacementModel.items = this.feed.getReplacementsArray();
@@ -30,6 +31,7 @@ function AddFeedAssistant(feed) {
 		this.albumArt = null;
 		this.autoDownload = false;
 		this.autoDelete = true;
+		this.hideFiles = true;
 		this.maxDownloads = 1;
 		this.okButtonValue = "Add Feed";
 	}
@@ -122,6 +124,10 @@ AddFeedAssistant.prototype.setup = function() {
 	this.controller.setupWidget("autoDeleteToggle",
 		{},
 		this.autoDeleteModel = { value : this.autoDelete });
+
+	this.controller.setupWidget("hideFilesToggle",
+		{},
+		this.hideFilesModel = { value : this.hideFiles });
 
 	this.controller.setupWidget("autoDownloadToggle",
 		{},
@@ -253,6 +259,7 @@ AddFeedAssistant.prototype.updateFields = function() {
 	if (this.albumArtModel.value) {this.feed.albumArt = this.albumArtModel.value;}
 	this.feed.autoDownload = this.autoDownloadModel.value;
 	this.feed.autoDelete = this.autoDeleteModel.value;
+	this.feed.hideFromOS = this.hideFilesModel.value;
 	this.feed.maxDownloads = this.maxDownloadsModel.value;
 	this.feed.setReplacements(this.replacementModel.items);
 };
@@ -260,12 +267,12 @@ AddFeedAssistant.prototype.updateFields = function() {
 AddFeedAssistant.prototype.checkFeed = function() {
 	if (this.okButtonActive === true) {
 		// Shouldn't happen, but log event if it does and exit
-		Mojo.Log.info("Multiple Check Feed requests");
+		Mojo.Log.warn("Multiple Check Feed requests");
 		return;
 	}
 
 	// Check entered URL and name to confirm that it is a valid feedlist
-	Mojo.Log.info("New Feed URL Request: (%s:%s)%s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
+	Mojo.Log.warn("New Feed URL Request: (%s:%s)%s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
 
 	// If the url is the same, then assume that it's just a title change,
 	// update the feed title and close the dialog. Otherwise update the feed.
@@ -306,7 +313,7 @@ AddFeedAssistant.prototype.check = function(url) {
 		url = this.urlModel.value;
 	}
 	//this.ajaxRequestTime = (new Date()).getTime();
-	//Mojo.Log.info("making ajax request [%s]", url);
+	//Mojo.Log.warn("making ajax request [%s]", url);
 	if (this.usernameModel.value) {
 		url = url.replace("http://", "http://" +
 						  encodeURIComponent(this.usernameModel.value) + ":" +
@@ -320,11 +327,11 @@ AddFeedAssistant.prototype.check = function(url) {
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});
-	//Mojo.Log.info("finished making ajax request");
+	//Mojo.Log.warn("finished making ajax request");
 };
 
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
-	//Mojo.Log.info("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
+	//Mojo.Log.warn("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
 	var location = transport.getHeader("Location");
 	if (location) {
 		Mojo.Log.warn("Redirection location=%s", location);
@@ -335,12 +342,12 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	// Prototype template object generates a string from return status
 	var t = new Template($L("#{status}"));
 	var m = t.evaluate(transport);
-	Mojo.Log.info("Valid URL (Status ", m, " returned).");
+	Mojo.Log.warn("Valid URL (Status ", m, " returned).");
 
 	if (transport.status) {
 		// DEBUG - Work around due occasion Ajax XML error in response.
 		if (transport.responseXML === null && transport.responseText !== null) {
-			Mojo.Log.info("Request not in XML format - manually converting");
+			Mojo.Log.warn("Request not in XML format - manually converting");
 			//var start = (new Date()).getTime();
 			transport.responseXML = new DOMParser().parseFromString(
 					transport.responseText, "text/xml");

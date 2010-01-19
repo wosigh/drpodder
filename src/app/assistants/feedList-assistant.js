@@ -126,7 +126,25 @@ FeedListAssistant.prototype.activate = function(result) {
 			}
 		}
 		if (firstLoad) {
-			this.updateFeeds();
+			var dialog = new drnull.Dialog.Confirm(this, "Add Default Feeds",
+				"Welcome to drPodder!<br><br>Would you like to add some technology podcasts to get you started?",
+				function() {
+					Mojo.Log.warn("we want to add feeds");
+					var dialog = new drnull.Dialog.Info(this, "Thanks for using drPodder!",
+						"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left." +
+						"<br><br>Feel free to delete any of the default podcasts.");
+					dialog.show();
+					DB.defaultFeeds();
+					this.controller.modelChanged(feedModel);
+					this.updateFeeds();
+				}.bind(this),
+				function() {
+					var dialog = new drnull.Dialog.Info(this, "Thanks for using drPodder!",
+						"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left." +
+						"<br><br>Until you add at least one podcast, you will see this prompt when starting the program.");
+					dialog.show();
+				}.bind(this));
+			dialog.show();
 		}
 	}
 	this.onFocus();

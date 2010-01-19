@@ -33,13 +33,13 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(DrPodder.MainStageName);
 		if (cardStageController) {
-			Mojo.Log.info("Main Stage exists");
+			Mojo.Log.warn("Main Stage exists");
 			cardStageController.activate();
 		} else {
 			var pushMainScene = function(stageController) {
 				stageController.pushScene("loading");
 			};
-			Mojo.Log.info("Create Main Stage");
+			Mojo.Log.warn("Create Main Stage");
 			var stageArguments = {name: DrPodder.MainStageName, lightweight: true};
 			this.controller.createStageWithCallback(stageArguments, pushMainScene.bind(this), "card");
 		}
@@ -79,20 +79,20 @@ AppAssistant.prototype.setWakeup = function() {
 		this.wakeupRequest = new Mojo.Service.Request("palm://com.palm.power/timeout", {
 			method: "set",
 			parameters: {
-				"key": "com.drnull.drpodder.update",
+				"key": Mojo.appInfo.id + '.update', //"com.drnull.drpodder.update",
 				"in": Prefs.updateInterval,
 				//"wakeup": true,
 				"uri": "palm://com.palm.applicationManager/open",
 				"params": {
-					"id": "com.drnull.drpodder",
+					"id": Mojo.appInfo.id, //"com.drnull.drpodder",
 					"params": {"action": "updateFeeds"}
 				}
 			},
 			onSuccess: function(response) {
-				Mojo.Log.info("Alarm set success: %s", response.returnValue);
+				Mojo.Log.warn("Alarm set success: %s", response.returnValue);
 			},
 			onFailure: function(response) {
-				Mojo.Log.info("Alarm set failure: %s:%s", response.returnValue, response.errorText);
+				Mojo.Log.warn("Alarm set failure: %s:%s", response.returnValue, response.errorText);
 			}
 		});
 
@@ -134,7 +134,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 								var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
 								var replacements = Util.xmlGetAttributeValue(node, "replacements");
 								if (title !== undefined && url !== undefined) {
-									Mojo.Log.info("Importing feed: (%s)-[%s]", title, url);
+									Mojo.Log.warn("Importing feed: (%s)-[%s]", title, url);
 									feed = new Feed();
 									feed.url = url;
 									feed.title = title;

@@ -33,5 +33,7 @@
     {"source": "javascript\/support_info.js"},
     {"source": "\/usr\/palm\/frameworks\/media\/media.js"},
     {"source": "app\/assistants\/webSearch-assistant.js",
-     "scenes": "webSearch"}
+     "scenes": "webSearch"},
+    {"source": "app\/common\/common.js"},
+    {"source": "app\/common\/dialog.js"}
 ]

@@ -3,9 +3,22 @@ var Prefs = {};
 function DBClass() {
 }
 
-	/*
-	 // CRAP.  All that and it doesn't look like palm has implemented the changeVersion method
-	 // for db objects yet.  Which means, I have to manage my schema changes manually.  BOOO.
+// db version number, followed by the sql statements required to bring it up to the latest version
+DBClass.prototype.dbVersions = [
+	{version: "0.5.1", migrationSql: []},
+	{version: "0.2", migrationSql: ["ALTER TABLE feed ADD COLUMN hideFromOS BOOLEAN",
+									"ALTER TABLE feed ADD COLUMN maxEpisodes INTEGER",
+									"UPDATE feed SET hideFromOS=1, maxEpisodes=0",
+									"DROP TABLE version"]}
+];
+
+DBClass.prototype.waitForFeeds = function(callback) {
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "updateLoadingMessage", message: "Opening Database"});
+
+	this.callback = callback;
+	this.readPrefs();
+
 	var currentVerIndex = 0;
 	do {
 		var ver = this.dbVersions[currentVerIndex];
@@ -18,34 +31,39 @@ function DBClass() {
 				Mojo.Log.error("Exception opening db: %s", e.message);
 				// setTimeout only works with assistants
 				//setTimeout("Util.showError('Exception opening db', '"+e.message+"');", 1000);
-				currentVerIndex = 99;
+				currentVerIndex = 999;
 			}
 		}
 	} while (!this.db && currentVerIndex <= this.dbVersions.length);
 
-	Mojo.Log.error("db:%j", this.db);
+	Mojo.Log.warn("db:%j", this.db);
 
-	if (currentVerIndex > 0) {
+	if (!this.db) {
+		Mojo.Controller.getAppController().sendToNotificationChain({
+			type: "updateLoadingMessage", message: "Error Creating DB!"});
+		Mojo.Log.error("Error creating DB");
+	} else if (currentVerIndex > 0) {
 		ver = this.dbVersions[currentVerIndex];
 		var latestVersion = this.dbVersions[0].version;
 
-		Mojo.Log.error("We need to upgrade from v%s using [%s]", ver.version, ver.migrationSql);
-		Mojo.Log.error("version:%s, latestVersion:%s", ver.version, latestVersion);
-		Mojo.Log.error("migrationSql.length: %s", ver.migrationSql.length);
+		Mojo.Controller.getAppController().sendToNotificationChain({
+			type: "updateLoadingMessage", message: "Upgrading Database from " + ver.version});
+
+		Mojo.Log.warn("We need to upgrade from v%s using [%s]", ver.version, ver.migrationSql);
+		Mojo.Log.warn("version:%s, latestVersion:%s", ver.version, latestVersion);
+		Mojo.Log.warn("migrationSql.length: %s", ver.migrationSql.length);
 		this.db.changeVersion(ver.version, latestVersion,
 			// callback
 			function(transaction) {
-				Mojo.Log.error("Upgrading db");
+				Mojo.Log.warn("Upgrading db");
+				var migrateSuccess = function() {Mojo.Log.warn("Successfully executed migration statement %d", i);};
+				var migrateFail = function(transaction, error) {Mojo.Log.error("Error executing migration statement %d: %j", i, error);};
 				for (var i=0; i<ver.migrationSql.length; i++) {
-					transaction.executeSql(ver.migrationSql[i], [],
-						function(transaction, results) {
-							Mojo.Log.error("Successfully executed migration statement %d", i);
-						},
-						function(transaction, error) {
-							Mojo.Log.error("Error executing migration statement %d: %j", i, error);
-						});
+					Mojo.Controller.getAppController().sendToNotificationChain({
+						type: "updateLoadingMessage", message: "Upgrading Database from " + ver.version + "_" + i});
+					transaction.executeSql(ver.migrationSql[i], [], migrateSuccess, migrateFail);
 				}
-				Mojo.Log.error("Finished upgrading db");
+				Mojo.Log.warn("Finished upgrading db");
 			},
 			//errorCallback
 			function(transaction, error) {
@@ -53,71 +71,21 @@ function DBClass() {
 			},
 			// successCallback
 			function() {
-				Mojo.Log.info("Migration complete!");
+				Mojo.Log.warn("Migration complete! calling loadFeeds");
 				this.loadFeeds();
 			}.bind(this)
 		);
-		Mojo.Log.error("changeVersion done");
+		Mojo.Log.warn("changeVersion done");
 	} else {
-		this.initDB(this.loadFeeds.bind(this));
-	}
-	*/
-
-DBClass.prototype.waitForFeeds = function(callback) {
-	this.callback = callback;
-	this.readPrefs();
-
-	Mojo.Controller.getAppController().sendToNotificationChain({
-		type: "updateLoadingMessage", message: "Opening Database"});
-	this.db = openDatabase(this.dbName, "0.2"); // can't change the version until db.changeVersion works
-	if (!this.db) {
-		// setTimeout only works with assistants
-		//this.controller.window.setTimeout(Util.showError.bind(this, 'Error opening db', 'There was an unknown error opening the feed db'), 1000);
-		Mojo.Controller.getAppController().sendToNotificationChain({
-			type: "updateLoadingMessage", message: "Error Opening Database"});
-		Mojo.Log.error("Error opening feed db");
-	} else {
-		this.db.transaction(function(transaction) {
-			transaction.executeSql("SELECT version FROM version", [],
-				function(transaction, results) {
-					var version;
-					if (results.rows.length > 0) {
-						version = results.rows.item(0).version;
-					}
-					Mojo.Log.info("DB Version: %s", version);
-					// check if version is latest
-					if (this.dbVersions[0].version === version) {
-						Mojo.Controller.getAppController().sendToNotificationChain({
-							type: "updateLoadingMessage", message: "Loading"});
-						this.loadFeeds();
-					} else {
-						Mojo.Controller.getAppController().sendToNotificationChain({
-							type: "updateLoadingMessage", message: "Upgrading Database"});
-						// dbInfo.version = this.dbVersions[0].version;
-						// dbCookie.put(dbInfo);
-					}
-				}.bind(this),
-				function(transaction, error) {
-					Mojo.Log.error("Error getting db version: %j", error);
-					// call init
-					Mojo.Controller.getAppController().sendToNotificationChain({
-						type: "updateLoadingMessage", message: "Creating Database<BR>(WebOS v1.1+ Required)"});
-					this.initDB();
-				}.bind(this));
-		}.bind(this));
+		this.initDB();
 	}
 };
 
 DBClass.prototype.dbName = "ext:drPodderFeeds";
 
-// db version number, followed by the sql statements required to bring it up to the latest version
-DBClass.prototype.dbVersions = [
-	{version: "0.4", migrationSql: []}
-	//{version: "0.2", migrationSql: ["ALTER TABLE feed ADD COLUMN replacements TEXT"]}
-];
-
 
 DBClass.prototype.initDB = function() {
+	Mojo.Log.warn("entering initDB");
 	var createFeedTable = "CREATE TABLE IF NOT EXISTS 'feed' " +
 	                      "(id INTEGER PRIMARY KEY, " +
 	                      "displayOrder INTEGER, " +
@@ -133,7 +101,9 @@ DBClass.prototype.initDB = function() {
 						  "maxDisplay INTEGER, " +
 						  "viewFilter TEXT, " +
 						  "username TEXT, " +
-						  "password TEXT)";
+						  "password TEXT, " +
+						  "hideFromOS BOOLEAN, " +
+						  "maxEpisodes INTEGER)";
 	var createEpisodeTable = "CREATE TABLE IF NOT EXISTS 'episode' " +
 	                         "(id INTEGER PRIMARY KEY, " +
 							 "feedId INTEGER, " +
@@ -151,39 +121,34 @@ DBClass.prototype.initDB = function() {
 	                         "file TEXT, " +
 	                         "length REAL, " +
 							 "type TEXT)";
-	var createVersionTable = "CREATE TABLE version (version TEXT)";
-	var populateVersionTable = "INSERT INTO version (version) VALUES ('0.4')";
-	var allPlaylist = "INSERT INTO feed (title, url, albumArt, viewFilter) VALUES " +
-	                  "('All', 'drPodder://'," +
+	var allPlaylist = "INSERT INTO feed (id, title, url, albumArt, viewFilter) VALUES " +
+	                  "(0, 'All', 'drPodder://'," +
 	                  "'images/playlist-icon.png', 'New')";
 	var loadFeeds = this.loadFeeds.bind(this);
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
 			function(transaction, results) {
-				Mojo.Log.info("Feed table created");
+				Mojo.Log.warn("Feed table created");
 			},
 			function(transaction, error) {Mojo.Log.error("Error creating feed table: %j", error);});
 		transaction.executeSql(createEpisodeTable, [],
 			function(transaction, results) {
-				Mojo.Log.info("Episode table created");
+				Mojo.Log.warn("Episode table created");
 			},
 			function(transaction, error) {Mojo.Log.error("Error creating episode table: %j", error);});
-		transaction.executeSql(createVersionTable, [],
-			function(transaction, results) {
-				Mojo.Log.info("Version table created");
-			},
-			function(transaction, error) {Mojo.Log.error("Error creating version table: %j", error);});
-		transaction.executeSql(populateVersionTable, [],
-			function(transaction, results) {
-				Mojo.Log.info("Version table populated");
-			},
-			function(transaction, error) {Mojo.Log.error("Error populating version table: %j", error);});
 		transaction.executeSql(allPlaylist, [],
 			function(transaction, results) {
-				Mojo.Log.info("Created all playlist");
+				Mojo.Log.warn("Created all playlist");
 				loadFeeds();
 			},
-			function(transaction, error) {Mojo.Log.error("Error creating all playlist, %j", error);});
+			function(transaction, error) {
+				if (error.message === "constraint failed") {
+					Mojo.Log.warn("Playlist 0 already exists, assuming we've created it already");
+					loadFeeds();
+				} else {
+					Mojo.Log.error("Error creating all playlist, %j", error);
+				}
+			});
 	});
 };
 
@@ -308,8 +273,6 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				}
 			}
 		}
-	} else {
-		this.defaultFeeds();
 	}
 	feedModel.items.forEach(function(f) {
 		f.sortEpisodes();
@@ -332,22 +295,22 @@ DBClass.prototype.saveFeeds = function() {
 DBClass.prototype.saveFeed = function(f, displayOrder) {
 	var saveFeedSQL = "INSERT OR REPLACE INTO feed (id, displayOrder, title, url, albumArt, " +
 	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements, maxDisplay, " +
-					  "viewFilter, username, password) " +
-					  "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					  "viewFilter, username, password, hideFromOS, maxEpisodes) " +
+					  "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 	if (displayOrder !== undefined) {
 		f.displayOrder = displayOrder;
 	}
 
 	this.db.transaction(function(transaction) {
-		Mojo.Log.info("Feed: %s", f.title);
+		Mojo.Log.warn("Feed: %s", f.title);
 		if (f.id === undefined) {f.id = null;}
 		if (f.playlist) {
 			f.url = "drPodder://" + f.feedIds.join(",");
 		}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay,
-											 f.viewFilter, f.username, f.password],
+											 f.viewFilter, f.username, f.password, f.hideFromOS, f.maxEpisodes],
 			function(transaction, results) {
 				if (f.id === null) {
 					f.id = results.insertId;
@@ -364,7 +327,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 						this.saveEpisodeTransaction(f.episodes[i], transaction);
 					}
 				}
-				Mojo.Log.info("Feed saved: %s", f.title);
+				Mojo.Log.warn("Feed saved: %s", f.title);
 			}.bind(this),
 			function(transaction, error) {
 				Util.showError("Error Saving Feed", "There was an error saving feed: "+f.title);
@@ -405,7 +368,7 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
 				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type],
 			function(transaction, results) {
-				Mojo.Log.info("Episode saved: %s", e.title);
+				Mojo.Log.warn("Episode saved: %s", e.title);
 				e.id = results.insertId;
 				e.description = null;
 			},
@@ -425,7 +388,7 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 		}
 		transaction.executeSql(sql, params,
 			function(transaction, results) {
-				Mojo.Log.info("Episode updated: %s", e.title);
+				Mojo.Log.warn("Episode updated: %s", e.title);
 				e.description = null;
 			},
 			function(transaction, error) {
@@ -459,10 +422,10 @@ DBClass.prototype.removeFeed = function(f) {
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(removeEpisodesSQL, [f.id],
-			function(transaction, results) {Mojo.Log.info("Episodes removed for feed %s", f.id);},
+			function(transaction, results) {Mojo.Log.warn("Episodes removed for feed %s", f.id);},
 			function(transaction, error) { Mojo.Log.error("Episodes remove failed: (%s), %j", f.id, error);});
 		transaction.executeSql(removeFeedSQL, [f.id],
-			function(transaction, results) {Mojo.Log.info("Feed removed: %s", f.title);},
+			function(transaction, results) {Mojo.Log.warn("Feed removed: %s", f.title);},
 			function(transaction, error) { Mojo.Log.error("Feed remove failed: (%s), %j", f.title, error);});
 	});
 };
@@ -538,7 +501,6 @@ DBClass.prototype.defaultFeeds = function() {
 	feed.title = "Stack Overflow";
 	feed.interval = 60000;
 	feedModel.add(feed);
-	*/
 
 	feed = new Feed();
 	feed.url = "http://feeds.feedburner.com/podictionary";
@@ -549,8 +511,8 @@ DBClass.prototype.defaultFeeds = function() {
 	feed.url = "http://www.merriam-webster.com/word/index.xml";
 	feed.interval = 60000;
 	feedModel.add(feed);
+	*/
 
-	this.callback();
 	this.saveFeeds();
 };
 
