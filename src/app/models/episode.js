@@ -78,7 +78,7 @@ Episode.prototype.updateUIElements = function(ignore) {
 				this.statusIcon = "Knob Download.png";
 			}
 		}
-		if (!this.enclosure) {
+		if (!this.enclosure && !this.downloaded) {
 			this.statusIcon = "Knob Help.png";
 		}
 	}

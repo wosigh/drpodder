@@ -375,7 +375,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			e.pubDate = episode.pubDate;
 			e.description = episode.description;
 			e.link = episode.link;
-			e.enclosure = episode.enclosure;
+			if (episode.enclosure) { e.enclosure = episode.enclosure; }
 			e.type = episode.type;
 		}
 		result = nodes.iterateNext();
