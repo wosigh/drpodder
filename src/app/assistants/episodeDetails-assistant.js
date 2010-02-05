@@ -94,7 +94,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.setupWidget("progress", this.progressAttr, this.progressModel);
 	this.progress = this.controller.get("progress");
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
-	if (this.episodeObject.enclosure) {
+	if (this.episodeObject.enclosure || this.episodeObject.downloaded) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
 		this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
