@@ -157,7 +157,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 							}
 						} catch (e){
 							Mojo.Log.error("error with OPML: (%s)", e);
-							Util.showError("Error parsing OPML File", "There was an error parsing the OPML file.  Please send the file to drnull.");
+							Util.showError("Error parsing OPML File", "There was an error parsing the OPML file.  Please send the file to support@drpodder.com.");
 						}
 					}.bind(this)
 				});
