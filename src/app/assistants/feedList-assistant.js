@@ -80,6 +80,10 @@ FeedListAssistant.prototype.setup = function() {
 	this.onFocusHandler = this.onFocus.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+
+	if (this.controller.stageController.setWindowOrientation) {
+		this.controller.stageController.setWindowOrientation("free");
+	}
 };
 
 FeedListAssistant.prototype.activate = function(result) {

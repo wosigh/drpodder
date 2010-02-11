@@ -536,6 +536,7 @@ Feed.prototype.setReplacements = function(arr) {
 Feed.prototype.listened = function(ignore) {
 	this.episodes.forEach(function(e) {
 		e.setListened(true);
+		e.deleteFile(true);
 	});
 	if (!ignore) {
 		this.updated();

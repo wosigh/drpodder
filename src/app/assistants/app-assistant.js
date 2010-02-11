@@ -109,7 +109,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 				stageController.pushScene("preferences");
 				break;
 			case "about-cmd":
-				stageController.pushScene("support");
+				stageController.pushAppSupportInfoScene();
 				break;
 			case "import-cmd":
 				var req = new Ajax.Request("/media/internal/drpodder.xml", {
@@ -133,6 +133,8 @@ AppAssistant.prototype.handleCommand = function(event) {
 								var autoDelete = Util.xmlGetAttributeValue(node, "autoDelete");
 								var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
 								var replacements = Util.xmlGetAttributeValue(node, "replacements");
+								var username = Util.xmlGetAttributeValue(node, "username");
+								var password = Util.xmlGetAttributeValue(node, "password");
 								if (title !== undefined && url !== undefined) {
 									Mojo.Log.warn("Importing feed: (%s)-[%s]", title, url);
 									feed = new Feed();
@@ -142,6 +144,8 @@ AppAssistant.prototype.handleCommand = function(event) {
 									if (autoDelete !== undefined) {feed.autoDelete = (autoDelete==='1');}
 									if (maxDownloads !== undefined) {feed.maxDownloads = maxDownloads;}
 									if (replacements !== undefined) {feed.replacements = replacements;}
+									if (username !== undefined) {feed.username = username;}
+									if (password !== undefined) {feed.password = password;}
 									feedModel.items.push(feed);
 									imported++;
 								} else {
@@ -151,7 +155,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 							}
 							if (imported > 0) {
 								DB.saveFeeds();
-								Util.showError("OPML Import Finished", "Please refresh the Feed List to see the " + imported + " imported feed" + ((imported !== 1)?"s":""));
+								Util.showError("OPML Import Finished", "The imported feeds can be found at the END of your feed list.<br><br>Please refresh the Feed List to see the " + imported + " imported feed" + ((imported !== 1)?"s":""));
 							} else {
 								Util.showError("OPML Import Finished", "No valid feeds found in drpodder.xml");
 							}
@@ -163,7 +167,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 				});
 				break;
 			case "export-cmd":
-				var message = "Copy the following out to a file named drpodder.xml.<br>" +
+				var message = "Copy the following out to a file named drpodder.xml (Make sure the filename is all lowercase and Windows doesn't rename the file as drpodder.xml.txt).<br>" +
 				              "To restore this set of feeds to drPodder, simply copy drpodder.xml to the root of the Pre's USB directory." +
 							  "<br><br>&lt;opml version='1.1'>&lt;body><br>";
 				for (var i=0; i<feedModel.items.length; i++) {
@@ -175,6 +179,10 @@ AppAssistant.prototype.handleCommand = function(event) {
 						message += " autoDelete='" + feed.autoDelete + "'";
 						message += " maxDownloads='" + feed.maxDownloads + "'";
 						message += " replacements='" + feed.replacements.replace(/&/g,"&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
+						if (feed.username) {
+							message += " username='" + feed.username + "'";
+							message += " password='" + feed.password + "'";
+						}
 						message += "/><br>";
 					}
 				}

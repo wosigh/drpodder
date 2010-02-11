@@ -38,6 +38,7 @@ Utilities.prototype.showError = function(title, message){
         onChoose: function(value){
         },
         title: title,
+		allowHTMLMessage: true,
         message: message,
         choices: [{
             label: $L('OK'),

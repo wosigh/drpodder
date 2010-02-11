@@ -1,7 +1,7 @@
 {
-  "logLevel":10,
-  "timingEnabled":true,
-  "logEvents":true,
+  "logLevel":0,
+  "timingEnabled":false,
+  "logEvents":false,
   "debuggingEnabled":false,
   "escapeHTMLInTemplates":true
 }

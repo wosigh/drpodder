@@ -2,6 +2,8 @@ function MediaEventsService() {
 }
 
 MediaEventsService.prototype.URI = "palm://com.palm.mediaevents/";
+MediaEventsService.prototype.MEDIA_KEYS_URI = "palm://com.palm.keys/media";
+MediaEventsService.prototype.HEADSET_KEYS_URI = "palm://com.palm.keys/headset";
 
 MediaEventsService.prototype._serviceRequest = function(sceneController, uri, params) {
 	if (sceneController) {
@@ -13,6 +15,16 @@ MediaEventsService.prototype._serviceRequest = function(sceneController, uri, pa
 };
 
 MediaEventsService.prototype.registerForMediaEvents = function(sceneController, callback) {
+	var req = this._serviceRequest(sceneController, this.MEDIA_KEYS_URI, {
+		method: "status",
+		onSuccess: callback,
+		parameters: {"subscribe": true}});
+
+	req = this._serviceRequest(sceneController, this.HEADSET_KEYS_URI, {
+		method: "status",
+		onSuccess: callback,
+		parameters: {"subscribe": true}});
+
 	return this._serviceRequest(sceneController, this.URI, {
 		method: "mediaEvents",
 		onSuccess: callback,

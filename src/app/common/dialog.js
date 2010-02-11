@@ -74,3 +74,29 @@ drnull.Dialog.Confirm = Class.create(drnull.Dialog.BaseDialog, {
 		}
 	}
 });
+
+drnull.Dialog.Choice = Class.create(drnull.Dialog.BaseDialog, {
+	// labels are the buttons, handlers are the handlers for each button (with the +1 being the swipe-back-cancel option)
+	initialize: function($super, assistant, title, message, labels, handlers) {
+		if (labels.length === 0 ||
+			handlers.length != labels.length+1) {
+			Mojo.Log.error("drnull.Dialog.Choice: Labels not specified or handlers not 1 greater than labels");
+		}
+		var choices = [];
+		for (var i=0; i<labels.length; i++) {
+			var label = labels[i];
+			Mojo.Log.error("label: %s", label);
+			choices.push({label: label, value: i});
+		}
+		this.handlers = handlers;
+
+		$super(assistant, title, message, choices);
+	},
+	onChoose: function(value) {
+		Mojo.Log.warn("Confirm.onChoose(" + value + ") called");
+		handler = this.handlers[i];
+		if (!handler) {handler = this.handlers[this.handlers.length-1];}
+		if (handler) {handler();}
+		else {Mojo.Log.error("drnull.Dialog.Choice: could not find handler for " + value);}
+	}
+});

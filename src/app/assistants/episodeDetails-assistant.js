@@ -4,6 +4,7 @@ function EpisodeDetailsAssistant(episode, options) {
 	this.resume = options.resume && (this.episodeObject.position !== 0);
 	this.autoPlay = options.autoPlay;
 	this.playlist = options.playlist;
+	this.isForeground = true;
 }
 
 EpisodeDetailsAssistant.prototype.progressAttr = {
@@ -153,7 +154,6 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 };
 
 EpisodeDetailsAssistant.prototype.activate = function() {
-	this.isForeground = true;
 	if (this.episodeObject.enclosure && !this.isVideo()) {
 		Mojo.Event.listen(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
 		Mojo.Event.listen(this.progress, Mojo.Event.sliderDragStart, this.sliderDragStartHandler);
@@ -166,11 +166,13 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 
 EpisodeDetailsAssistant.prototype.deactivate = function() {
 	this.isForeground = false;
+	Mojo.Log.error("isForeground = false");
 	if (this.episodeObject.enclosure && !this.isVideo()) {
 		Mojo.Event.stopListening(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
 		Mojo.Event.stopListening(this.progress, Mojo.Event.sliderDragStart, this.sliderDragStartHandler);
 		Mojo.Event.stopListening(this.progress, Mojo.Event.sliderDragEnd, this.sliderDragEndHandler);
 		Mojo.Event.stopListening(this.controller.sceneElement, Mojo.Event.keydown, this.keyDownEventHandler);
+		Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 
 		if (this.mediaEvents) {
 			this.mediaEvents.cancel();
@@ -181,6 +183,7 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
+		this.bookmark();
 		this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 		if (!this.isVideo()) {
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
@@ -209,12 +212,12 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 			this.audioObject.removeEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEventsHandler);
 		}
 		this.setTimer(false);
-		this.bookmark();
 	}
 };
 
 EpisodeDetailsAssistant.prototype.bookmark = function() {
 	var cur = this.audioObject.currentTime;
+	Mojo.Log.error("BOOKMARK!!! %d", cur);
 	if (cur !== undefined && cur !== null && cur > 15) {
 		this.episodeObject.length = this.audioObject.duration;
 		this.episodeObject.bookmark(cur);
@@ -246,7 +249,8 @@ EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 		this.controller.window.clearInterval(this.updateTimer);
 		this.updateTimer = null;
 	}
-	if (bool) {
+	Mojo.Log.error("setTimer: set it=%s, isForeground=%s", bool, this.isForeground);
+	if (bool && this.isForeground) {
 		this.updateTimer = this.controller.window.setInterval(this.updateProgress.bind(this), 500);
 	}
 };
@@ -294,31 +298,33 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {
-	Mojo.Log.warn("received mediaKeyPress: %j", event);
-	switch (event.key) {
-		case "togglePausePlay":
-			if (this.audioObject.paused) {
-				this.play();
-			} else {
+	Mojo.Log.error("received mediaKeyPress: %s", Mojo.Log.propertiesAsString(event));
+	if (event.state === 'down') {
+		switch (event.key) {
+			case "togglePausePlay":
+				if (this.audioObject.paused) {
+					this.play();
+				} else {
+					this.pause();
+				}
+				break;
+			case "stop":
+			case "pause":
 				this.pause();
-			}
-			break;
-		case "stop":
-		case "pause":
-			this.pause();
-			break;
-		case "play":
-			this.play();
-			break;
-		case "next":
-			this.doSkip(20);
-			break;
-		case "prev":
-			this.doSkip(-20);
-			break;
-		default:
-			//Mojo.Log.error("Ignoring mediaKeyPress");
-			break;
+				break;
+			case "play":
+				this.play();
+				break;
+			case "next":
+				this.doSkip(20);
+				break;
+			case "prev":
+				this.doSkip(-20);
+				break;
+			default:
+				//Mojo.Log.error("Ignoring mediaKeyPress");
+				break;
+		}
 	}
 };
 
@@ -461,6 +467,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			break;
 		*/
 		case "pause":
+			this.bookmark();
 			this.pauseGUI();
 			break;
 		case "ended":
@@ -576,8 +583,9 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event) {
 	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
+
 	if (isNaN(this.audioObject.currentTime) ||
-	    isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
+	    !isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 		this.updateProgressLabelsValues("00:00", "00:00");
 	} else {
 		this.updateProgressLabels();
@@ -620,7 +628,6 @@ EpisodeDetailsAssistant.prototype.pause = function() {
 		this.disablePause();
 		this.audioObject.pause();
 		//this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
-		this.bookmark();
 	} catch (e) {
 		Mojo.Log.error("Error in pause: %j", e);
 	}
@@ -639,7 +646,6 @@ EpisodeDetailsAssistant.prototype.play = function() {
 			}
 			this.audioObject.play();
 			//this.controller.window.setTimeout(this.enablePlayPause.bind(this), 10000);
-			//this.bookmark();
 
 		}
 	} catch (e) {
@@ -721,6 +727,8 @@ EpisodeDetailsAssistant.prototype.refreshMenu = function() {
 };
 
 EpisodeDetailsAssistant.prototype.onBlur = function() {
+	this.bookmark();
+	this.isForeground = false;
 	this.setTimer(false);
 };
 
@@ -728,6 +736,7 @@ EpisodeDetailsAssistant.prototype.considerForNotification = function(params) {
 	if (params) {
 		switch (params.type) {
 			case "onFocus":
+				this.isForeground = true;
 				if (this.audioObject && this.audioObject.paused !== true) {
 					this.setTimer(true);
 				}
