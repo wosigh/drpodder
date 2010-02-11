@@ -23,7 +23,7 @@ DBClass.prototype.waitForFeeds = function(callback) {
 	do {
 		var ver = this.dbVersions[currentVerIndex];
 		try {
-			this.db = openDatabase(this.dbName, ver.version);
+			this.db = openDatabase(this.dbName, ver.version, 'drPodder Feed DB', 5*1024*1024, this.initDB.bind(this));
 		} catch (e) {
 			if (e.code === e.INVALID_STATE_ERR) {
 				currentVerIndex++;
@@ -36,6 +36,8 @@ DBClass.prototype.waitForFeeds = function(callback) {
 		}
 	} while (!this.db && currentVerIndex <= this.dbVersions.length);
 
+	//Mojo.Log.warn = Mojo.Log.error;
+	//Mojo.Log.info = Mojo.Log.error;
 	Mojo.Log.warn("db:%j", this.db);
 
 	if (!this.db) {
@@ -77,14 +79,14 @@ DBClass.prototype.waitForFeeds = function(callback) {
 		);
 		Mojo.Log.warn("changeVersion done");
 	} else {
-		this.initDB();
+		this.loadFeeds();
 	}
 };
 
 DBClass.prototype.dbName = "ext:drPodderFeeds";
 
 
-DBClass.prototype.initDB = function() {
+DBClass.prototype.initDB = function(db) {
 	Mojo.Log.warn("entering initDB");
 	var createFeedTable = "CREATE TABLE IF NOT EXISTS 'feed' " +
 	                      "(id INTEGER PRIMARY KEY, " +
@@ -125,7 +127,7 @@ DBClass.prototype.initDB = function() {
 	                  "(0, 'All', 'drPodder://'," +
 	                  "'images/playlist-icon.png', 'New')";
 	var loadFeeds = this.loadFeeds.bind(this);
-	this.db.transaction(function(transaction) {
+	db.transaction(function(transaction) {
 		transaction.executeSql(createFeedTable, [],
 			function(transaction, results) {
 				Mojo.Log.warn("Feed table created");
