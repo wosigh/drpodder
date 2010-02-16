@@ -54,7 +54,7 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 };
 
 AppAssistant.prototype.handleLaunchParams = function(launchParams) {
-	Mojo.Log.error("handleLaunchParams called: %s", launchParams.action);
+	Mojo.Log.warn("handleLaunchParams called: %s", launchParams.action);
 	var dashboardOpen = this.controller.getStageController(DrPodder.DashboardStageName);
 	var downloadedDashboardOpen = this.controller.getStageController(DrPodder.DownloadedStageName);
 	var downloadingDashboardOpen = this.controller.getStageController(DrPodder.DownloadingStageName);

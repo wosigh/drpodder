@@ -209,7 +209,9 @@ EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 EpisodeListAssistant.prototype.activate = function(changes) {
 	this.refresh();
 	this.filterEpisodes();
-	this.controller.listen(this.controller.stageController.document, 'orientationchange', this.orientationChangeHandler);
+	if (Prefs.freeRotation) {
+		this.controller.listen(this.controller.stageController.document, 'orientationchange', this.orientationChangeHandler);
+	}
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);
@@ -217,7 +219,9 @@ EpisodeListAssistant.prototype.activate = function(changes) {
 };
 
 EpisodeListAssistant.prototype.deactivate = function(changes) {
-	this.controller.stopListening(this.controller.stageController.document, 'orientationchange', this.orientationChangeHandler);
+	if (Prefs.freeRotation) {
+		this.controller.stopListening(this.controller.stageController.document, 'orientationchange', this.orientationChangeHandler);
+	}
 	Mojo.Event.stopListening(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.stopListening(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.stopListening(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);

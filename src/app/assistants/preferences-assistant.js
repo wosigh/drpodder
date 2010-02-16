@@ -2,6 +2,10 @@ function PreferencesAssistant() {
 }
 
 PreferencesAssistant.prototype.setup = function() {
+	this.controller.setupWidget("freeRotationToggle",
+		{},
+		{ value : Prefs.freeRotation });
+
 	this.controller.setupWidget("enableNotificationsToggle",
 		{},
 		{ value : Prefs.enableNotifications });
@@ -44,6 +48,7 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		{ value : Prefs.singleTap });
 
+	this.freeRotationHandler = this.freeRotation.bind(this);
 	this.enableNotificationsHandler = this.enableNotifications.bind(this);
 	this.autoUpdateHandler = this.autoUpdate.bind(this);
 	this.updateIntervalHandler = this.updateInterval.bind(this);
@@ -61,6 +66,7 @@ PreferencesAssistant.prototype.setup = function() {
 };
 
 PreferencesAssistant.prototype.activate = function() {
+	Mojo.Event.listen(this.controller.get('freeRotationToggle'),Mojo.Event.propertyChange,this.freeRotationHandler);
 	Mojo.Event.listen(this.controller.get('enableNotificationsToggle'),Mojo.Event.propertyChange,this.enableNotificationsHandler);
 	Mojo.Event.listen(this.controller.get('autoUpdateToggle'),Mojo.Event.propertyChange,this.autoUpdateHandler);
 	Mojo.Event.listen(this.controller.get('updateIntervalList'),Mojo.Event.propertyChange,this.updateIntervalHandler);
@@ -72,6 +78,7 @@ PreferencesAssistant.prototype.activate = function() {
 };
 
 PreferencesAssistant.prototype.deactivate = function() {
+	Mojo.Event.stopListening(this.controller.get('freeRotationToggle'),Mojo.Event.propertyChange,this.freeRotationHandler);
 	Mojo.Event.stopListening(this.controller.get('enableNotificationsToggle'),Mojo.Event.propertyChange,this.enableNotificationsHandler);
 	Mojo.Event.stopListening(this.controller.get('autoUpdateToggle'),Mojo.Event.propertyChange,this.autoUpdateHandler);
 	Mojo.Event.stopListening(this.controller.get('updateIntervalList'),Mojo.Event.propertyChange,this.updateIntervalHandler);
@@ -81,6 +88,13 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
 	Mojo.Event.stopListening(this.controller.get('singleTap'),Mojo.Event.propertyChange,this.singleTapHandler);
 	DB.writePrefs();
+};
+
+PreferencesAssistant.prototype.freeRotation = function(event) {
+	Prefs.freeRotation = event.value;
+	var dialog = new drnull.Dialog.Info(this, "Restart Required",
+		"Changing Free Rotation requires a restart of drPodder.");
+	dialog.show();
 };
 
 PreferencesAssistant.prototype.enableNotifications = function(event) {

@@ -80,10 +80,6 @@ FeedListAssistant.prototype.setup = function() {
 	this.onFocusHandler = this.onFocus.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
-
-	if (this.controller.stageController.setWindowOrientation) {
-		this.controller.stageController.setWindowOrientation("free");
-	}
 };
 
 FeedListAssistant.prototype.activate = function(result) {
@@ -116,6 +112,14 @@ FeedListAssistant.prototype.activate = function(result) {
 	Mojo.Event.listen(this.feedList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.feedList, Mojo.Event.listReorder, this.handleReorderHandler);
+
+	if (Prefs.freeRotation) {
+		if (this.controller.stageController.setWindowOrientation) {
+			this.controller.stageController.setWindowOrientation("free");
+		}
+	} else {
+		this.controller.stageController.setWindowOrientation("up");
+	}
 
 	if (Prefs.reload) {
 		delete Prefs.reload;

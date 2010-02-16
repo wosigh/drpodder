@@ -23,7 +23,8 @@ DBClass.prototype.waitForFeeds = function(callback) {
 	do {
 		var ver = this.dbVersions[currentVerIndex];
 		try {
-			this.db = openDatabase(this.dbName, ver.version, 'drPodder Feed DB', 5*1024*1024, this.initDB.bind(this));
+			//this.db = openDatabase(this.dbName, ver.version, 'drPodder Feed DB', 5*1024*1024, this.initDB.bind(this));
+			this.db = openDatabase(this.dbName, ver.version);
 		} catch (e) {
 			if (e.code === e.INVALID_STATE_ERR) {
 				currentVerIndex++;
@@ -162,7 +163,13 @@ DBClass.prototype.loadFeeds = function() {
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(loadSQL, [],
 			this.loadFeedsSuccess.bind(this),
-			function(transaction, error) {Mojo.Log.error("Error retrieving feeds: %j", error);});
+			function(transaction, error) {
+				if (error.message === 'no such table: feed') {
+					this.initDB(this.db);
+				} else {
+					Mojo.Log.error("Error retrieving feeds: %j", error);
+				}
+			}.bind(this));
 	}.bind(this));
 };
 
@@ -452,6 +459,7 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}
 	if (Prefs.simple === undefined) {Prefs.simple = false;}
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
+	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = true;}
 	this.writePrefs();
 };
 

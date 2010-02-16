@@ -85,7 +85,7 @@ drnull.Dialog.Choice = Class.create(drnull.Dialog.BaseDialog, {
 		var choices = [];
 		for (var i=0; i<labels.length; i++) {
 			var label = labels[i];
-			Mojo.Log.error("label: %s", label);
+			Mojo.Log.warn("label: %s", label);
 			choices.push({label: label, value: i});
 		}
 		this.handlers = handlers;
