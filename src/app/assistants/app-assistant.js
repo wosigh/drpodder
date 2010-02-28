@@ -60,10 +60,10 @@ AppAssistant.prototype.handleLaunchParams = function(launchParams) {
 	var downloadingDashboardOpen = this.controller.getStageController(DrPodder.DownloadingStageName);
 	switch (launchParams.action) {
 		case "updateFeeds":
+			this.setWakeup();
 			if (Prefs.autoUpdate && !downloadingDashboardOpen && !feedModel.updatingFeeds) {
 				feedModel.updateFeeds();
 			}
-			this.setWakeup();
 			break;
 		case "download":
 			feedModel.download();
