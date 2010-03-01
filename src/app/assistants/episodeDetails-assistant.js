@@ -393,16 +393,17 @@ EpisodeDetailsAssistant.prototype.statusTimer = function() {
 
 EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 	Mojo.Log.warn("W.AudioEvent: %j", event);
+	Mojo.Log.error("W.AudioEvent: %s", event.type);
 	switch (event.type) {
 		//case "stalled":
 			//this.stalled = true;
 			//break;
-		/*
 		case "seeked":
 			this.setStatus("");
 			this.updateProgress();
+			this.cmdMenuModel.items[2].disabled = false;
+			this.refreshMenu();
 			break;
-		*/
 		case "load":
 			this.setStatus("");
 			this.updateProgress();
@@ -420,9 +421,9 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			this.disablePlay();
 			break;
 		*/
-		case "canplay":
+		case "canplaythrough":
 			if (this.resume) {
-				Mojo.Log.warn("resuming playback at %d", this.episodeObject.position);
+				Mojo.Log.error("resuming playback at %d", this.episodeObject.position);
 				try {
 					this.setStatus("Seeking");
 					this.audioObject.currentTime = this.episodeObject.position;
@@ -431,6 +432,8 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 					Mojo.Log.error("Error setting currentTime: %j", e);
 				}
 			}
+			break;
+		case "canplay":
 			if (!this.audioObject.autoplay) {
 				this.setStatus("");
 				this.cmdMenuModel.items[2].disabled = false;
@@ -560,12 +563,13 @@ EpisodeDetailsAssistant.prototype.sliderDragStart = function() {
 };
 
 EpisodeDetailsAssistant.prototype.progressChange = function(event) {
-	this.audioObject.currentTime = event.value * this.audioObject.duration;
-	this.updateProgress();
+	//this.audioObject.currentTime = event.value * this.audioObject.duration;
+	this.updateProgress(event.value);
 	this.controller.modelChanged(this.progressModel);
 };
 
-EpisodeDetailsAssistant.prototype.sliderDragEnd = function() {
+EpisodeDetailsAssistant.prototype.sliderDragEnd = function(event) {
+	this.audioObject.currentTime = this.progressModel.value * this.audioObject.duration;
 	this.setStatus("Seeking");
 	this.bookmark();
 	if (this.wasPlaying) {
@@ -573,9 +577,9 @@ EpisodeDetailsAssistant.prototype.sliderDragEnd = function() {
 	}
 };
 
-EpisodeDetailsAssistant.prototype.updateProgressLabels = function() {
-	this.updateProgressLabelsValues(this.formatTime(this.audioObject.currentTime),
-									this.formatTime(this.audioObject.duration-this.audioObject.currentTime));
+EpisodeDetailsAssistant.prototype.updateProgressLabels = function(currentTime) {
+	this.updateProgressLabelsValues(this.formatTime(currentTime||this.audioObject.currentTime),
+									this.formatTime(this.audioObject.duration-(currentTime||this.audioObject.currentTime)));
 };
 
 EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playbackProgress, playbackRemaining) {
@@ -583,24 +587,26 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 	this.controller.get("playback-remaining").update(playbackRemaining);
 };
 
-EpisodeDetailsAssistant.prototype.updateProgress = function() {
-	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
+EpisodeDetailsAssistant.prototype.updateProgress = function(currentTime) {
+	Mojo.Log.info("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
 
 	if (isNaN(this.audioObject.currentTime) ||
 	    !isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 		this.updateProgressLabelsValues("00:00", "00:00");
 	} else {
 		this.updateProgressLabels();
-		this.progressModel.value = this.audioObject.currentTime/this.audioObject.duration;
+		if (!currentTime) {
+			this.progressModel.value = this.audioObject.currentTime/this.audioObject.duration;
+		}
 	}
 
 	if (!this.episodeObject.downloaded) {
-		if (this.audioObject.mojo._media !== undefined && this.audioObject.mojo._media !== null) {
-			var buffered = this.audioObject.mojo._media.buffered;
-			if (buffered !== undefined && buffered !== null) {
-				this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
-				this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
-			}
+		var buffered = this.audioObject.buffered;
+		if (buffered !== undefined && buffered !== null) {
+			// webOS 1.4 broke this
+			//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
+			this.progressModel.progressStart = this.audioObject.position;
+			this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
 		}
 	}
 	this.controller.modelChanged(this.progressModel);
