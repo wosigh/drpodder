@@ -1,5 +1,5 @@
 drPodder
-drnull - <jdhatfield (at) google's-email-service (dot) com>
+drnull - support@drpodder.com
 
 USAGE:
   - Add your feeds
@@ -59,8 +59,7 @@ TODO:
   - per-feed abbreviations that will get shortened in episode names ("Buzz Out Loud 1025: Amazon's New Kicks" could be shortened to "BOL1025: Amazon's New Kicks")
 
 License:
-  - drPodder by Jamie Hatfield is licensed under a Creative Commons Attribution-Noncommercial-No Derivative Works 3.0 Unported License
-    http://creativecommons.org/licenses/by-nc-nd/3.0/
+  - drPodder by Jamie Hatfield is licensed under GPL http://www.gnu.org/licenses/gpl.txt
 
 Credits
   Thanks to Palm for making all of their applications use the same interfaces we use, so we could easily Use The Source to get API pointers!

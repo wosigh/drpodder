@@ -16,7 +16,3 @@ along with drPodder.  If not, see <http://www.gnu.org/licenses/>.
 
 Copyright 2010 Jamie Hatfield <support@drpodder.com>
 */
-
-var drnull = {
-	Dialog:{}
-};
