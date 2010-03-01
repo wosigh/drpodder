@@ -143,7 +143,7 @@ FeedListAssistant.prototype.activate = function(result) {
 	if (Prefs.reload) {
 		delete Prefs.reload;
 		DB.writePrefs();
-		this.stageController.swapScene("feedList");
+		this.stageController.swapScene({name: "feedList", transition: Mojo.Transition.none});
 	} else {
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
@@ -314,17 +314,17 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        {label: "Cancel Downloads", command: 'cancelDownloads-cmd'}
 			]});
 	} else {
-		this.stageController.pushScene("episodeList", feed);
+		this.stageController.pushScene({name: "episodeList", transition: Mojo.Transition.none}, feed);
 	}
 };
 
 FeedListAssistant.prototype.popupHandler = function(feed, feedIndex, command) {
 	switch(command) {
 		case "edit-cmd":
-			this.stageController.pushScene("addFeed", feed);
+			this.stageController.pushScene({name: "addFeed", transition: Mojo.Transition.none}, feed);
 			break;
 		case "editplaylist-cmd":
-			this.stageController.pushScene("addPlaylist", feed);
+			this.stageController.pushScene({name: "addPlaylist", transition: Mojo.Transition.none}, feed);
 			break;
 		case "listened-cmd":
 			feed.listened();
@@ -343,19 +343,19 @@ FeedListAssistant.prototype.handleCommand = function(event) {
     if (event.type == Mojo.Event.command) {
         switch (event.command) {
 			case "add-playlist":
-				this.stageController.pushScene("addPlaylist", null);
+				this.stageController.pushScene({name: "addPlaylist", transition: Mojo.Transition.none}, null);
 				break;
 			case "add-feed":
-				this.stageController.pushScene("addFeed", null);
+				this.stageController.pushScene({name: "addFeed", transition: Mojo.Transition.none}, null);
 				break;
 			case "feed-search":
-				this.stageController.pushScene("feedSearch", this, null);
+				this.stageController.pushScene({name: "feedSearch", transition: Mojo.Transition.none}, this, null);
 				break;
 			case "web-search":
-				this.stageController.pushScene("webSearch", {startPage: "http://m.google.com/search"});
+				this.stageController.pushScene({name: "webSearch", transition: Mojo.Transition.none}, {startPage: "http://m.google.com/search"});
 				break;
 			case "pt-search":
-				this.stageController.pushScene("webSearch", {startPage: "http://ota.versatilemonkey.com/ptbrowse/browse.pl",
+				this.stageController.pushScene({name: "webSearch", transition: Mojo.Transition.none}, {startPage: "http://ota.versatilemonkey.com/ptbrowse/browse.pl",
 											                 limitSite: "http://ota.versatilemonkey.com"});
 				break;
 			case "refresh-cmd":

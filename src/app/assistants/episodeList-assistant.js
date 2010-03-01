@@ -261,9 +261,9 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "edit-cmd":
 				if (this.feedObject.playlist) {
-					this.stageController.pushScene("addPlaylist", this.feedObject);
+					this.stageController.pushScene({name: "addPlaylist", transition: Mojo.Transition.none}, this.feedObject);
 				} else {
-					this.stageController.pushScene("addFeed", this.feedObject);
+					this.stageController.pushScene({name: "addFeed", transition: Mojo.Transition.none}, this.feedObject);
 				}
 				break;
 			case "refresh-cmd":
@@ -283,11 +283,11 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "feedPrev-cmd":
 				var feed = feedModel.items[this.feedObject.displayOrder-1];
-				this.stageController.swapScene("episodeList", feed);
+				this.stageController.swapScene({name: "episodeList", transition: Mojo.Transition.none}, feed);
 				break;
 			case "feedNext-cmd":
 				feed = feedModel.items[this.feedObject.displayOrder+1];
-				this.stageController.swapScene("episodeList", feed);
+				this.stageController.swapScene({name: "episodeList", transition: Mojo.Transition.none}, feed);
 				break;
 			case "feed-cmd":
 				this.controller.popupSubmenu({
@@ -351,7 +351,7 @@ EpisodeListAssistant.prototype.playFrom = function(oldest) {
 	if (oldest) {playlist.reverse();}
 	if (playlist.length > 0) {
 		var e = playlist.shift();
-		this.stageController.pushScene("episodeDetails", e, {autoPlay: true, resume: true, playlist: playlist});
+		this.stageController.pushScene({name: "episodeDetails", transition: Mojo.Transition.none}, e, {autoPlay: true, resume: true, playlist: playlist});
 	} else {
 		Util.showError("Error playing episodes", "No New Episodes found");
 	}
@@ -569,7 +569,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
-	this.stageController.pushScene("episodeDetails", episode, {"autoPlay": autoPlay, "resume": resume, playlist: []});
+	this.stageController.pushScene({name: "episodeDetails", transition: Mojo.Transition.none}, episode, {"autoPlay": autoPlay, "resume": resume, playlist: []});
 };
 
 EpisodeListAssistant.prototype.updatePercent = function(episode) {
