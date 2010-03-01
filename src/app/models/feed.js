@@ -33,6 +33,9 @@ function Feed(init) {
 		this.url = init.url;
 		this.title = init.title;
 		this.albumArt = init.albumArt;
+		if (this.albumArt && this.albumArt.substring(0, 15) === "/media/internal") {
+			this.albumArt = this.albumArt.substring(15);
+		}
 		this.maxDisplay = init.maxDisplay;
 		this.autoDownload = init.autoDownload;
 		this.autoDelete = init.autoDelete;
@@ -346,7 +349,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			null, this.albumArt, ".albumArt", newAlbumArt,
 			function(event) {
 				if (event.completed) {
-					this.albumArt = "/media/internal/drPodder/.albumArt/" + newAlbumArt;
+					this.albumArt = "/drPodder/.albumArt/" + newAlbumArt;
 					Mojo.Controller.getAppController().sendToNotificationChain({
 						type: "feedUpdated", feed: this});
 				}

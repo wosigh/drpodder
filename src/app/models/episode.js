@@ -173,11 +173,15 @@ Episode.prototype.download = function(silent) {
 	var url = this.getEnclosure();
 	if (url) {
 		Mojo.Log.warn("Downloading %s as %s", url, this.getDownloadFilename());
-		this.downloadRequest = AppAssistant.downloadService.download(null, url,
-																	this.feedObject.getDownloadPath(),
-																	this.getDownloadFilename(),
-																	this.downloadingCallback.bind(this));
+		AppAssistant.downloadService.allow1x(null, this.doTheDownload.bind(this, url));
 	}
+};
+
+Episode.prototype.doTheDownload = function(url) {
+	this.downloadRequest = AppAssistant.downloadService.download(null, url,
+																this.feedObject.getDownloadPath(),
+																this.getDownloadFilename(),
+																this.downloadingCallback.bind(this));
 };
 
 Episode.prototype.getEnclosure = function() {
@@ -266,7 +270,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		event.errorCode === -1 &&
 		event.serviceName === "com.palm.downloadmanager") {
 		Mojo.Log.error("Error contacting downloadmanager");
-		Util.showError("Error Downloading Episode", "There was an error connecting to the download manager service.  Please ensure you are running WebOS 1.2");
+		Util.showError("Error Downloading Episode", "There was an error connecting to the download manager service.  Please ensure you are running WebOS 1.2 or later");
 	} else 	if (event.returnValue) {
 		this.downloadCanceled = false;
 		this.downloadTicket = event.ticket;
@@ -345,10 +349,7 @@ Episode.prototype.downloadingCallback = function(event) {
 				this.downloadTicket = null;
 				if (redirect !== undefined) {
 					Mojo.Log.warn("Attempting to download redirected link: [%s]", redirect);
-					this.downloadRequest = AppAssistant.downloadService.download(null, redirect,
-						Util.escapeSpecial(this.feedObject.title),
-						this.getDownloadFilename(),
-						this.downloadingCallback.bind(this));
+					this.doTheDownload(redirect);
 				} else {
 					Mojo.Log.error("No download link found! [%s]", transport.responseText);
 					this.updateUIElements();

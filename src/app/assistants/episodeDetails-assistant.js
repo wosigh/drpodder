@@ -296,6 +296,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 			this.setStatus("Connecting");
 			this.audioObject.src = url;
 		}
+		Mojo.Log.error("autoplay = %s, %s", this.autoPlay, this.audioObject.autoplay);
 		this.audioObject.autoplay = this.autoPlay;
 		this.setTimer(true);
 	}
@@ -414,9 +415,12 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 	Mojo.Log.warn("W.AudioEvent: %j", event);
 	Mojo.Log.error("W.AudioEvent: %s", event.type);
 	switch (event.type) {
-		//case "stalled":
-			//this.stalled = true;
-			//break;
+		/*
+		case "stalled":
+			Mojo.Log.error("audio stalled");
+			this.readyToPlay();
+			break;
+		*/
 		case "seeked":
 			this.setStatus("");
 			this.updateProgress();
@@ -453,6 +457,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			}
 			break;
 		case "canplay":
+			Mojo.Log.error("canplay: autoplay=%s", this.audioObject.autoPlay);
 			if (!this.audioObject.autoplay) {
 				this.setStatus("");
 				this.cmdMenuModel.items[2].disabled = false;
@@ -624,7 +629,7 @@ EpisodeDetailsAssistant.prototype.updateProgress = function(currentTime) {
 		if (buffered !== undefined && buffered !== null) {
 			// webOS 1.4 broke this
 			//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
-			this.progressModel.progressStart = this.audioObject.position;
+			this.progressModel.progressStart = this.audioObject.position/this.audioObject.duration;
 			this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
 		}
 	}

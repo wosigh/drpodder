@@ -48,13 +48,23 @@ DownloadService.prototype.download = function(sceneController, target, dir, file
 		onSuccess: callback,
 		onFailure: callback,
 		parameters: {"target": target,
-		             "targetDir": "/media/internal/drPodder/" + dir,
-		             "targetFilename": filename,
-		             "subscribe": subscribe}});
+					"targetDir": "/media/internal/drPodder/" + dir,
+					"targetFilename": filename,
+					"subscribe": subscribe}});
 	//} else {
 	//return this.downloadWhenEmpty(sceneController, target, callback);
 	//}
 };
+
+DownloadService.prototype.allow1x = function(sceneController, callback) {
+	return this._serviceRequest(sceneController, this.URI, {
+		method: "allow1x",
+		onSuccess: callback,
+		onFailure: callback,
+		parameters: {"value": true}
+	});
+};
+
 
 	// what we need to do:
 	// intercept the callback from a download.

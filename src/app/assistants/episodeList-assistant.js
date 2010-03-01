@@ -217,7 +217,7 @@ EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 
 	if (formatted && formatted.indexOf("/") === 0) {
 		formatted = "/var/luna/data/extractfs" +
-						encodeURIComponent(formatted) +
+						encodeURIComponent("/media/internal" + formatted) +
 						":0:0:48:48:3";
 	}
 
