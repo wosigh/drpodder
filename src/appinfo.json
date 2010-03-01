@@ -1,7 +1,7 @@
 {
-  "id":"com.drnull.drpodder",
+  "id":"com.drnull.drpodder-hb",
   "version":"0.5.3",
-  "title":"drPodder",
+  "title":"drPodder HB",
   "vendor":"drnull",
   "vendorurl":"http://www.drPodder.com",
   "main":"index.html",
