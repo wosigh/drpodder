@@ -338,7 +338,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 		}
 		transaction.executeSql(saveFeedSQL, [f.id, f.displayOrder, f.title, f.url, f.albumArt,
 											 (f.autoDelete)?1:0, (f.autoDownload)?1:0, f.maxDownloads, f.interval, f.lastModified, f.replacements, f.maxDisplay,
-											 f.viewFilter, f.username, f.password, f.hideFromOS, f.maxEpisodes],
+											 f.viewFilter, f.username, f.password, (f.hideFromOS)?1:0, f.maxEpisodes],
 			function(transaction, results) {
 				if (f.id === null) {
 					f.id = results.insertId;

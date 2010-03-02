@@ -23,6 +23,8 @@ function AddFeedAssistant(feed) {
 	// default empty replacement
 	this.replacementModel = {items: []};
 
+	this.cmdMenuModel = {items: [{label: "Cancel", command: "cancel-cmd"}]};
+
 	if (this.feed !== null) {
 		this.newFeed = false;
 		this.originalUrl = feed.url;
@@ -70,6 +72,8 @@ AddFeedAssistant.prototype.setup = function() {
 	};
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
+
+	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
 	this.controller.get("dialogTitle").update(this.dialogTitle);
 	this.controller.setupWidget("newFeedURL",
@@ -203,16 +207,6 @@ AddFeedAssistant.prototype.setup = function() {
 	this.listDeleteHandler = this.listDeleteHandler.bindAsEventListener(this);
 	this.listReorderHandler = this.listReorderHandler.bindAsEventListener(this);
 
-	this.controller.setupWidget("okButton", {
-		type : Mojo.Widget.activityButton
-	}, this.okButtonModel = {
-		buttonLabel : this.okButtonValue,
-		disables : false
-	});
-	this.okButtonActive = false;
-	this.okButton = this.controller.get('okButton');
-	this.checkFeedHandler = this.checkFeed.bindAsEventListener(this);
-
 	if (!this.autoDownloadModel.value) {
 		this.controller.get("maxDownloadsRow").hide();
 		this.controller.get("autoDownloadRow").addClassName("last");
@@ -236,7 +230,6 @@ AddFeedAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.replacementList, Mojo.Event.listAdd, this.listAddHandler);
 	Mojo.Event.listen(this.replacementList, Mojo.Event.listDelete, this.listDeleteHandler);
 	Mojo.Event.listen(this.replacementList, Mojo.Event.listReorder, this.listReorderHandler);
-	Mojo.Event.listen(this.okButton, Mojo.Event.tap, this.checkFeedHandler);
 	Mojo.Event.listen(this.autoDownloadToggle, Mojo.Event.propertyChange,this.autoDownloadHandler);
 };
 
@@ -244,7 +237,6 @@ AddFeedAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.replacementList, Mojo.Event.listAdd, this.listAddHandler);
 	Mojo.Event.stopListening(this.replacementList, Mojo.Event.listDelete, this.listDeleteHandler);
 	Mojo.Event.stopListening(this.replacementList, Mojo.Event.listReorder, this.listReorderHandler);
-	Mojo.Event.stopListening(this.okButton, Mojo.Event.tap, this.checkFeedHandler);
 	Mojo.Event.stopListening(this.autoDownloadToggle, Mojo.Event.propertyChange,this.autoDownloadHandler);
 };
 
@@ -284,11 +276,20 @@ AddFeedAssistant.prototype.updateFields = function() {
 };
 
 AddFeedAssistant.prototype.checkFeed = function() {
-	if (this.okButtonActive === true) {
-		// Shouldn't happen, but log event if it does and exit
-		Mojo.Log.warn("Multiple Check Feed requests");
+	if (!this.urlModel.value) {
+		Util.banner("No URL Entered");
+		this.controller.stageController.popScene();
 		return;
 	}
+
+	if (this.checkingFeed === true) {
+		// Shouldn't happen, but log event if it does and exit
+		Mojo.Log.error("Multiple Check Feed requests");
+		return;
+	}
+	this.checkingFeed = true;
+	this.cmdMenuModel.items[0].disabled = true;
+	this.controller.modelChanged(this.cmdMenuModel);
 
 	// Check entered URL and name to confirm that it is a valid feedlist
 	Mojo.Log.warn("New Feed URL Request: (%s:%s)%s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
@@ -304,16 +305,12 @@ AddFeedAssistant.prototype.checkFeed = function() {
 		DB.saveFeed(this.feed);
 		this.controller.stageController.popScene({feedChanged: true, feedIndex: feedModel.items.indexOf(this.feed)});
 	} else {
-		this.okButton.mojo.activate();
-		this.okButtonActive = true;
-		this.okButtonModel.buttonLabel = "Updating Feed";
-		this.okButtonModel.disabled = true;
-		this.controller.modelChanged(this.okButtonModel);
+		Util.banner("Checking feed URL");
 
 		// Check for "http://" on front or other legal prefix; any string of
 		// 1 to 5 alpha characters followed by ":" is ok, else prepend "http://"
 		var url = this.urlModel.value;
-		if (/^[A-Za-z]{1,5}:/.test(url) === false) {
+		if (url && /^[A-Za-z]{1,5}:/.test(url) === false) {
 			// Strip any leading slashes
 			url = url.replace(/^\/{1,2}/, "");
 			url = "http://" + url;
@@ -321,8 +318,6 @@ AddFeedAssistant.prototype.checkFeed = function() {
 			// Update the entered URL & model
 			this.controller.modelChanged(this.urlModel);
 		}
-
-
 		this.check(url);
 	}
 };
@@ -339,6 +334,7 @@ AddFeedAssistant.prototype.check = function(url) {
 						  encodeURIComponent(this.passwordModel.value) + "@");
 	}
 
+	this.updateCheckID = this.controller.window.setTimeout(this.abortURLCheck.bind(this), 10000);
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
@@ -349,8 +345,13 @@ AddFeedAssistant.prototype.check = function(url) {
 	//Mojo.Log.warn("finished making ajax request");
 };
 
+AddFeedAssistant.prototype.abortURLCheck = function() {
+	this.fail("Invalid URL. Correct URL or Cancel");
+};
+
 AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	//Mojo.Log.warn("check success %d", (new Date()).getTime()-this.ajaxRequestTime);
+	this.controller.window.clearTimeout(this.updateCheckID);
 	var location = transport.getHeader("Location");
 	if (location) {
 		Mojo.Log.warn("Redirection location=%s", location);
@@ -403,12 +404,10 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 
 	if (feedStatus < 0 || !transport.status) {
 		// Feed can't be processed - remove it but keep the dialog open
+		Mojo.Log.error("Invalid URL (Status", m, "returned).");
 		Mojo.Log.error("Error updating feed: (%s:%s) %s", this.usernameModel.value, this.passwordModel.value, this.urlModel.value);
-		this.controller.get("dialogTitle").update("Error updating feed");
-		this.controller.getSceneScroller().mojo.revealTop(true);
-		this.controller.get("newFeedURL").mojo.focus();
+		this.fail("Invalid URL. Correct URL or Cancel");
 
-		this.resetButton();
 	} else {
 		this.updateFields();
 		var results = {};
@@ -424,42 +423,47 @@ AddFeedAssistant.prototype.checkSuccess = function(transport) {
 	}
 };
 
-AddFeedAssistant.prototype.resetButton = function() {
-	this.okButton.mojo.deactivate();
-	this.okButtonActive = false;
-	this.okButtonModel.buttonLabel = this.okButtonValue;
-	this.okButtonModel.disabled = false;
-	this.controller.modelChanged(this.okButtonModel);
+AddFeedAssistant.prototype.fail = function(message, log, reveal) {
+	if (message) {
+		Util.banner(message);
+	}
+	if (log) {
+		Mojo.Log.error(log);
+	}
+
+	if (!reveal) {
+		reveal = "newFeedURL";
+	}
+
+	this.controller.getSceneScroller().mojo.revealTop(true);
+	this.controller.get(reveal).mojo.focus();
+
+	this.cmdMenuModel.items[0].disabled = false;
+	this.controller.modelChanged(this.cmdMenuModel);
+	this.checkingFeed = false;
 };
 
 AddFeedAssistant.prototype.checkFailure = function(transport) {
 	// Prototype template object generates a string from return status
+	this.controller.window.clearTimeout(this.updateCheckID);
 	var t = new Template("#{status}");
 	var m = t.evaluate(transport);
-
-	this.resetButton();
 
 	// Log error and put message in status area
 	if (transport.status === 401) {
 		if (this.usernameModel.value) {
 			Util.showError("Access Denied", "Please check your username and password to ensure they are correct.");
 		} else {
-			Util.showError("Authorization Required", "Please enter your username and password for this feed.");
+			Util.showError("Authentication Required", "Please enter your username and password for this feed.");
 			this.controller.get("usernameDiv").show();
 			this.controller.get("passwordDiv").show();
 		}
+		this.fail(null, "Authentication error", "username");
 	} else {
-		Mojo.Log.error("Invalid URL (Status", m, "returned).");
-		this.controller.get("dialogTitle").update("Invalid URL Please Retry");
-		this.controller.getSceneScroller().mojo.revealTop(true);
-		this.controller.get("newFeedURL").mojo.focus();
+		Mojo.Log.error("Invalid URL (Status %s returned).", m);
+		this.fail("Invalid URL. Correct URL or Cancel");
 	}
-};
-
-AddFeedAssistant.prototype.cancel = function() {
-	// TODO - Cancel Ajax request or Feed operation if in progress
-	this.controller.stopListening("okButton", Mojo.Event.tap, this.checkFeedHandler);
-	this.controller.stageController.popScene();
+	Mojo.Log.error("checkFailure done");
 };
 
 AddFeedAssistant.prototype.handleCommand = function(event) {
@@ -475,14 +479,18 @@ AddFeedAssistant.prototype.handleCommand = function(event) {
 					this.controller.modelChanged(this.passwordModel);
 				}
 				break;
-			case "shutup-JSLint":
+			case "cancel-cmd":
+				if (!this.newFeed) {
+					this.feed.url = this.originalUrl;
+					this.feed.username = this.originalUsername;
+					this.feed.password = this.originalPassword;
+				}
+				this.controller.stageController.popScene();
 				break;
 		}
 	} else	if (event.type === Mojo.Event.back) {
-		if (!this.newFeed) {
-			this.feed.url = this.originalUrl;
-			this.feed.username = this.originalUsername;
-			this.feed.password = this.originalPassword;
-		}
+		event.stop();
+		event.stopPropagation();
+		this.checkFeed();
 	}
 };
