@@ -350,6 +350,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 			function(event) {
 				if (event.completed) {
 					this.albumArt = "/drPodder/.albumArt/" + newAlbumArt;
+					this.save();
 					Mojo.Controller.getAppController().sendToNotificationChain({
 						type: "feedUpdated", feed: this});
 				}

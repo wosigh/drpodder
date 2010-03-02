@@ -33,9 +33,19 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		{ value : Prefs.autoUpdate });
 
+	this.controller.setupWidget("updateTypeList",
+		{label: "Update Type",
+		 labelPlacement: Mojo.Widget.labelPlacementLeft,
+		 choices: [
+				  {label: "Hourly", value: "H"},
+				  {label: "Daily", value: "D"},
+				  {label: "Weekly", value: "W"}]},
+		{ value : Prefs.updateType });
+
 	this.controller.setupWidget("updateIntervalList",
-		{label: "Interval",
-		choices: [
+		{label: "Update Every",
+		 labelPlacement: Mojo.Widget.labelPlacementLeft,
+		 choices: [
 				  //{label: "5 Minutes", value: "00:05:00"},
 				  {label: "1 Hour", value: "01:00:00"},
 				  {label: "2 Hours", value: "02:00:00"},
@@ -44,6 +54,27 @@ PreferencesAssistant.prototype.setup = function() {
 				  {label: "12 Hours", value: "12:00:00"},
 				  {label: "24 Hours", value: "23:59:59"}]},
 		{ value : Prefs.updateInterval });
+
+	this.showIntervalSelector();
+
+	this.controller.setupWidget("updateDayList",
+		{label: "Update Day",
+		 labelPlacement: Mojo.Widget.labelPlacementLeft,
+		 choices: [{label: "Sunday", value: "0"},
+				   {label: "Monday", value: "1"},
+ 				   {label: "Tuesday", value: "2"},
+				   {label: "Wednesday", value: "3"},
+				   {label: "Thursday", value: "4"},
+				   {label: "Friday", value: "5"},
+				   {label: "Saturday", value: "6"},
+				  ]},
+		{ value: Prefs.updateDay });
+
+    this.controller.setupWidget("timePicker",
+        { label: ' ',
+		  minuteInterval: 15},
+        { time: Prefs.updateTime }
+    );
 
 	this.controller.setupWidget("wifiToggle",
 		{},
@@ -71,6 +102,9 @@ PreferencesAssistant.prototype.setup = function() {
 	this.enableNotificationsHandler = this.enableNotifications.bind(this);
 	this.autoUpdateHandler = this.autoUpdate.bind(this);
 	this.updateIntervalHandler = this.updateInterval.bind(this);
+	this.updateTypeHandler = this.updateType.bind(this);
+	this.updateDayHandler = this.updateDay.bind(this);
+	this.updateTimeHandler = this.updateTime.bind(this);
 	this.wifiHandler = this.wifi.bind(this);
 	this.limitToWifiHandler = this.limitToWifi.bind(this);
 	this.albumArtHandler = this.albumArt.bind(this);
@@ -89,6 +123,9 @@ PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('enableNotificationsToggle'),Mojo.Event.propertyChange,this.enableNotificationsHandler);
 	Mojo.Event.listen(this.controller.get('autoUpdateToggle'),Mojo.Event.propertyChange,this.autoUpdateHandler);
 	Mojo.Event.listen(this.controller.get('updateIntervalList'),Mojo.Event.propertyChange,this.updateIntervalHandler);
+	Mojo.Event.listen(this.controller.get('updateTypeList'),Mojo.Event.propertyChange,this.updateTypeHandler);
+	Mojo.Event.listen(this.controller.get('updateDayList'),Mojo.Event.propertyChange,this.updateDayHandler);
+	Mojo.Event.listen(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.listen(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.listen(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.listen(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
@@ -101,6 +138,9 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('enableNotificationsToggle'),Mojo.Event.propertyChange,this.enableNotificationsHandler);
 	Mojo.Event.stopListening(this.controller.get('autoUpdateToggle'),Mojo.Event.propertyChange,this.autoUpdateHandler);
 	Mojo.Event.stopListening(this.controller.get('updateIntervalList'),Mojo.Event.propertyChange,this.updateIntervalHandler);
+	Mojo.Event.stopListening(this.controller.get('updateTypeList'),Mojo.Event.propertyChange,this.updateTypeHandler);
+	Mojo.Event.stopListening(this.controller.get('updateDayList'),Mojo.Event.propertyChange,this.updateDayHandler);
+	Mojo.Event.stopListening(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.stopListening(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.stopListening(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.stopListening(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
@@ -133,6 +173,44 @@ PreferencesAssistant.prototype.autoUpdate = function(event) {
 PreferencesAssistant.prototype.updateInterval = function(event) {
 	Prefs.updateInterval = event.value;
 	Mojo.Controller.getAppController().assistant.setWakeup();
+};
+
+PreferencesAssistant.prototype.updateType = function(event) {
+	Prefs.updateType = event.value;
+	this.showIntervalSelector();
+	Mojo.Controller.getAppController().assistant.setWakeup();
+};
+
+PreferencesAssistant.prototype.updateDay = function(event) {
+	Prefs.updateDay = event.value;
+	Mojo.Controller.getAppController().assistant.setWakeup();
+};
+
+PreferencesAssistant.prototype.updateTime = function(event) {
+	Prefs.updateTime = event.value;
+	Prefs.updateHour = Prefs.updateTime.getHours();
+	Prefs.updateMinute = Prefs.updateTime.getMinutes();
+	Mojo.Controller.getAppController().assistant.setWakeup();
+};
+
+PreferencesAssistant.prototype.showIntervalSelector = function() {
+	switch (Prefs.updateType) {
+		case 'H':
+			this.controller.get("intervalH").show();
+			this.controller.get("intervalW").hide();
+			this.controller.get("intervalD").hide();
+			break;
+		case 'D':
+			this.controller.get("intervalH").hide();
+			this.controller.get("intervalW").hide();
+			this.controller.get("intervalD").show();
+			break;
+		case 'W':
+			this.controller.get("intervalH").hide();
+			this.controller.get("intervalW").show();
+			this.controller.get("intervalD").show();
+			break;
+	}
 };
 
 PreferencesAssistant.prototype.wifi = function(event) {

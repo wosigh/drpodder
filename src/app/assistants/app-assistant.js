@@ -95,25 +95,65 @@ AppAssistant.prototype.setWakeup = function() {
 	// luna-send -n 1 palm://com.palm.applicationManager/open '{"id":"com.drnull.drpodder","params":{"action":"updateFeeds"}}'
 	// obviously, an update time preference needs to be here
 	if (Prefs.autoUpdate) {
-		this.wakeupRequest = new Mojo.Service.Request("palm://com.palm.power/timeout", {
-			method: "set",
-			parameters: {
-				"key": Mojo.appInfo.id + '.update', //"com.drnull.drpodder.update",
-				"in": Prefs.updateInterval,
-				//"wakeup": true,
-				"uri": "palm://com.palm.applicationManager/open",
-				"params": {
-					"id": Mojo.appInfo.id, //"com.drnull.drpodder",
-					"params": {"action": "updateFeeds"}
-				}
-			},
-			onSuccess: function(response) {
-				Mojo.Log.warn("Alarm set success: %s", response.returnValue);
-			},
-			onFailure: function(response) {
-				Mojo.Log.warn("Alarm set failure: %s:%s", response.returnValue, response.errorText);
+		// compute time based on Prefs
+		// Prefs.updateType: H, D, W
+		// Prefs.updateInterval: if H, use directly for "IN" alarm
+		// Prefs.updateHour & .updateMinute: if D or W, use to compute next "AT" alarm
+		// Prefs.updateDay: ditto
+		var alarmType;
+		var alarmTime;
+		var alarmDate = new Date();
+		var now = new Date();
+		switch (Prefs.updateType) {
+			case "H":
+				alarmType = "in";
+				alarmTime = Prefs.updateInterval;
+				break;
+			case "W":
+				alarmType = "at";
+				var dayDelta = Math.abs(Prefs.updateDay-alarmDate.getDay())%7;
+				alarmDate.setDate(alarmDate.getDate() + dayDelta);
+				alarmDate.setHours(Prefs.updateHour);
+				alarmDate.setMinutes(Prefs.updateMinute);
+				break;
+			case "D":
+				alarmType = "at";
+				alarmDate.setHours(Prefs.updateHour);
+				alarmDate.setMinutes(Prefs.updateMinute);
+				break;
+		}
+		if (alarmType === "at") {
+			// verify that the time is at least 6 minutes in the future
+			// if not, jump forward a day or a week depending on Prefs.updateType
+			if (now.valueOf() + 6*60*1000 > alarmDate.valueOf()) {
+				alarmDate.setDate(alarmDate.getDate() + ((Prefs.updateType==="D")?1:7));
 			}
-		});
+			// "mm/dd/yyyy hh:mm:ss"
+			var d = alarmDate;
+			var mo = "" + (d.getUTCMonth()+1); if (mo.length === 1) { mo = "0" + mo;}
+			var da = "" + d.getUTCDate();    if (da.length === 1) { da = "0" + da;}
+			var yy = "" + d.getUTCFullYear();
+			var hh = "" + d.getUTCHours();   if (hh.length === 1) { hh = "0" + hh;}
+			var mi = "" + d.getUTCMinutes(); if (mi.length === 1) { mi = "0" + mi;}
+			alarmTime = mo + "/" + da + "/" + yy + " " + hh + ":" + mi + ":00";
+		}
+		if (alarmTime && alarmType) {
+			var parameters = {};
+			parameters.key = Mojo.appInfo.id + '.update';
+			parameters.uri = "palm://com.palm.applicationManager/open";
+			parameters.params = {"id": Mojo.appInfo.id, "params": {"action": "updateFeeds"}};
+			parameters[alarmType] = alarmTime;
+			this.wakeupRequest = new Mojo.Service.Request("palm://com.palm.power/timeout", {
+				method: "set",
+				parameters: parameters,
+				onSuccess: function(response) {
+					Mojo.Log.warn("Alarm set success: %s", response.returnValue);
+				},
+				onFailure: function(response) {
+					Mojo.Log.warn("Alarm set failure: %s:%s", response.returnValue, response.errorText);
+				}
+			});
+		}
 
 	}
 };

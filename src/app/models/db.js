@@ -470,9 +470,22 @@ DBClass.prototype.readPrefs = function() {
 	if (!Prefs) {
 		Prefs = {};
 	}
+	/*
+	delete Prefs.updateInterval;
+	delete Prefs.updateType;
+	delete Prefs.updateDay;
+	delete Prefs.updateHour;
+	*/
 	if (Prefs.enableNotifications === undefined) {Prefs.enableNotifications = true;}
 	if (Prefs.autoUpdate === undefined) {Prefs.autoUpdate = false;}
 	if (Prefs.updateInterval === undefined) {Prefs.updateInterval = "01:00:00";}
+	if (Prefs.updateType === undefined) {Prefs.updateType = "H";}
+	if (Prefs.updateDay === undefined) {Prefs.updateDay = "0";}
+	if (Prefs.updateHour === undefined) {Prefs.updateTime = new Date(); Prefs.updateTime.setHours(4, 0, 0);}
+	else {
+		Prefs.updateTime = new Date();
+		Prefs.updateTime.setHours(Prefs.updateHour, Prefs.updateMinute);
+	}
 	if (Prefs.enableWifi === undefined) {Prefs.enableWifi = false;}
 	if (Prefs.limitToWifi === undefined) {Prefs.limitToWifi = true;}
 	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}
