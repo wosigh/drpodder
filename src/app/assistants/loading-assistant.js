@@ -22,9 +22,6 @@ function LoadingAssistant() {
 	this.stageController = this.appController.getStageController(DrPodder.MainStageName);
 }
 
-LoadingAssistant.prototype.initialize = function() {
-};
-
 LoadingAssistant.prototype.setup = function() {
 	//this.spinnerModel = {spinning: true};
 	//this.controller.setupWidget("loadingSpinner", {spinnerSize: "small"}, this.spinnerModel);

@@ -20,6 +20,7 @@ Copyright 2010 Jamie Hatfield <support@drpodder.com>
 var Prefs = {};
 
 function DBClass() {
+	this.count = 0;
 }
 
 // db version number, followed by the sql statements required to bring it up to the latest version
@@ -320,12 +321,15 @@ DBClass.prototype.saveFeeds = function() {
 	}
 };
 
-DBClass.prototype.saveFeed = function(f, displayOrder) {
+DBClass.prototype.saveFeed = function(f, displayOrder, functionWhenFinished) {
 	var saveFeedSQL = "INSERT OR REPLACE INTO feed (id, displayOrder, title, url, albumArt, " +
 	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements, maxDisplay, " +
 					  "viewFilter, username, password, hideFromOS, maxEpisodes) " +
 					  "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
+	if (!functionWhenFinished) {
+		functionWhenFinished = function() {};
+	}
 	if (displayOrder !== undefined) {
 		f.displayOrder = displayOrder;
 	}
@@ -352,8 +356,14 @@ DBClass.prototype.saveFeed = function(f, displayOrder) {
 				if (!f.playlist) {
 					for (var i=0; i<f.episodes.length; i++) {
 						f.episodes[i].displayOrder = i;
-						this.saveEpisodeTransaction(f.episodes[i], transaction);
+						if (i === f.episodes.length - 1) {
+							this.saveEpisodeTransaction(f.episodes[i], transaction, functionWhenFinished);
+						} else {
+							this.saveEpisodeTransaction(f.episodes[i], transaction);
+						}
 					}
+				} else {
+					functionWhenFinished();
 				}
 				Mojo.Log.warn("Feed saved: %s", f.title);
 			}.bind(this),
@@ -384,13 +394,14 @@ DBClass.prototype.saveEpisode = function(e, displayOrder) {
 	}
 };
 
-DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
+DBClass.prototype.saveEpisodeTransaction = function(e, transaction, functionWhenFinished) {
 	var updateSQL            = "UPDATE episode SET feedId=?, displayOrder=?, title=?,                enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
 	var updateSQLDescription = "UPDATE episode SET feedId=?, displayOrder=?, title=?, description=?, enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
 	var insertSQL = "INSERT INTO episode (feedId, displayOrder, title, description, " +
 	                     "enclosure, guid, link, pubDate, position, " +
 					     "downloadTicket, downloaded, listened, file, length, type) " +
 					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	if (!functionWhenFinished) {functionWhenFinished = function() {};}
 	if (e.id === undefined) {
 		transaction.executeSql(insertSQL, [e.feedId, e.displayOrder, e.title, e.description,
 				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
@@ -399,9 +410,11 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 				Mojo.Log.warn("Episode saved: %s", e.title);
 				e.id = results.insertId;
 				e.description = null;
+				functionWhenFinished();
 			},
 			function(transaction, error) {
 				Mojo.Log.error("Episode Save failed: (%s), %j", e.title, error);
+				functionWhenFinished();
 			});
 	} else {
 		var sql = updateSQL;
@@ -418,9 +431,11 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction) {
 			function(transaction, results) {
 				Mojo.Log.warn("Episode updated: %s", e.title);
 				e.description = null;
+				functionWhenFinished();
 			},
 			function(transaction, error) {
 				Mojo.Log.error("Episode update failed: (%s), %j", e.title, error);
+				functionWhenFinished();
 			});
 	}
 };
@@ -557,5 +572,26 @@ DBClass.prototype.defaultFeeds = function() {
 
 	this.saveFeeds();
 };
+
+DBClass.prototype.start = function() {
+	DB.count++;
+	Mojo.Log.error("+++++++++++++++++++++++++++db.start %d", DB.count);
+	if (DB.count === 1) {
+		Util.dashboard(DrPodder.DatabaseStageName, "Waiting for DB operations...", "Swipe away");
+	}
+};
+
+DBClass.prototype.done = function() {
+	DB.count--;
+	Mojo.Log.error("---------------------------db.done %d", DB.count);
+	if (DB.count === 0) {
+		Util.closeDashboard(DrPodder.DatabaseStageName);
+		Mojo.Log.error("=============================db.closeDashboardStage!!!!");
+	}
+};
+
+DBClass.prototype.waitingForClose = function() {
+};
+
 
 var DB;

@@ -233,8 +233,8 @@ Feed.prototype.checkSuccess = function(callback, transport) {
 		this.updating = false;
 		this.updated();
 		this.updatedEpisodes();
-		DB.saveFeed(this);
-		callback();
+		DB.saveFeed(this, undefined, callback);
+		//callback();
 	}
 };
 

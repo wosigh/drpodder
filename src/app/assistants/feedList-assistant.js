@@ -47,9 +47,6 @@ FeedListAssistant.prototype.viewMenuModel = {
 
 //FeedListAssistant.prototype.depotOptions = { name: "feed", replace: false };
 
-initialize = function() {
-};
-
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 	this.controller.setupWidget("add-menu", this.handleCommand, this.addMenuModel);
