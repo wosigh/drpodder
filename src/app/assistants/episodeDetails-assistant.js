@@ -206,7 +206,7 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
-		this.bookmark();
+		if (!this.finished) {this.bookmark();}
 		this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 		if (!this.isVideo()) {
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
@@ -250,10 +250,10 @@ EpisodeDetailsAssistant.prototype.bookmark = function() {
 EpisodeDetailsAssistant.prototype.backToList = function() {
 	var feed = this.episodeObject.feedObject;
 
-	this.audioObject.pause();
-	this.audioObject.currentTime = 0;
+	this.finished = true;
 
 	this.episodeObject.setListened();
+	this.episodeObject.clearBookmark();
 
 	if (feed.autoDelete && this.episodeObject.downloaded) {
 		this.episodeObject.deleteFile();
@@ -469,7 +469,6 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			this.pauseGUI();
 			break;
 		case "ended":
-			this.episodeObject.clearBookmark();
 			this.backToList();
 			break;
 	}

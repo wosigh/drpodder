@@ -234,7 +234,6 @@ Feed.prototype.checkSuccess = function(callback, transport) {
 		this.updated();
 		this.updatedEpisodes();
 		DB.saveFeed(this, undefined, callback);
-		//callback();
 	}
 };
 
