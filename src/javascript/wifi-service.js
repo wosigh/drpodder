@@ -58,6 +58,8 @@ WifiService.prototype.isWifiConnected = function(sceneController, callback) {
 			}
 			callback(state);
 		},
-		onFailure: function() {},
+		onFailure: function() {
+			callback(false);
+		},
 		parameters: {}});
 };

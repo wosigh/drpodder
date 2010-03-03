@@ -66,7 +66,7 @@ PreferencesAssistant.prototype.setup = function() {
 				   {label: "Wednesday", value: "3"},
 				   {label: "Thursday", value: "4"},
 				   {label: "Friday", value: "5"},
-				   {label: "Saturday", value: "6"},
+				   {label: "Saturday", value: "6"}
 				  ]},
 		{ value: Prefs.updateDay });
 

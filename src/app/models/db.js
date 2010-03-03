@@ -18,6 +18,7 @@ Copyright 2010 Jamie Hatfield <support@drpodder.com>
 */
 
 var Prefs = {};
+var DB;
 
 function DBClass() {
 	this.count = 0;
@@ -592,6 +593,3 @@ DBClass.prototype.done = function() {
 
 DBClass.prototype.waitingForClose = function() {
 };
-
-
-var DB;
