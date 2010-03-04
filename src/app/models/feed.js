@@ -425,7 +425,7 @@ Feed.prototype.sortEpisodes = function() {
 };
 
 Feed.prototype.sortEpisodesFunc = function(a,b) {
-	if (b.pubDate === a.pubDate) {
+	if ((b.pubDate - a.pubDate) === 0) {
 		return a.displayOrder - b.displayOrder;
 	}
 	return (b.pubDate - a.pubDate);
@@ -446,6 +446,24 @@ Feed.prototype.addToPlaylistsTop = function(episode) {
 Feed.prototype.insertEpisodeTop = function(episode) {
 	try {
 		this.episodes.unshift(episode);
+		this.guid[episode.guid] = episode;
+	} catch (e) {
+		Mojo.Log.error("Feed[%s]:Error adding episode: %j", this.title, e);
+	}
+	if (!episode.listened) { ++this.numNew; }
+	if (episode.downloaded) {++this.numDownloaded;}
+	if (episode.position !== 0) {
+		++this.numStarted;
+	}
+	if (episode.downloadTicket && !episode.downloaded) {
+		this.downloading = true;
+		++this.downloadCount;
+	}
+};
+
+Feed.prototype.insertEpisodeBottom = function(episode) {
+	try {
+		this.episodes.push(episode);
 		this.guid[episode.guid] = episode;
 	} catch (e) {
 		Mojo.Log.error("Feed[%s]:Error adding episode: %j", this.title, e);
@@ -756,8 +774,10 @@ FeedModel.prototype.download = function() {
 
 	if (eps.length) {
 		if (Prefs.limitToWifi) {
+			Mojo.Log.warn("check for wifi");
 			AppAssistant.wifiService.isWifiConnected(null, this._wifiCheck.bind(this, eps));
 		} else {
+			Mojo.Log.warn("check for wifi");
 			this._doDownload(eps);
 		}
 	} else {
@@ -771,11 +791,14 @@ FeedModel.prototype.download = function() {
 
 FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
 	if (wifiConnected) {
+		Mojo.Log.warn("wifiCheck is connected!");
 		this._doDownload(eps);
 	} else {
+		Mojo.Log.warn("wifiCheck no wifi!");
 		// popup banner saying that we couldn't download episodes
 		// because wifi wasn't enabled, maybe even do a "click to retry"
 		var newEps = eps.filter(function(e){return e.newlyAddedEpisode;});
+		Mojo.Log.warn("wifiCheck newEps: %d!", newEps.length);
 		if (newEps.length) {
 			Mojo.Log.warn("Skipping %d episode download because wifi isn't connected", newEps.length);
 			Util.banner(newEps.length + " Download" + ((newEps.length===1)?"":"s") +

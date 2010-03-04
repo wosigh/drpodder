@@ -387,7 +387,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 	} else {
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
-		Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
+		//Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);
 		this.downloadTicket = null;
 		// this.downloading = false; // must already be false
 		this.downloadingPercent = 0;

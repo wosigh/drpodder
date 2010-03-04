@@ -84,9 +84,8 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.statusDiv = this.controller.get("statusDiv");
 	this.statusDiv.hide();
 	this.setStatus("Setup");
-	this.controller.setupWidget("bodyScroller", {mode: "dominant"}, {});
+	this.controller.getSceneScroller().mojo.setMode("dominant");
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
-
 
 	DB.getEpisodeDescription(this.episodeObject, function(description) {
 		this.controller.update(this.controller.get("episodeDetailsDescription"), description);
@@ -183,6 +182,10 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 };
 
 EpisodeDetailsAssistant.prototype.activate = function() {
+	var height=this.controller.get("topContent").getHeight();
+	this.controller.get("topSpacer").style.height = height + 'px';
+	this.controller.get("descriptionFade").style.top = height + 'px';
+
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
 		Mojo.Event.listen(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
 		Mojo.Event.listen(this.progress, Mojo.Event.sliderDragStart, this.sliderDragStartHandler);

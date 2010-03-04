@@ -272,7 +272,7 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						else { e.pubDate = new Date(e.pubDate); }
 						if (e.description === "undefined") {e.description = null;}
 						f.addToPlaylistsTop(e);
-						f.insertEpisodeTop(e);
+						f.insertEpisodeBottom(e);
 						//f.episodes.push(e);
 						//f.guid[e.guid] = e;
 						//if (!e.listened) {++f.numNew;}
