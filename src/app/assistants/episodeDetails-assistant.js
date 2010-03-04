@@ -81,6 +81,9 @@ EpisodeDetailsAssistant.prototype.viewMenuModel = {
 };
 
 EpisodeDetailsAssistant.prototype.setup = function() {
+	this.statusDiv = this.controller.get("statusDiv");
+	this.statusDiv.hide();
+	this.setStatus("Setup");
 	this.controller.setupWidget("bodyScroller", {mode: "dominant"}, {});
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
 
@@ -117,13 +120,18 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	if (this.episodeObject.enclosure || this.episodeObject.downloaded) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
+		this.setStatus("Extend");
 		this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
+		this.setStatus("Class");
 		this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
 
+		this.setStatus("Bind");
 		this.readyToPlayHandler = this.readyToPlay.bind(this);
+		this.setStatus("Event");
 		this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 		//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
 		//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
+		this.setStatus("Other");
 		if (!this.isVideo()) {
 			this.disablePlay(true);
 			this.progressChangedHandler = this.progressChange.bind(this);
@@ -168,8 +176,6 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 		this.updateTimer = null;
 	}
 
-	this.statusDiv = this.controller.get("statusDiv");
-	this.statusDiv.hide();
 	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
 
 	this.onBlurHandler = this.onBlur.bind(this);
