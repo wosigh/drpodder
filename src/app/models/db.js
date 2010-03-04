@@ -492,7 +492,7 @@ DBClass.prototype.readPrefs = function() {
 	delete Prefs.updateDay;
 	delete Prefs.updateHour;
 	*/
-	if (Prefs.enableNotifications === undefined) {Prefs.enableNotifications = true;}
+	/*if (Prefs.enableNotifications === undefined) */{Prefs.enableNotifications = true;}
 	if (Prefs.autoUpdate === undefined) {Prefs.autoUpdate = false;}
 	if (Prefs.updateInterval === undefined) {Prefs.updateInterval = "01:00:00";}
 	if (Prefs.updateType === undefined) {Prefs.updateType = "D";}
