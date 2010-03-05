@@ -165,7 +165,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 	if (event.type === Mojo.Event.command) {
 		switch (event.command) {
 			case "prefs-cmd":
-				stageController.pushScene("preferences");
+				stageController.pushScene({name:"preferences", transition: Mojo.Transition.none});
 				break;
 			case "about-cmd":
 				stageController.pushAppSupportInfoScene();

@@ -224,7 +224,6 @@ EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 	return formatted;
 };
 
-
 EpisodeListAssistant.prototype.activate = function(changes) {
 	this.refresh();
 	this.filterEpisodes();
