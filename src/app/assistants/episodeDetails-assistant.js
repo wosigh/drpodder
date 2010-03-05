@@ -130,7 +130,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 		this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 		//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
 		//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
-		this.setStatus("Other");
+		this.setStatus("Loading");
 		if (!this.isVideo()) {
 			this.disablePlay(true);
 			this.progressChangedHandler = this.progressChange.bind(this);
@@ -565,8 +565,9 @@ EpisodeDetailsAssistant.prototype.sliderDragStart = function() {
 };
 
 EpisodeDetailsAssistant.prototype.progressChange = function(event) {
+	// need this line
 	//this.audioObject.currentTime = event.value * this.audioObject.duration;
-	this.updateProgress(null, event.value);
+	this.updateProgress(null, event.value * this.audioObject.duration);
 	this.controller.modelChanged(this.progressModel);
 };
 
@@ -590,13 +591,13 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 };
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) {
-	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d", this.audioObject.currentTime, this.audioObject.duration);
+	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (currentTime passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
 
 	if (isNaN(this.audioObject.currentTime) ||
 	    !isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 		this.updateProgressLabelsValues("00:00", "00:00");
 	} else {
-		this.updateProgressLabels();
+		this.updateProgressLabels(currentTime);
 		if (!currentTime) {
 			this.progressModel.value = this.audioObject.currentTime/this.audioObject.duration;
 		}
