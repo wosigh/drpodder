@@ -363,6 +363,9 @@ DBClass.prototype.saveFeed = function(f, displayOrder, functionWhenFinished) {
 							this.saveEpisodeTransaction(f.episodes[i], transaction);
 						}
 					}
+					if (!f.episodes.length) {
+						functionWhenFinished();
+					}
 				} else {
 					functionWhenFinished();
 				}
