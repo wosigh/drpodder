@@ -299,6 +299,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 	} else {
 		if (this.episodeObject.file) {
 			Mojo.Log.warn("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
+			this.setStatus("");
 			this.audioObject.src = this.episodeObject.file;
 			this.progressModel.progressStart = 0;
 			this.progressModel.progressEnd = 1;
