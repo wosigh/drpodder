@@ -59,8 +59,8 @@ DownloadService.prototype.download = function(sceneController, target, dir, file
 DownloadService.prototype.allow1x = function(sceneController, callback) {
 	return this._serviceRequest(sceneController, this.URI, {
 		method: "allow1x",
-		onSuccess: callback,
-		onFailure: callback,
+		onSuccess: function() {Mojo.Log.warn("allow1x Success"); callback();},
+		onFailure: function() {Mojo.Log.error("allow1x Failure"); callback();},
 		parameters: {"value": true}
 	});
 };

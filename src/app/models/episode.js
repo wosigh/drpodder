@@ -165,15 +165,15 @@ Episode.prototype.clearBookmark = function(ignore) {
 };
 
 Episode.prototype.download = function(silent) {
-	this.deleteFile();
 	if (!silent) {
 		Util.banner("Downloading: " + this.title);
 		Util.dashboard(DrPodder.DownloadingStageName, "Downloading", this.title);
 	}
+	this.deleteFile();
 	var url = this.getEnclosure();
 	if (url) {
 		Mojo.Log.warn("Downloading %s as %s", url, this.getDownloadFilename());
-		AppAssistant.downloadService.allow1x(null, this.doTheDownload.bind(this, url));
+		this.downloadRequest = AppAssistant.downloadService.allow1x(null, this.doTheDownload.bind(this, url));
 	}
 };
 

@@ -777,7 +777,7 @@ FeedModel.prototype.download = function() {
 			Mojo.Log.warn("check for wifi");
 			AppAssistant.wifiService.isWifiConnected(null, this._wifiCheck.bind(this, eps));
 		} else {
-			Mojo.Log.warn("check for wifi");
+			Mojo.Log.warn("no check for wifi, just download");
 			this._doDownload(eps);
 		}
 	} else {
@@ -818,5 +818,5 @@ FeedModel.prototype._doDownload = function(eps) {
 	eps.forEach(function (e) {
 		e.download();
 	});
-	Util.closeDashboard(DrPodder.DashboardStageName);
+	Util.closeDashboard.defer(DrPodder.DashboardStageName);
 };
