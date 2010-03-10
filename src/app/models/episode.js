@@ -54,6 +54,7 @@ function Episode(init) {
 }
 
 Episode.prototype.findLinks = /(\b(https?|ftp|file):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%=~_|])/ig;
+Episode.prototype.getExtension = /\.(....?)$/g;
 
 Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
@@ -70,7 +71,58 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	if (this.guid === undefined) {
 		this.guid = this.link + this.title + this.getDateString();
 	}
+	Mojo.Log.info("episode %s, pubdate:%s, guid:%s", this.title, this.pubDate, this.guid);
 	this.type = Util.xmlTagAttributeValue(xmlObject, "enclosure", "type");
+
+	// override the type with what we parse from the filename, if it's obvious...
+	var inferredType;
+	try {
+		var matches = this.getExtension.exec(this.enclosure);
+		if (matches && matches.length > 1) {
+			var extension = matches[1];
+			switch (extension) {
+				case "mp3":
+					inferredType = "audio/mpeg";
+					break;
+				case "mp4":
+					inferredType = "audio/mp4";
+					break;
+				case "avi":
+					inferredType = "video/x-msvideo";
+					break;
+				case "asf":
+					inferredType = "video/x-ms-asf";
+					break;
+				case "mov":
+					inferredType = "video/quicktime";
+					break;
+				case "mpg":
+					inferredType = "video/mpeg";
+					break;
+				case "mp4":
+					inferredType = "video/mp4";
+					break;
+				case "m4v":
+					inferredType = "video/m4v";
+					break;
+				case "wmv":
+					inferredType = "video/wmv";
+					break;
+				case "flv":
+					inferredType = "application/x-shockwave-flash";
+					break;
+			}
+		}
+	} catch (e) {
+		Mojo.Log.error("error with regex: (%j)", e);
+	}
+
+	if (inferredType && this.type != inferredType) {
+		Mojo.Log.warn("type for %s was %s, changed to %s", this.title, this.type, inferredType);
+		this.type = inferredType;
+	}
+
+	Mojo.Log.info("Episode %s: enclosure=%s, type=%s", this.title, this.enclosure, this.type);
 };
 
 Episode.prototype.updateUIElements = function(ignore) {

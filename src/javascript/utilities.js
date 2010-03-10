@@ -80,6 +80,16 @@ Utilities.prototype.xpath = function(path, node, getData, numeric) {
     }
 };
 
+Utilities.prototype.dumpXml = function(n) {
+	var c = n.childNodes;
+	Mojo.Log.info("node: <%s>,name=%s, %d children", n.nodeName, n.nodeValue, c.length);
+	for (var i=0; i<c.length; i++) {
+		var child=c[i];
+		Util.dumpXml(child);
+	}
+	Mojo.Log.info("node: <%s> done", n.nodeName);
+};
+
 Utilities.prototype.xmlTagValue = function(node, element, def) {
 	var arr = node.getElementsByTagName(element);
 	var val = def;

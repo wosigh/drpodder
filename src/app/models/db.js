@@ -495,13 +495,17 @@ DBClass.prototype.readPrefs = function() {
 	delete Prefs.updateDay;
 	delete Prefs.updateHour;
 	*/
-	/*if (Prefs.enableNotifications === undefined) */{Prefs.enableNotifications = true;}
+	/*if (Prefs.enableNotifications === undefined) {*/Prefs.enableNotifications = true;//}
 	if (Prefs.autoUpdate === undefined) {Prefs.autoUpdate = false;}
 	if (Prefs.updateInterval === undefined) {Prefs.updateInterval = "01:00:00";}
 	if (Prefs.updateType === undefined) {Prefs.updateType = "D";}
 	if (Prefs.updateDay === undefined) {Prefs.updateDay = "0";}
-	if (Prefs.updateHour === undefined) {Prefs.updateTime = new Date(); Prefs.updateTime.setHours(4, 0, 0);}
-	else {
+	if (Prefs.updateHour === undefined) {
+		Prefs.updateTime = new Date();
+		Prefs.updateTime.setHours(4, 0, 0);
+		Prefs.updateHour = 4;
+		Prefs.updateMinute = 0;
+	} else {
 		Prefs.updateTime = new Date();
 		Prefs.updateTime.setHours(Prefs.updateHour, Prefs.updateMinute);
 	}

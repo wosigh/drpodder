@@ -104,13 +104,16 @@ AppAssistant.prototype.setWakeup = function() {
 		var alarmTime;
 		var alarmDate = new Date();
 		var now = new Date();
+		Mojo.Log.warn("updateType: %s", Prefs.updateType);
 		switch (Prefs.updateType) {
 			case "H":
 				alarmType = "in";
+				Mojo.Log.warn("updateInterval: %s", Prefs.updateInterval);
 				alarmTime = Prefs.updateInterval;
 				break;
 			case "W":
 				alarmType = "at";
+				Mojo.Log.warn("updateDay/Hour/Minute: %s %s:%s", Prefs.updateDay, Prefs.updateHour, Prefs.updateMinute);
 				var dayDelta = Math.abs(Prefs.updateDay-alarmDate.getDay())%7;
 				alarmDate.setDate(alarmDate.getDate() + dayDelta);
 				alarmDate.setHours(Prefs.updateHour);
@@ -118,10 +121,12 @@ AppAssistant.prototype.setWakeup = function() {
 				break;
 			case "D":
 				alarmType = "at";
+				Mojo.Log.warn("updateHour/Minute: %s:%s", Prefs.updateHour, Prefs.updateMinute);
 				alarmDate.setHours(Prefs.updateHour);
 				alarmDate.setMinutes(Prefs.updateMinute);
 				break;
 		}
+		Mojo.Log.warn("alarmTime: %s", alarmTime);
 		if (alarmType === "at") {
 			// verify that the time is at least 6 minutes in the future
 			// if not, jump forward a day or a week depending on Prefs.updateType
@@ -143,6 +148,7 @@ AppAssistant.prototype.setWakeup = function() {
 			parameters.uri = "palm://com.palm.applicationManager/open";
 			parameters.params = {"id": Mojo.appInfo.id, "params": {"action": "updateFeeds"}};
 			parameters[alarmType] = alarmTime;
+			Mojo.Log.info("alarm request %s: %s", alarmType, alarmTime);
 			this.wakeupRequest = new Mojo.Service.Request("palm://com.palm.power/timeout", {
 				method: "set",
 				parameters: parameters,

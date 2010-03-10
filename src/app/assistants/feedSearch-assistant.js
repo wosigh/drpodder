@@ -87,6 +87,78 @@ DigitalPodcastSearch.prototype.searchResults = function(callback, transport) {
 	callback(results);
 };
 
+function PodcastDeSearch() {
+}
+
+PodcastDeSearch.prototype.url = "http://api.podcast.de/suche/drpodder/?q=#{keyword}";
+PodcastDeSearch.prototype.providerLabel = "powered by <a href='http://www.podcast.de'>podcast.de</a>";
+
+PodcastDeSearch.prototype.getProviderLabel = function() {
+	return this.providerLabel;
+};
+
+PodcastDeSearch.prototype.search = function(keyword, filter, callback) {
+	Mojo.Log.error("PodcastDeSearch.search(%s, %s)", keyword, filter);
+	var t = new Template(this.url);
+	var url = t.evaluate({keyword:encodeURI(keyword), filter: filter});
+
+	Mojo.Log.info("url: %s", url);
+
+	var request = new Ajax.Request(url, {
+		method : "get",
+		evalJSON : "false",
+		evalJS : "false",
+		requestHeaders : {
+			"X-Requested-With": undefined
+		},
+		onFailure : function(transport) {
+			Mojo.Log.error("Error contacting search service: %d", transport.status);
+			Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		},
+		onSuccess : this.searchResults.bind(this, callback)
+	});
+
+};
+
+PodcastDeSearch.prototype.searchResults = function(callback, transport) {
+	Mojo.Log.info("transport.status = %d", transport.status);
+	var results = [];
+
+	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
+		Mojo.Log.error("Error contacting search service: %d", transport.status);
+		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		return;
+	}
+
+	var doc = transport.responseXML;
+	Mojo.Log.info("transport.responseText", transport.responseText);
+	if (!doc) {
+		doc = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
+	}
+
+	var nodes = document.evaluate("//outline", doc, null, XPathResult.ANY_TYPE, null);
+	var node = nodes.iterateNext();
+	if (!node) {
+		Mojo.Log.error("Error contacting search service: outline node not found");
+		Util.showError("Error contacting search service", "No results found");
+		return;
+	}
+
+	while (node) {
+		var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
+		var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
+		if (title !== undefined && url !== undefined) {
+			Mojo.Log.info("found: (%s)-[%s]", title, url);
+			results.push({title:title, url:url});
+		} else {
+			Mojo.Log.warn("skipping: (%s)-[%s]", title, url);
+		}
+		node = nodes.iterateNext();
+	}
+
+	callback(results);
+};
+
 function SpokenWordSearch() {
 }
 
@@ -227,6 +299,7 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 function FeedSearchAssistant() {
 	this.searchService = "digitalPodcast";
 	this.searchServices = {"digitalPodcast": new DigitalPodcastSearch(),
+						   "podcastDe": new PodcastDeSearch(),
 						   "spokenWord": new SpokenWordSearch(),
 						   "googleListen": new GoogleListenSearch()};
 }
@@ -236,7 +309,8 @@ FeedSearchAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("searchProviderList",
 		{label: "Directory",
-		 choices: [{label: "Digital Podcast", value: "digitalPodcast"}
+		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},
+		           {label: "Podcast.de (German)", value: "podcastDe"}
 		           //{label: "Spoken Word", value: "spokenWord"}
 		           //{label: "Google Listen", value: "googleListen"}
 		]},

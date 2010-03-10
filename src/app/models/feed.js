@@ -239,7 +239,22 @@ Feed.prototype.checkSuccess = function(callback, transport) {
 
 Feed.prototype.validateXML = function(transport){
 	// Convert the string to an XML object
+	if (this.url && this.url.toLowerCase().indexOf("itunes.apple.com") !== -1) {
+		transport.responseXML = null;
+	}
 	if (!transport.responseXML) {
+		Mojo.Log.warn("responseXML was empty, populating");
+		Mojo.Log.warn("responseText.length = %d", transport.responseText.length);
+		transport.responseText = transport.responseText.replace(/<link(.*[^/])>/g, "<link$1/>");
+		transport.responseText = transport.responseText.replace(/<meta(.*[^/])>/g, "<meta$1/>");
+		transport.responseText = transport.responseText.replace(/<input(.*[^/])>/g, "<input$1/>");
+		Mojo.Log.warn("responseText.length = %d", transport.responseText.length);
+		Mojo.Log.warn("%s", transport.responseText.substr(0,100));
+		Mojo.Log.warn("%s", transport.responseText.substr(100,200));
+		Mojo.Log.warn("%s", transport.responseText.substr(200,300));
+		Mojo.Log.warn("%s", transport.responseText.substr(300,400));
+		Mojo.Log.warn("%s", transport.responseText.substr(400,500));
+
 		//var start = (new Date()).getTime();
 		transport.responseXML = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
 		//Mojo.Log.error("document parse: %d", (new Date()).getTime() - start);
@@ -256,10 +271,11 @@ Feed.prototype.getTitle = function(transport) {
 		if (nodes) {
 			var node = nodes.iterateNext();
 			if (node) {
+				title = "";
 				var firstChild = node.firstChild;
 				if (firstChild) {
 					title = firstChild.nodeValue;
-					//Mojo.Log.error("title: %s", title);
+					Mojo.Log.info("title: %s", title);
 				}
 			}
 		}
@@ -270,11 +286,64 @@ Feed.prototype.getTitle = function(transport) {
 		}
 		Mojo.Log.error("Error finding feed title: %j", e);
 	}
-	if (!title) {
+	if (title === undefined || title === null) {
 		if (this.gui) {
 			Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
 		}
 		Mojo.Log.error("Error finding feed title for feed: %s", this.url);
+	}
+	return title;
+};
+
+Feed.prototype.getiTunesTitle = function(transport) {
+	//var titlePath = "/html/body/h1";
+	//var titlePath = "/html/body/div/div/div/div/h1";
+	var titlePath = "//h1";
+	this.validateXML(transport);
+
+	var title;
+	try {
+		Mojo.Log.info("finding title");
+		Util.dumpXml(transport.responseXML);
+
+	} catch (e) {
+		// bring this back once feed add dialog is its own page
+		if (this.gui) {
+			Util.showError("Error parsing iTunes feed", "Could not find title in iTunes feed: " + this.url);
+		}
+		Mojo.Log.error("Error finding iTunes feed title: %j", e);
+	}
+	/*
+	try {
+		Mojo.Log.info("finding title");
+		var nodes = document.evaluate(titlePath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
+		Mojo.Log.info("nodes: %s", nodes);
+		Mojo.Log.info("nodes.resultType: %s", nodes.resultType);
+		if (nodes) {
+			var node = nodes.iterateNext();
+			Mojo.Log.info("node: %s", node);
+			if (node) {
+				var firstChild = node.firstChild;
+				Mojo.Log.info("firstChild: %s", firstChild);
+				if (firstChild) {
+					title = firstChild.nodeValue;
+					Mojo.Log.info("itunes title: %s", title);
+				}
+			}
+		}
+	} catch (e) {
+		// bring this back once feed add dialog is its own page
+		if (this.gui) {
+			Util.showError("Error parsing iTunes feed", "Could not find title in iTunes feed: " + this.url);
+		}
+		Mojo.Log.error("Error finding iTunes feed title: %j", e);
+	}
+	*/
+	if (!title) {
+		if (this.gui) {
+			Util.showError("Error parsing iTunes feed", "Could not find title in iTunes feed: " + this.url);
+		}
+		Mojo.Log.error("Error finding iTunes feed title for feed: %s", this.url);
 	}
 	return title;
 };
@@ -309,7 +378,7 @@ Feed.prototype.getAlbumArt = function(transport) {
 	return imageUrl;
 };
 
-Feed.prototype.updateCheck = function(transport, callback) {
+Feed.prototype.updateCheck = function(transport) {
 	var lastModified = transport.getHeader("Last-Modified");
 	var updateCheckStatus = UPDATECHECK_NOUPDATES;
 
@@ -320,13 +389,65 @@ Feed.prototype.updateCheck = function(transport, callback) {
 	*/
 
 	this.lastModified = lastModified;
+
+	if (this.isRssFeed(transport)) {
+		updateCheckStatus = this.parseRssFeed(transport);
+	} else if (this.isiTunesFeed(transport)) {
+		updateCheckStatus = this.parseiTunesFeed(transport);
+	} else {
+		if (this.gui) {
+			Util.showError("Error determing feed type", "Could not determine feed type for: " + this.url);
+		}
+		Mojo.Log.error("Error determing feed type for %s", this.url);
+		updateCheckStatus = UPDATECHECK_INVALID;
+	}
+
+	this.sortEpisodes();
+	this.playlists.forEach(function(f) {
+		f.sortEpisodes();
+	});
+	//Mojo.Log.error("documentProcessing: %d", (new Date()).getTime() - start);
+
+	//this.episodes.splice(this.maxDisplay);
+
+	return updateCheckStatus;
+};
+
+Feed.prototype.isRssFeed = function(transport) {
+	this.validateXML(transport);
+	var rssPath = "/rss";
+	var isRss = false;
+
+	try {
+		var nodes = document.evaluate(rssPath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
+		var node = nodes.iterateNext();
+		if (node) {
+			isRss = true;
+		}
+	} catch (e) {
+		isRss = false;
+	}
+	Mojo.Log.warn("isRssFeed = %s", isRss);
+	return isRss;
+
+};
+
+Feed.prototype.isiTunesFeed = function(transport) {
+	var isiTunes = this.url && this.url.toLowerCase().indexOf("itunes.apple.com") !== -1;
+	Mojo.Log.warn("isiTunes = %s", isiTunes);
+	return isiTunes;
+
+};
+
+Feed.prototype.parseRssFeed = function(transport) {
+	var updateCheckStatus = UPDATECHECK_NOUPDATES;
 	var itemPath = "/rss/channel/item";
 
-	this.validateXML(transport);
+	Mojo.Log.info("parseRssFeed");
 
-	if (this.title === undefined || this.title === null || this.title === "") {
+	if (this.title === undefined || this.title === null) {
 		this.title = this.getTitle(transport);
-		if (!this.title) {
+		if (this.title === undefined || this.title === null) {
 			return UPDATECHECK_INVALID;
 		}
 	}
@@ -385,6 +506,7 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		//Mojo.Log.error("loadFromXML: %d", (new Date()).getTime() - start2);
 
 		var e = this.guid[episode.guid];
+		Mojo.Log.info("looking for GUID: %s, found %s", episode.guid, e);
 		if (e === undefined) {
 			episode.newlyAddedEpisode = true;
 			episode.feedId = this.id;
@@ -406,16 +528,97 @@ Feed.prototype.updateCheck = function(transport, callback) {
 		}
 		result = nodes.iterateNext();
 	}
-	this.sortEpisodes();
-	this.playlists.forEach(function(f) {
-		f.sortEpisodes();
-	});
-	//Mojo.Log.error("documentProcessing: %d", (new Date()).getTime() - start);
-
-	//this.episodes.splice(this.maxDisplay);
 
 	return updateCheckStatus;
 };
+
+Feed.prototype.parseiTunesFeed = function(transport) {
+	var updateCheckStatus = UPDATECHECK_NOUPDATES;
+	var htmlPath = "/html/@xmlns";
+
+	Mojo.Log.info("parseiTunesFeed");
+
+	if (this.title === undefined || this.title === null || this.title === "") {
+		this.title = this.getiTunesTitle(transport);
+		if (!this.title) {
+			return UPDATECHECK_INVALID;
+		}
+	}
+
+	if (this.albumArt === undefined || this.albumArt === null || this.albumArt === "") {
+		this.albumArt = this.getiTunesAlbumArt(transport);
+	}
+
+	if (this.albumArt !== undefined && this.albumArt !== null &&
+		this.albumArt.indexOf("http://") === 0) {
+		// if we currently point to a picture on the net, download it so we can resize on display
+		var ext = ".JPG";
+		if (this.albumArt.toLowerCase().indexOf(".jpg") > 0) {ext=".JPG";}
+		if (this.albumArt.toLowerCase().indexOf(".bmp") > 0) {ext=".BMP";}
+		if (this.albumArt.toLowerCase().indexOf(".png") > 0) {ext=".PNG";}
+		if (this.albumArt.toLowerCase().indexOf(".gif") > 0) {ext=".GIF";}
+		var newAlbumArt = Util.escapeSpecial(this.title) + ext;
+		this.downloadRequest = AppAssistant.downloadService.download(
+			null, this.albumArt, ".albumArt", newAlbumArt,
+			function(event) {
+				if (event.completed) {
+					this.albumArt = "/drPodder/.albumArt/" + newAlbumArt;
+					this.save();
+					Mojo.Controller.getAppController().sendToNotificationChain({
+						type: "feedUpdated", feed: this});
+				}
+			}.bind(this));
+	}
+
+
+	//var start = (new Date()).getTime();
+	nodes = document.evaluate(itemPath, transport.responseXML, null, XPathResult.ANY_TYPE, null);
+	//Mojo.Log.error("document evaluate: %d", (new Date()).getTime() - start);
+
+	if (!nodes) {
+		//Util.showError("Error parsing feed", "No items found in feed");
+		return UPDATECHECK_INVALID;
+	}
+
+	var result = nodes.iterateNext();
+	var newEpisodeCount = 0;
+	var noEnclosureCount = 0;
+	//while (result && this.episodes.length < this.maxDisplay) {
+
+	Feed.newDate = new Date();
+	while (result) {
+		// construct a new Episode based on the current item from XML
+		var episode = new Episode();
+		//var start2 = (new Date()).getTime();
+		episode.loadFromXML(result);
+		//Mojo.Log.error("loadFromXML: %d", (new Date()).getTime() - start2);
+
+		var e = this.guid[episode.guid];
+		if (e === undefined) {
+			episode.newlyAddedEpisode = true;
+			episode.feedId = this.id;
+			episode.feedObject = this;
+			episode.albumArt = this.albumArt;
+			this.insertEpisodeTop(episode);
+			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
+			episode.updateUIElements(true);
+			updateCheckStatus = UPDATECHECK_UPDATES;
+			this.addToPlaylistsTop(episode);
+		} else {
+			// it already exists, check that the enclosure url is up to date
+			e.title = episode.title;
+			e.pubDate = episode.pubDate;
+			e.description = episode.description;
+			e.link = episode.link;
+			if (episode.enclosure) { e.enclosure = episode.enclosure; }
+			e.type = episode.type;
+		}
+		result = nodes.iterateNext();
+	}
+
+	return updateCheckStatus;
+};
+
 
 Feed.prototype.sortEpisodes = function() {
 	this.episodes.sort(this.sortEpisodesFunc);
