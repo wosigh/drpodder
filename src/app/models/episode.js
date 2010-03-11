@@ -321,7 +321,7 @@ Episode.prototype.getDownloadFilename = function() {
 };
 
 Episode.prototype.downloadingCallback = function(event) {
-	//Mojo.Log.error("downloadingCallback: %j", event);
+	Mojo.Log.info("downloadingCallback: %j", event);
 	if (event.returnValue === false &&
 		event.errorCode === -1 &&
 		event.serviceName === "com.palm.downloadmanager") {
@@ -357,23 +357,33 @@ Episode.prototype.downloadingCallback = function(event) {
 				Util.showError("Download aborted", "There was an error downloading url:"+this.enclosure);
 			}
 		}
-	} else if (this.downloading && event.completed && event.completionStatusCode === 200) {
-		//success!
+	} else if (this.downloading && event.completed) {
 		Mojo.Log.warn("Download complete!", this.title);
-		// this.downloadTicket = 0; // we need to save the downloadTicket
 		this.downloading = false;
 		this.downloadingPercent = 0;
 		this.downloadActivity();
 
-		this.file = event.target;
+		if (event.completionStatusCode === 200) {
+			//success!
+			// this.downloadTicket = 0; // we need to save the downloadTicket
+			this.file = event.target;
 
-		this.setDownloaded(true);
-		this.setUnlistened(true);
+			this.setDownloaded(true);
+			this.setUnlistened(true);
+
+			Util.dashboard(DrPodder.DownloadedStageName, "Downloaded", this.title);
+		} else if (event.completionStatusCode === -5) {
+			this.downloadTicket = 0;
+			Mojo.Log.error("CompletionStatusCode=%d, file=%s", event.completionStatusCode, event.destPath + event.destFile);
+			Util.showError("Download Failed", "Failure downloading " + this.title + ".  If this was a podshifter download, please try again in an hour.");
+		} else {
+			this.downloadTicket = 0;
+			Mojo.Log.error("CompletionStatusCode=%d, file=%s", event.completionStatusCode, event.destPath + event.destFile);
+		}
+
 		this.updateUIElements();
-		this.save();
 		this.feedObject.downloadFinished();
-
-		Util.dashboard(DrPodder.DownloadedStageName, "Downloaded", this.title);
+		this.save();
 		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {

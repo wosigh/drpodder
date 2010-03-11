@@ -52,19 +52,21 @@ Utilities.albumArtListUrlFormatter = function(url){
 
 Utilities.prototype.showError = function(title, message){
 	var stageController = Mojo.Controller.getAppController().getActiveStageController();
-	var currentScene = stageController.activeScene();
-	currentScene.showAlertDialog({
-        onChoose: function(value){
-        },
-        title: title,
-		allowHTMLMessage: true,
-        message: message,
-        choices: [{
-            label: $L('OK'),
-            value: 'ok',
-            type: 'color'
-        }]
-    });
+	if (stageController) {
+		var currentScene = stageController.activeScene();
+		currentScene.showAlertDialog({
+			onChoose: function(value){
+			},
+			title: title,
+			allowHTMLMessage: true,
+			message: message,
+			choices: [{
+				label: $L('OK'),
+				value: 'ok',
+				type: 'color'
+			}]
+		});
+	}
 };
 
 Utilities.prototype.xpath = function(path, node, getData, numeric) {
