@@ -334,7 +334,7 @@ AddFeedAssistant.prototype.check = function(url) {
 						  encodeURIComponent(this.passwordModel.value) + "@");
 	}
 
-	this.updateCheckID = this.controller.window.setTimeout(this.abortURLCheck.bind(this), 10000);
+	this.updateCheckID = this.controller.window.setTimeout(this.abortURLCheck.bind(this), 20000);
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",

@@ -59,6 +59,10 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	this.title = Util.xmlTagValue(xmlObject, "title", "NO TITLE FOUND");
 	this.link = Util.xmlTagValue(xmlObject, "link");
 	this.description = Util.xmlTagValue(xmlObject, "encoded") || Util.xmlTagValue(xmlObject, "description") || "";
+	var itunesSummary = Util.xmlTagValue(xmlObject, "summary");
+	if (itunesSummary && itunesSummary.length > this.description.length) {
+		this.description = itunesSummary;
+	}
 	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	if (this.pubDate) {
