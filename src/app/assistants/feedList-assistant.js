@@ -144,7 +144,7 @@ FeedListAssistant.prototype.activate = function(result) {
 	} else {
 		var firstLoad = true;
 		for (var i=0; i<feedModel.items.length; i++) {
-			if (feedModel.items[i].episodes.length > 0) {
+			if (feedModel.items[i].title != "All") {
 				firstLoad = false;
 				break;
 			}
