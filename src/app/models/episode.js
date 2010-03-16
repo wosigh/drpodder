@@ -88,7 +88,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 				case "mp3":
 					inferredType = "audio/mpeg";
 					break;
-				case "mp4":
+				case "m4a":
 					inferredType = "audio/mp4";
 					break;
 				case "avi":

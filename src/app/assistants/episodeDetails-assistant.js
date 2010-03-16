@@ -118,20 +118,20 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
 	if (this.episodeObject.enclosure || this.episodeObject.downloaded) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
-
-		this.setStatus("Extend");
-		this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
-		this.setStatus("Class");
-		this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
-
-		this.setStatus("Bind");
-		this.readyToPlayHandler = this.readyToPlay.bind(this);
-		this.setStatus("Event");
-		this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
-		//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
-		//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
-		this.setStatus("Loading");
 		if (!this.isVideo()) {
+
+			this.setStatus("Extend");
+			this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
+			this.setStatus("Class");
+			this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
+
+			this.setStatus("Bind");
+			this.readyToPlayHandler = this.readyToPlay.bind(this);
+			this.setStatus("Event");
+			this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
+			//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
+			//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
+			this.setStatus("Loading");
 			this.disablePlay(true);
 			this.progressChangedHandler = this.progressChange.bind(this);
 			this.sliderDragStartHandler = this.sliderDragStart.bind(this);
@@ -170,9 +170,20 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 			//this.audioObject.addEventListener(Media.Event.TIMEUPDATE, this.updateProgressHandler);
 
 			this.keyDownEventHandler = this.keyDownHandler.bind(this);
+		} else {
+			this.setStatus();
+			if (this.autoPlay) {
+				this.disablePlay();
+				this.controller.window.setTimeout(this.enablePlay.bind(this), 10000);
+				this.play();
+			} else {
+				this.enablePlay();
+			}
 		}
 
 		this.updateTimer = null;
+	} else {
+		this.setStatus();
 	}
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
@@ -288,7 +299,7 @@ EpisodeDetailsAssistant.prototype.setTimer = function(bool) {
 };
 
 EpisodeDetailsAssistant.prototype.readyToPlay = function() {
-	if (this.isVideo()) {
+	/*if (this.isVideo()) {
 		if (this.autoPlay) {
 			this.disablePlay();
 			this.controller.window.setTimeout(this.enablePlay.bind(this), 10000);
@@ -296,7 +307,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 		} else {
 			this.enablePlay();
 		}
-	} else {
+	} else {*/
 		if (this.episodeObject.file) {
 			Mojo.Log.warn("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
 			this.setStatus("");
@@ -315,7 +326,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 		}
 		this.audioObject.autoplay = this.autoPlay;
 		this.setTimer(true);
-	}
+	//}
 };
 
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
