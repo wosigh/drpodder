@@ -383,11 +383,15 @@ FeedListAssistant.prototype.considerForNotification = function(params) {
 		switch (params.type) {
 			case "feedUpdated":
 				var feedIndex = params.feedIndex;
+				var reveal = params.reveal;
 				if (feedIndex === undefined) {
 					feedIndex = feedModel.items.indexOf(params.feed);
 				}
 				if (feedIndex !== -1) {
 					this.feedList.mojo.noticeUpdatedItems(feedIndex, [params.feed]);
+				}
+				if (reveal) {
+					this.feedList.mojo.revealItem(feedIndex, true);
 				}
 				break;
 			case "feedsUpdating":

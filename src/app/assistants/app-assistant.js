@@ -198,6 +198,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 								var autoDelete = Util.xmlGetAttributeValue(node, "autoDelete");
 								var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
 								var replacements = Util.xmlGetAttributeValue(node, "replacements");
+								var hideFromOS = Util.xmlGetAttributeValue(node, "hideFromOS");
 								var username = Util.xmlGetAttributeValue(node, "username");
 								var password = Util.xmlGetAttributeValue(node, "password");
 								if (title !== undefined && url !== undefined) {
@@ -209,9 +210,11 @@ AppAssistant.prototype.handleCommand = function(event) {
 									if (autoDelete !== undefined) {feed.autoDelete = (autoDelete==='1');}
 									if (maxDownloads !== undefined) {feed.maxDownloads = maxDownloads;}
 									if (replacements !== undefined) {feed.replacements = replacements;}
+									if (hideFromOS !== undefined) {feed.hideFromOS = hideFromOS;}
 									if (username !== undefined) {feed.username = username;}
 									if (password !== undefined) {feed.password = password;}
 									feedModel.items.push(feed);
+									feed.update(null, null, true);
 									imported++;
 								} else {
 									Mojo.Log.warn("Skipping import: (%s)-[%s]", title, url);
@@ -220,7 +223,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 							}
 							if (imported > 0) {
 								DB.saveFeeds();
-								Util.showError("OPML Import Finished", "The imported feeds can be found at the END of your feed list.<br><br>Please refresh the Feed List to see the " + imported + " imported feed" + ((imported !== 1)?"s":""));
+								Util.showError("OPML Import Finished", "The " + imported + " imported feed" + ((imported !== 1)?"s":"") + " can be found at the END of your feed list.");
 							} else {
 								Util.showError("OPML Import Finished", "No valid feeds found in drpodder.xml");
 							}
@@ -244,6 +247,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 						message += " autoDelete='" + feed.autoDelete + "'";
 						message += " maxDownloads='" + feed.maxDownloads + "'";
 						message += " replacements='" + feed.replacements.replace(/&/g,"&amp;amp;").replace(/'/g, "&amp;apos;") + "'";
+						message += " hideFromOS='" + feed.hideFromOS + "'";
 						if (feed.username) {
 							message += " username='" + feed.username + "'";
 							message += " password='" + feed.password + "'";

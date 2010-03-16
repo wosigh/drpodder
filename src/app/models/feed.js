@@ -116,9 +116,10 @@ function Feed(init) {
 	}
 }
 
-Feed.prototype.update = function(callback, url) {
+Feed.prototype.update = function(callback, url, reveal) {
 	this.updating = true;
-	this.updated();
+	this.updated(reveal);
+	if (!callback) {callback = function() {};}
 
 	if (this.playlist) {
 		this.updateFeedIds(0, function() {
@@ -878,9 +879,9 @@ Feed.prototype.save = function() {
 	}
 };
 
-Feed.prototype.updated = function() {
+Feed.prototype.updated = function(reveal) {
 	Mojo.Controller.getAppController().sendToNotificationChain({
-		type: "feedUpdated", feed: this});
+		type: "feedUpdated", feed: this, "reveal": reveal});
 };
 
 Feed.prototype.updatedEpisodes = function() {
