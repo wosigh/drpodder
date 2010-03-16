@@ -269,9 +269,13 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				this.cmdMenuModel.items[1].disabled = true;
 				this.controller.modelChanged(this.cmdMenuModel);
 				this.feedObject.update(function() {
+					// we may have navigated away from the scene
 					this.cmdMenuModel.items[1].disabled = false;
-					this.controller.modelChanged(this.cmdMenuModel);
+					if(this.controller) {
+						this.controller.modelChanged(this.cmdMenuModel);
+					}
 					this.feedObject.download();
+					Util.closeDashboard(DrPodder.DashboardStageName);
 				}.bind(this));
 				break;
 			case "playFromNewest-cmd":

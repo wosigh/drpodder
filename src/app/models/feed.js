@@ -121,7 +121,11 @@ Feed.prototype.update = function(callback, url) {
 	this.updated();
 
 	if (this.playlist) {
-		this.updateFeedIds(0, callback);
+		this.updateFeedIds(0, function() {
+			this.updating = false;
+			this.updated();
+			callback();
+		}.bind(this));
 	} else {
 		if (!url) {
 			var feedTitle = (this.title)?this.title:"Unknown feed title";
@@ -375,7 +379,7 @@ Feed.prototype.parseRssFeed = function(transport) {
 		//Mojo.Log.error("loadFromXML: %d", (new Date()).getTime() - start2);
 
 		var e = this.guid[episode.guid];
-		Mojo.Log.info("looking for GUID: %s, found %s", episode.guid, e);
+		//Mojo.Log.info("looking for GUID: %s, found %s", episode.guid, e);
 		if (e === undefined) {
 			episode.newlyAddedEpisode = true;
 			episode.feedId = this.id;

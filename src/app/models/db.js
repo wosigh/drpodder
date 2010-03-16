@@ -433,7 +433,7 @@ DBClass.prototype.saveEpisodeTransaction = function(e, transaction, functionWhen
 		}
 		transaction.executeSql(sql, params,
 			function(transaction, results) {
-				Mojo.Log.warn("Episode updated: %s", e.title);
+				//Mojo.Log.warn("Episode updated: %s", e.title);
 				e.description = null;
 				functionWhenFinished();
 			},

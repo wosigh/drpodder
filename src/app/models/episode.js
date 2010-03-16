@@ -75,7 +75,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	if (this.guid === undefined) {
 		this.guid = this.link + this.title + this.getDateString();
 	}
-	Mojo.Log.info("episode %s, pubdate:%s, guid:%s", this.title, this.pubDate, this.guid);
+	//Mojo.Log.info("episode %s, pubdate:%s, guid:%s", this.title, this.pubDate, this.guid);
 	this.type = Util.xmlTagAttributeValue(xmlObject, "enclosure", "type");
 
 	// override the type with what we parse from the filename, if it's obvious...
@@ -126,7 +126,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 		this.type = inferredType;
 	}
 
-	Mojo.Log.info("Episode %s: enclosure=%s, type=%s", this.title, this.enclosure, this.type);
+	//Mojo.Log.info("Episode %s: enclosure=%s, type=%s", this.title, this.enclosure, this.type);
 };
 
 Episode.prototype.updateUIElements = function(ignore) {
