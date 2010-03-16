@@ -1,7 +1,8 @@
-<div class="palm-group">
-    <div class="palm-group-title"><span>Search Podcast Directory</span></div>
+<div class="search-box">
+<div id="searchBox" class="palm-group">
+    <div id="searchBoxTitle" class="palm-group-title"><span>Search Podcast Directory</span></div>
     <div class="palm-list">
-        <div class="palm-row first">
+        <div id="providerDiv" class="palm-row first">
             <div class="palm-row-wrapper">
                 <div x-mojo-element="ListSelector" id="searchProviderList"></div>
 			</div>
@@ -21,7 +22,12 @@
         </div>
     </div>
 </div>
-<div id="feedSearchScroller" class="feed-search-scroller" x-mojo-element="Scroller">
-	<div id="feedSearchList" x-mojo-element="List"></div>
-</div><hr/>
+</div>
+<div id="searchBoxSpacer"></div>
+
+<div id="sceneFadeTop" class="scene-fade-top" x-mojo-scroll-fade="top"></div>
+<div id="feedSearchList" x-mojo-element="List"></div>
+<div class="scene-fade-bottom" x-mojo-scroll-fade="bottom"></div>
+
+<div class="search-provider-label-spacer"></div>
 <div id="providerLabel" class="search-provider-label"></div>

@@ -17,6 +17,10 @@ along with drPodder.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Jamie Hatfield <support@drpodder.com>
 */
 
+var LastSearchService = "digitalPodcast";
+var LastSearchFilter = "nofilter";
+var LastSearchKeyword = "";
+
 function DigitalPodcastSearch() {
 }
 
@@ -121,7 +125,6 @@ PodcastDeSearch.prototype.search = function(keyword, filter, callback) {
 };
 
 PodcastDeSearch.prototype.searchResults = function(callback, transport) {
-	Mojo.Log.info("transport.status = %d", transport.status);
 	var results = [];
 
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
@@ -131,7 +134,6 @@ PodcastDeSearch.prototype.searchResults = function(callback, transport) {
 	}
 
 	var doc = transport.responseXML;
-	Mojo.Log.info("transport.responseText", transport.responseText);
 	if (!doc) {
 		doc = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
 	}
@@ -148,7 +150,6 @@ PodcastDeSearch.prototype.searchResults = function(callback, transport) {
 		var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
 		var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
 		if (title !== undefined && url !== undefined) {
-			Mojo.Log.info("found: (%s)-[%s]", title, url);
 			results.push({title:title, url:url});
 		} else {
 			Mojo.Log.warn("skipping: (%s)-[%s]", title, url);
@@ -305,8 +306,6 @@ function FeedSearchAssistant() {
 }
 
 FeedSearchAssistant.prototype.setup = function() {
-	this.controller.setupWidget("feedSearchScroller", {}, {});
-
 	this.controller.setupWidget("searchProviderList",
 		{label: "Directory",
 		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},
@@ -314,10 +313,11 @@ FeedSearchAssistant.prototype.setup = function() {
 		           //{label: "Spoken Word", value: "spokenWord"}
 		           //{label: "Google Listen", value: "googleListen"}
 		]},
-		this.searchProviderModel = { value : "digitalPodcast" });
+		this.searchProviderModel = { value : LastSearchService });
 
 	this.searchProvider = this.controller.get("searchProviderList");
 	this.searchProviderChangeHandler = this.searchProviderChange.bind(this);
+	this.providerDiv = this.controller.get("providerDiv")
 
 	this.controller.setupWidget("filterList",
 		{label: "Filter",
@@ -327,7 +327,7 @@ FeedSearchAssistant.prototype.setup = function() {
 				   {label: "Clean", value: "clean"},
 				   {label: "Explicit", value: "explicit"},
 				   {label: "Adult", value: "adult"}]},
-		this.filterModel = { value : "nofilter" });
+		this.filterModel = { value : LastSearchFilter });
 
 	this.filter = this.controller.get("filterList");
 	this.filterDiv = this.controller.get("filterDiv");
@@ -341,9 +341,11 @@ FeedSearchAssistant.prototype.setup = function() {
 			autoReplace : false,
 			textCase : Mojo.Widget.steModeLowerCase,
 			focusMode : Mojo.Widget.focusSelectMode,
-			requiresEnterKey: true
+			requiresEnterKey: true,
+			enterSubmits : true,
+			changeOnKeyPress : true
 		},
-		this.keywordModel = { value : ""});
+		this.keywordModel = { value : LastSearchKeyword});
 
 	this.keywordField = this.controller.get("keywordField");
 	this.keywordChangeHandler = this.keywordChange.bind(this);
@@ -361,9 +363,13 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.providerLabel = this.controller.get("providerLabel");
 	this.providerLabel.update(this.searchServices[this.searchService].getProviderLabel());
 
+	this.searchBox = this.controller.get("searchBox");
+	this.searchBoxTitle = this.controller.get("searchBoxTitle");
+
 	this.controller.setupWidget("feedSearchList", this.listAttr, this.listModel);
 	this.feedSearchList = this.controller.get("feedSearchList");
 	this.selectionHandler = this.selection.bindAsEventListener(this);
+	this.focusChangeHandler = this.focusChange.bindAsEventListener(this);
 
 };
 
@@ -371,15 +377,42 @@ FeedSearchAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
 	Mojo.Event.listen(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
 	Mojo.Event.listen(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
+	this.focusChanges = Mojo.Event.listenForFocusChanges(this.keywordField, this.focusChangeHandler);
+	if (LastSearchKeyword) {
+		this.keywordChange({value: LastSearchKeyword, originalEvent: {keyCode: Mojo.Char.enter}});
+	}
+
 };
 
 FeedSearchAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.keywordField, Mojo.Event.propertyChange, this.keywordChangeHandler);
 	Mojo.Event.stopListening(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
 	Mojo.Event.stopListening(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
+	this.focusChanges.stopListening();
 };
 
 FeedSearchAssistant.prototype.cleanup = function() {
+};
+
+FeedSearchAssistant.prototype.focusChange = function(event) {
+	if (event) {
+		this.searchBoxTitle.show();
+		this.searchBox.removeClassName("unlabeled");
+		this.providerDiv.show();
+		this.searchProviderChange();
+	} else {
+		this.providerDiv.hide();
+		this.filterDiv.hide();
+		this.searchBoxTitle.hide();
+		this.searchBox.addClassName("unlabeled");
+		this.adjustTops();
+	}
+};
+
+FeedSearchAssistant.prototype.adjustTops = function() {
+	var height=this.controller.get("searchBox").getHeight();
+	this.controller.get("searchBoxSpacer").style.height = height + 'px';
+	this.controller.get("sceneFadeTop").style.top = (height+6) + 'px';
 };
 
 FeedSearchAssistant.prototype.searchProviderChange = function(event) {
@@ -390,18 +423,24 @@ FeedSearchAssistant.prototype.searchProviderChange = function(event) {
 	} else {
 		this.filterDiv.hide();
 	}
+	this.adjustTops();
 };
 
 FeedSearchAssistant.prototype.filterChange = function(event) {
 };
 
 FeedSearchAssistant.prototype.keywordChange = function(event) {
-	if (event.value) {
+	this.searchService = this.searchProviderModel.value;
+	LastSearchService = this.searchService;
+	LastSearchFilter = this.filterModel.value;
+	LastSearchKeyword = event.value;
+
+	if (event.originalEvent && event.originalEvent.keyCode === Mojo.Char.enter) {
+		this.keywordField.mojo.blur();
 		var ss = this.searchServices[this.searchService];
 
 		this.listModel.items = [];
 		this.controller.modelChanged(this.listModel);
-		Mojo.View.getScrollerForElement(this.providerLabel).mojo.revealBottom(true);
 
 		ss.search(event.value, this.filterModel.value, function(results) {
 			var numFeeds = results.length;

@@ -130,7 +130,7 @@
   position:fixed;
   top:0;
   z-index: 10000;
-  background-color:#ddd;
+  background-color:#e4e4e4;
   border-bottom-style: solid;
   border-bottom-width: thin;
   padding-bottom: 12px;
@@ -243,10 +243,32 @@
 .feed-search-scroller {
   height: 345px;
 }
+
+.search-provider-label-spacer {
+  font-size: 70%;
+  margin-bottom: 15px;
+  margin-bottom: 15px;
+}
+
 .search-provider-label{
+  z-index:999;
+  background-color:#e4e4e4;
+  position: fixed;
+  padding-bottom: 5px;
+  bottom: 0px;
   width: 100%;
   text-align: center;
   font-size: 70%;
+  border-top-style: solid;
+  border-top-width: thin;
+}
+
+.search-box {
+  z-index:999;
+  background-color:#e4e4e4;
+  position: fixed;
+  top: 0px;
+  width: 100%;
 }
 
 .drpodder-large-logo {
@@ -312,9 +334,18 @@
 
 .scene-fade-top {
   position: fixed;
-  top: 0;
+  top: 0px;
   z-index: 100000;
   height: 54px;
   width: 100%;
   background: url(../images/scene-fade-top.png) top center repeat-x;
+}
+
+.scene-fade-bottom {
+  position: fixed;
+  bottom: 24px;
+  z-index: 100000;
+  height: 54px;
+  width: 100%;
+  background: url(../images/scene-fade-bottom.png) top center repeat-x;
 }
