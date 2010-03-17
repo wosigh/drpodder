@@ -20,9 +20,10 @@ Copyright 2010 Jamie Hatfield <support@drpodder.com>
 function AddPlaylistAssistant(feed) {
 	this.feed = feed;
 
+	this.cmdMenuModel = {items: [{label: "Cancel", command: "cancel-cmd"}]};
+
 	if (this.feed !== null) {
 		this.newFeed = false;
-		this.cmdMenuModel = {items: [{label: "Update", command: "update-cmd"}]};
 		this.dialogTitle = "Edit Dynamic Playlist";
 		this.nameModel = { value: this.feed.title };
 		this.includeAllModel = { value: (this.feed.feedIds.length === 0) };
@@ -36,7 +37,6 @@ function AddPlaylistAssistant(feed) {
 		this.feed.details = undefined;
 
 		this.newFeed = true;
-		this.cmdMenuModel = {items: [{label: "Add", command: "update-cmd"}]};
 		this.dialogTitle = "Add Dynamic Playlist";
 		this.nameModel = { value: null };
 		this.includeAllModel = { value: false };
@@ -125,69 +125,84 @@ AddPlaylistAssistant.prototype.includeAllChanged = function(event) {
 	}
 };
 
-AddPlaylistAssistant.prototype.updateFields = function() {
-	if (this.nameModel.value) {this.feed.title = this.nameModel.value;}
+AddPlaylistAssistant.prototype.checkPlaylist = function() {
+	var feedIds = [];
+	if (!this.includeAllModel.value) {
+		this.feedModel.items.forEach(function(f) {
+			if (f.selected) {
+				feedIds.push(f.id);
+			}
+		});
+	}
+	if (this.nameModel.value) {
+		if (feedIds.length || this.includeAllModel.value) {
+			this.feed.feedIds = feedIds;
+			this.feed.title = this.nameModel.value;
+			this.feed.episodes = [];
+			this.feed.numNew = 0;
+			this.feed.numDownloaded = 0;
+			this.feed.numStarted = 0;
+			this.feed.downloadCount = 0;
+			this.feed.downloading = false;
+
+			if (feedIds.length === 0) {
+				feedIds = [];
+				feedModel.items.forEach(function(f) {
+					if (!f.playlist) { feedIds.push(f.id); }
+				});
+			}
+
+			feedIds.forEach(function(fid) {
+				var f = feedModel.getFeedById(fid);
+				f.playlists.push(this.feed);
+				f.episodes.forEach(function(e) {
+					this.feed.insertEpisodeTop(e);
+				}.bind(this));
+			}.bind(this));
+
+			this.feed.sortEpisodes();
+
+			var results = {};
+			if (this.newFeed) {
+				//feedModel.items.push(this.feed);
+				feedModel.items.unshift(this.feed);
+				results.feedChanged = true;
+				results.feedIndex = 0;
+				DB.saveFeeds();
+			} else {
+				results.feedChanged = true;
+				results.feedIndex = feedModel.items.indexOf(this.feed);
+				DB.saveFeed(this.feed);
+			}
+			this.controller.stageController.popScene(results);
+		} else {
+			if (this.newFeed) {
+				Util.banner("No Feeds Selected - Canceling playlist");
+				this.controller.stageController.popScene();
+			} else {
+				Util.showError("No Feeds Selected", "Please select at least 1 feed or choose \"Include All Feeds\"");
+			}
+		}
+	} else {
+		if (this.newFeed) {
+			Util.banner("No Playlist Title - Canceling playlist");
+			this.controller.stageController.popScene();
+		} else {
+			Util.showError("No Playlist Title", "Please enter a Title for the Playlist");
+		}
+	}
 };
 
 AddPlaylistAssistant.prototype.handleCommand = function(event) {
+	if (event.type === Mojo.Event.back) {
+		event.stop();
+		event.stopPropagation();
+		this.checkPlaylist();
+	}
 	if (event.type === Mojo.Event.command) {
 		switch (event.command) {
-			case "update-cmd":
-				var feedIds = [];
-				if (!this.includeAllModel.value) {
-					this.feedModel.items.forEach(function(f) {
-						if (f.selected) {
-							feedIds.push(f.id);
-						}
-					});
-				}
-				if (feedIds.length || this.includeAllModel.value) {
-					if (this.nameModel.value) {
-						this.feed.feedIds = feedIds;
-						this.feed.title = this.nameModel.value;
-						this.feed.episodes = [];
-						this.feed.numNew = 0;
-						this.feed.numDownloaded = 0;
-						this.feed.numStarted = 0;
-						this.feed.downloadCount = 0;
-						this.feed.downloading = false;
-
-						if (feedIds.length === 0) {
-							feedIds = [];
-							feedModel.items.forEach(function(f) {
-								if (!f.playlist) { feedIds.push(f.id); }
-							});
-						}
-
-						feedIds.forEach(function(fid) {
-							var f = feedModel.getFeedById(fid);
-							f.playlists.push(this.feed);
-							f.episodes.forEach(function(e) {
-								this.feed.insertEpisodeTop(e);
-							}.bind(this));
-						}.bind(this));
-
-						this.feed.sortEpisodes();
-
-						var results = {};
-						if (this.newFeed) {
-							//feedModel.items.push(this.feed);
-							feedModel.items.unshift(this.feed);
-							results.feedChanged = true;
-							results.feedIndex = 0;
-							DB.saveFeeds();
-						} else {
-							results.feedChanged = true;
-							results.feedIndex = feedModel.items.indexOf(this.feed);
-							DB.saveFeed(this.feed);
-						}
-						this.controller.stageController.popScene(results);
-					} else {
-						Util.showError("No Playlist Title", "Please enter a Title for the Playlist");
-					}
-				} else {
-					Util.showError("No Feeds Selected", "Please select at least 1 feed or choose \"Include All Feeds\"");
-				}
+			case "cancel-cmd":
+				this.controller.stageController.popScene();
 				break;
 			case "shutupJSLint":
 				break;

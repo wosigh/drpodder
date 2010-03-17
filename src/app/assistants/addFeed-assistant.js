@@ -488,7 +488,7 @@ AddFeedAssistant.prototype.handleCommand = function(event) {
 				this.controller.stageController.popScene();
 				break;
 		}
-	} else	if (event.type === Mojo.Event.back) {
+	} else if (event.type === Mojo.Event.back) {
 		event.stop();
 		event.stopPropagation();
 		this.checkFeed();

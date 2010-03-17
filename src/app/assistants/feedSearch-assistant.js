@@ -317,7 +317,7 @@ FeedSearchAssistant.prototype.setup = function() {
 
 	this.searchProvider = this.controller.get("searchProviderList");
 	this.searchProviderChangeHandler = this.searchProviderChange.bind(this);
-	this.providerDiv = this.controller.get("providerDiv")
+	this.providerDiv = this.controller.get("providerDiv");
 
 	this.controller.setupWidget("filterList",
 		{label: "Filter",
