@@ -40,12 +40,12 @@ EpisodeListAssistant.prototype.menuAttr = {omitDefaultItems: true};
 
 EpisodeListAssistant.prototype.filterMenuModel = {
 	items: [
-		{label: "ALL", command: "filter-all-cmd"},
-		{label: "New", command: "filter-new-cmd"},
-		{label: "Old", command: "filter-old-cmd"},
-		{label: "Downloaded", command: "filter-downloaded-cmd"},
-		{label: "Downloading", command: "filter-downloading-cmd"},
-		{label: "Paused", command: "filter-paused-cmd"}
+		{label: $L("ALL"), command: "filter-all-cmd"},
+		{label: $L("New"), command: "filter-new-cmd"},
+		{label: $L("Old"), command: "filter-old-cmd"},
+		{label: $L("Downloaded"), command: "filter-downloaded-cmd"},
+		{label: $L("Downloading"), command: "filter-downloading-cmd"},
+		{label: $L("Paused"), command: "filter-paused-cmd"}
 	]
 };
 
@@ -101,7 +101,7 @@ EpisodeListAssistant.prototype.filterEpisodes = function() {
 EpisodeListAssistant.prototype.setup = function() {
 	this.cmdMenuModel = {
 		items: [
-			{label: "View: " + this.feedObject.viewFilter, submenu: "filter-menu"},
+			{label: "View: " + $L(this.feedObject.viewFilter), submenu: "filter-menu"},
 			{icon: "refresh", command: "refresh-cmd"}
 		]
 	};
@@ -110,17 +110,17 @@ EpisodeListAssistant.prototype.setup = function() {
 		visible: true,
 		items: [
 			Mojo.Menu.editItem,
-			{label: "Edit Feed", command: "edit-cmd"},
-			{label: "Mark all as New", command: "unlistened-cmd"},
-			{label: "Mark all as Old", command: "listened-cmd"},
-			{label: "Report a Problem", command: "report-cmd"},
-			{label: "Help", command: "help-cmd"},
-			{label: "About...", command: "about-cmd"}
+			{label: $L({value:"Edit Feed", key:"editFeed"}), command: "edit-cmd"},
+			{label: $L({value:"Mark all as New", key:"markAllNew"}), command: "unlistened-cmd"},
+			{label: $L({value:"Mark all as Old", key:"markAllOld"}), command: "listened-cmd"},
+			{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
+			{label: $L("Help"), command: "help-cmd"},
+			{label: $L("About") + '...', command: "about-cmd"}
 		]
 	};
 
 	if (this.feedObject.playlist) {
-		this.menuModel.items[1].label = "Edit Playlist";
+		this.menuModel.items[1].label = $L({value:"Edit Playlist", key:"editPlaylist"});
 
 	}
 
@@ -339,7 +339,7 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 
 EpisodeListAssistant.prototype.handleFilterCommand = function(filter) {
 	this.feedObject.viewFilter = filter;
-	this.cmdMenuModel.items[0].label = "View: " + filter;
+	this.cmdMenuModel.items[0].label = "View: " + $L(filter);
 	this.controller.modelChanged(this.cmdMenuModel);
 	this.filterEpisodes();
 	DB.saveFeed(this.feedObject);
@@ -369,7 +369,7 @@ EpisodeListAssistant.prototype.playFrom = function(oldest) {
 		var e = playlist.shift();
 		this.stageController.pushScene({name: "episodeDetails", transition: Prefs.transition}, e, {autoPlay: true, resume: true, playlist: playlist});
 	} else {
-		Util.showError("Error playing episodes", "No New Episodes found");
+		Util.showError($L({value:"Error playing episodes", key:"errorPlayingEpisodes"}), $L({value:"No New Episodes found", key:"noNewEpisodes"}));
 	}
 };
 
@@ -383,8 +383,8 @@ EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 
 EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var formatted = pubDate;
-	var d_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-	var m_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+	var d_names = [$L("Sun"), $L("Mon"), $L("Tue"), $L("Wed"), $L("Thu"), $L("Fri"), $L("Sat")];
+	var m_names = [$L("Jan"), $L("Feb"), $L("Mar"), $L("Apr"), $L("May"), $L("Jun"), $L("Jul"), $L("Aug"), $L("Sep"), $L("Oct"), $L("Nov"), $L("Dec")];
 	if (formatted) {
 		var d = formatted;
 		var y = d.getFullYear();
@@ -445,17 +445,17 @@ EpisodeListAssistant.prototype.handleDelete = function(event) {
 };
 
 EpisodeListAssistant.prototype.cmdItems = {
-	deleteCmd     : {label: "Delete", command: "delete-cmd"},
-	downloadCmd   : {label: "Download", command: "download-cmd"},
-	cancelCmd     : {label: "Cancel", command: "cancel-cmd"},
-	playCmd       : {label: "Play", command: "resume-cmd"},
-	resumeCmd     : {label: "Resume", command: "resume-cmd"},
-	restartCmd    : {label: "Restart", command: "restart-cmd"},
-	listenedCmd   : {label: "Mark as Old", command: "listen-cmd"},
-	unlistenedCmd : {label: "Mark as New", command: "unlisten-cmd"},
-	clearCmd      : {label: "Clear Bookmark", command: "clear-cmd"},
-	detailsCmd    : {label: "Episode Details", command: "details-cmd"},
-	noEnclosureCmd: {label: "No enclosure found", command: "noenclosure-cmd", disabled: true}
+	deleteCmd     : {label: $L("Delete"), command: "delete-cmd"},
+	downloadCmd   : {label: $L("Download"), command: "download-cmd"},
+	cancelCmd     : {label: $L("Cancel"), command: "cancel-cmd"},
+	playCmd       : {label: $L("Play"), command: "resume-cmd"},
+	resumeCmd     : {label: $L("Resume"), command: "resume-cmd"},
+	restartCmd    : {label: $L("Restart"), command: "restart-cmd"},
+	listenedCmd   : {label: $L({value:"Mark as Old", key:"markOld"}), command: "listen-cmd"},
+	unlistenedCmd : {label: $L({value:"Mark as New", key:"markNew"}), command: "unlisten-cmd"},
+	clearCmd      : {label: $L({value:"Clear Bookmark", key:"clearBookmark"}), command: "clear-cmd"},
+	detailsCmd    : {label: $L({value:"Episode Details", key:"episodeDetails"}), command: "details-cmd"},
+	noEnclosureCmd: {label: $L({value:"No enclosure found", key:"noEnclosureFound"}), command: "noenclosure-cmd", disabled: true}
 };
 
 EpisodeListAssistant.prototype.clearPopupMenuOnSelection = function(event) {

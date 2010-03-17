@@ -222,8 +222,8 @@ Episode.prototype.clearBookmark = function(ignore) {
 
 Episode.prototype.download = function(silent) {
 	if (!silent) {
-		Util.banner("Downloading: " + this.title);
-		Util.dashboard(DrPodder.DownloadingStageName, "Downloading", this.title);
+		Util.banner($L("Downloading") + ": " + this.title);
+		Util.dashboard(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 	}
 	this.deleteFile();
 	var url = this.getEnclosure();
@@ -326,7 +326,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		event.errorCode === -1 &&
 		event.serviceName === "com.palm.downloadmanager") {
 		Mojo.Log.error("Error contacting downloadmanager");
-		Util.showError("Error Downloading Episode", "There was an error connecting to the download manager service.  Please ensure you are running WebOS 1.2 or later");
+		Util.showError($L({value:"Error Downloading Episode", key:"errorDownloadingEpisode"}), $L({value:"There was an error connecting to the download manager service.  Please ensure you are running webOS 1.2 or later", key:"errorDownloadManagerService"}));
 	} else 	if (event.returnValue) {
 		this.downloadCanceled = false;
 		this.downloadTicket = event.ticket;
@@ -351,10 +351,10 @@ Episode.prototype.downloadingCallback = function(event) {
 		if (!event.aborted) {
 			if (event.completionStatusCode === 401) {
 				Mojo.Log.error("Authentication error during download. %j", event);
-				Util.showError("Authentication Error", "The username and/or password for this feed is incorrect. Please correct and try your download again.");
+				Util.showError($L({value:"Authentication Error", key:"authenticationError"}), $L({value:"The username and/or password for this feed is incorrect. Please correct and try your download again.", key:"authenticationErrorDetail"}));
 			} else {
 				Mojo.Log.error("Download error=%j", event);
-				Util.showError("Download aborted", "There was an error downloading url:"+this.enclosure);
+				Util.showError($L({value:"Download aborted", key:"downloadAborted"}), $L({value:"There was an error downloading url:", key:"downloadAbortedDetail"})+this.enclosure);
 			}
 		}
 	} else if (this.downloading && event.completed) {

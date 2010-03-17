@@ -30,11 +30,11 @@ FeedListAssistant.prototype.cmdMenuModel = {
 };
 
 FeedListAssistant.prototype.addMenuModel = {
-	items: [{label: "Enter feed URL...", command: "add-feed"},
-			{label: "Search Directory...", command: "feed-search"},
+	items: [{label: $L({value:"Enter feed URL...", key:"enterFeedURL"}), command: "add-feed"},
+			{label: $L({value:"Search Directory...", key:"searchDirectory"}), command: "feed-search"},
 	        //{label: "Search podTrapper...", command: "pt-search"},
 	        //{label: "Search the Web...", command: "web-search"},
-	        {label: "Dynamic Playlist...", command: "add-playlist"}
+	        {label: $L({value:"Dynamic Playlist...", key:"dynamicPlaylist"}), command: "add-playlist"}
 	        ]
 };
 
@@ -44,8 +44,6 @@ FeedListAssistant.prototype.viewMenuModel = {
 	items: []
 };
 
-
-//FeedListAssistant.prototype.depotOptions = { name: "feed", replace: false };
 
 FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
@@ -152,20 +150,19 @@ FeedListAssistant.prototype.activate = function(result) {
 		if (Prefs.firstRun) {
 			Prefs.firstRun = false;
 			DB.writePrefs();
-			var dialog = new drnull.Dialog.Confirm(this, "Add Default Feeds",
-				"Welcome to drPodder!<br><br>Would you like to add some technology podcasts to get you started?",
+			var dialog = new drnull.Dialog.Confirm(this, $L({value:"Add Default Feeds", key:"addDefaultFeeds"}),
+				$L({value:"Welcome to drPodder!<br><br>Would you like to add some technology podcasts to get you started?", key:"drpodderWelcome"}),
 				function() {
 					Mojo.Log.warn("we want to add feeds");
-					var dialog = new drnull.Dialog.Info(this, "Thanks for using drPodder!",
-						"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left." +
-						"<br><br>Feel free to delete any of the default podcasts.");
+					var dialog = new drnull.Dialog.Info(this, $L({value:"Thanks for using drPodder!", key:"drpodderThanks"}),
+						$L({value:"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left.", key:"drpodderInstructions"}) +
+						"<br><br>" + $L({value:"Feel free to delete any of the default podcasts.", key:"drpodderDeleteDefaults"}));
 					dialog.show();
 					this._loadDefaultFeeds();
 				}.bind(this),
 				function() {
-					var dialog = new drnull.Dialog.Info(this, "Thanks for using drPodder!",
-						"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left." +
-						"<br><br>Until you add at least one podcast, you will see this prompt when starting the program.");
+					var dialog = new drnull.Dialog.Info(this, $L({value:"Thanks for using drPodder!", key:"drpodderThanks"}),
+						$L({value:"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left.", key:"drpodderInstructions"}));
 					dialog.show();
 				}.bind(this));
 			dialog.show();
@@ -175,9 +172,9 @@ FeedListAssistant.prototype.activate = function(result) {
 };
 
 FeedListAssistant.prototype.loadDefaultFeeds = function() {
-	var dialog = new drnull.Dialog.Confirm(this, "Add Default Feeds",
-		"Would you like to add the following feeds?<ul>" +
-		"<li>This Week in Tech</li>" +
+	var dialog = new drnull.Dialog.Confirm(this, $L({value:"Add Default Feeds", key:"addDefaultFeeds"}),
+		$L({value:"Would you like to add the following feeds?", key:"drpodderDefaults"}) +
+		"<ul><li>This Week in Tech</li>" +
 		"<li>PalmCast</li>" +
 		"<li>Engadget Podcast</li>" +
 		"<li>gdgt weekly</li>" +
@@ -303,9 +300,9 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 	var feedIndex = event.index;
 	var feed = feedModel.items[feedIndex];
 	if (targetClass.indexOf("feedStats") === 0) {
-		var editCmd = {label: "Edit Feed", command: "edit-cmd"};
+		var editCmd = {label: $L({value:"Edit Feed", key:"editFeed"}), command: "edit-cmd"};
 		if (feed.playlist) {
-			editCmd = {label: "Edit Playlist", command: "editplaylist-cmd"};
+			editCmd = {label: $L({value:"Edit Playlist", key:"editPlaylist"}), command: "editplaylist-cmd"};
 		}
 		// popup menu:
 		// last update date/time
@@ -323,7 +320,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			        //{label: feed.numDownloaded+" downloaded", command: 'viewDownloaded-cmd'},
 			        //{label: feed.numNew+" new", command: 'viewNew-cmd'},
 			        //{label: feed.numStarted+" started", command: 'viewStarted-cmd'},
-			        {label: "Clear New", command: 'listened-cmd'},
+			        {label: $L({value:"Clear New", key:"clearNew"}), command: 'listened-cmd'},
 			        editCmd
 			]});
 	} else if (targetClass.indexOf("download") === 0) {
@@ -331,7 +328,7 @@ FeedListAssistant.prototype.handleSelection = function(event) {
 			onChoose: this.popupHandler.bind(this, feed, feedIndex),
 			placeNear: event.originalEvent.target,
 			items: [
-			        {label: "Cancel Downloads", command: 'cancelDownloads-cmd'}
+			        {label: $L({value:"Cancel Downloads", key:"cancelDownloads"}), command: 'cancelDownloads-cmd'}
 			]});
 	} else {
 		this.stageController.pushScene({name: "episodeList", transition: Prefs.transition}, feed);

@@ -35,7 +35,7 @@ DBClass.prototype.dbVersions = [
 
 DBClass.prototype.waitForFeeds = function(callback) {
 	Mojo.Controller.getAppController().sendToNotificationChain({
-		type: "updateLoadingMessage", message: "Opening Database"});
+		type: "updateLoadingMessage", message: $L({value:"Opening Database", key:"openingDatabase"})});
 
 	this.callback = callback;
 	this.readPrefs();
@@ -64,14 +64,14 @@ DBClass.prototype.waitForFeeds = function(callback) {
 
 	if (!this.db) {
 		Mojo.Controller.getAppController().sendToNotificationChain({
-			type: "updateLoadingMessage", message: "Error Creating DB!"});
+			type: "updateLoadingMessage", message: $L({value:"Error Creating DB!", key:"errorCreatingDB"})});
 		Mojo.Log.error("Error creating DB");
 	} else if (currentVerIndex > 0) {
 		ver = this.dbVersions[currentVerIndex];
 		var latestVersion = this.dbVersions[0].version;
 
 		Mojo.Controller.getAppController().sendToNotificationChain({
-			type: "updateLoadingMessage", message: "Upgrading Database from " + ver.version});
+			type: "updateLoadingMessage", message: $L({value:"Upgrading Database from #{version}", key:"upgradingDB"}).interpolate(ver)});
 
 		Mojo.Log.warn("We need to upgrade from v%s using [%s]", ver.version, ver.migrationSql);
 		Mojo.Log.warn("version:%s, latestVersion:%s", ver.version, latestVersion);
@@ -84,7 +84,7 @@ DBClass.prototype.waitForFeeds = function(callback) {
 				var migrateFail = function(transaction, error) {Mojo.Log.error("Error executing migration statement %d: %j", i, error);};
 				for (var i=0; i<ver.migrationSql.length; i++) {
 					Mojo.Controller.getAppController().sendToNotificationChain({
-						type: "updateLoadingMessage", message: "Upgrading Database from " + ver.version + "_" + i});
+						type: "updateLoadingMessage", message: $L({value:"Upgrading Database from #{version}", key:"upgradingDB"}).interpolate({version:ver.version+"_"+i})});
 					transaction.executeSql(ver.migrationSql[i], [], migrateSuccess, migrateFail);
 				}
 				Mojo.Log.warn("Finished upgrading db");
@@ -179,7 +179,7 @@ DBClass.prototype.initDB = function(db) {
 DBClass.prototype.loadFeeds = function() {
 	var loadSQL = "SELECT * FROM feed ORDER BY displayOrder";
 	Mojo.Controller.getAppController().sendToNotificationChain({
-		type: "updateLoadingMessage", message: "Loading Feeds"});
+		type: "updateLoadingMessage", message: $L({value:"Loading Feeds", key:"loadingFeeds"})});
 
 	this.db.transaction(function(transaction) {
 		transaction.executeSql(loadSQL, [],
@@ -228,7 +228,7 @@ DBClass.prototype.getEpisodeDescription = function(e, callback) {
 			},
 			function(transaction, error) {
 				Mojo.Log.error("Error retrieving episode description for %d: %j", e.id, error);
-				callback("Error loading description from database.  Please restart drPodder.");
+				callback($L({value:"Error loading description from database.  Please restart drPodder.", key:"errorLoadingDescription"}));
 			});
 	});
 };
@@ -238,7 +238,7 @@ DBClass.prototype.loadEpisodes = function() {
 	var loadSQL = "SELECT id, feedId, displayOrder, title, enclosure, guid, link, position, pubDate, downloadTicket, downloaded, listened, file, length, type FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage",
-		message: "Loading Episodes"});
+		message: $L({value:"Loading Episodes", key:"loadingEpisodes"})});
 
 	//this.startEpisodeRetrieval = (new Date()).getTime();
 	this.db.transaction(function(transaction) {

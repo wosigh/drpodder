@@ -20,11 +20,11 @@ Copyright 2010 Jamie Hatfield <support@drpodder.com>
 function AddPlaylistAssistant(feed) {
 	this.feed = feed;
 
-	this.cmdMenuModel = {items: [{label: "Cancel", command: "cancel-cmd"}]};
+	this.cmdMenuModel = {items: [{label: $L("Cancel"), command: "cancel-cmd"}]};
 
 	if (this.feed !== null) {
 		this.newFeed = false;
-		this.dialogTitle = "Edit Dynamic Playlist";
+		this.dialogTitle = $L({value:"Edit Dynamic Playlist", key:"editDynamicPlaylist"});
 		this.nameModel = { value: this.feed.title };
 		this.includeAllModel = { value: (this.feed.feedIds.length === 0) };
 	} else {
@@ -37,7 +37,7 @@ function AddPlaylistAssistant(feed) {
 		this.feed.details = undefined;
 
 		this.newFeed = true;
-		this.dialogTitle = "Add Dynamic Playlist";
+		this.dialogTitle = $L({value:"Add Dynamic Playlist", key:"addDynamicPlaylist"});
 		this.nameModel = { value: null };
 		this.includeAllModel = { value: false };
 	}
@@ -61,8 +61,8 @@ AddPlaylistAssistant.prototype.setup = function() {
 		visible: true,
 		items: [
 			Mojo.Menu.editItem,
-			{label: "Help", command: "help-cmd"},
-			{label: "About...", command: "about-cmd"}
+			{label: $L("Help"), command: "help-cmd"},
+			{label: $L("About") + '...', command: "about-cmd"}
 		]
 	};
 
@@ -190,18 +190,18 @@ AddPlaylistAssistant.prototype.checkPlaylist = function() {
 			this.controller.stageController.popScene(results);
 		} else {
 			if (this.newFeed) {
-				Util.banner("No Feeds Selected - Canceling playlist");
+				Util.banner($L({value:"No Feeds Selected - Canceling playlist", key:"noFeedsSelectedCanceling"}));
 				this.controller.stageController.popScene();
 			} else {
-				Util.showError("No Feeds Selected", "Please select at least 1 feed or choose \"Include All Feeds\"");
+				Util.showError($L({value:"No Feeds Selected", key:"noFeedsSelected"}), $L({value:"Please select at least 1 feed or choose \"Include All Feeds\"", key:"selectFeeds"}));
 			}
 		}
 	} else {
 		if (this.newFeed) {
-			Util.banner("No Playlist Title - Canceling playlist");
+			Util.banner($L({value:"No Playlist Title - Canceling playlist", key:"noTitleCanceling"}));
 			this.controller.stageController.popScene();
 		} else {
-			Util.showError("No Playlist Title", "Please enter a Title for the Playlist");
+			Util.showError($L({value:"No Playlist Title", key:"noTitle"}), $L({value:"Please enter a Title for the Playlist", key:"enterTitle"}));
 		}
 	}
 };

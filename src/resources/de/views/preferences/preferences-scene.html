@@ -1,0 +1,104 @@
+<div class="palm-page-header">
+    <div class="palm-page-header-wrapper">
+        <div id="dialogTitle" class="title">DE Preferences</div>
+    </div>
+</div>
+
+<div class="palm-group">
+    <div class="palm-group-title">DE Application Settings</div>
+        <div class="palm-row first">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="freeRotationToggle"></div>
+                <div class="title">
+                    DE Allow Landscape
+                </div>
+            </div>
+        </div>
+        <!--div class="palm-row first">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="enableNotificationsToggle"></div>
+                <div class="title">
+                    Notifications
+                </div>
+            </div>
+        </div-->
+        <div class="palm-row">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="autoUpdateToggle"></div>
+                <div class="title">
+                    DE Auto Update
+                </div>
+            </div>
+        </div>
+        <div id="updateIntervalDiv">
+            <div class="palm-row">
+                <div class="palm-row-wrapper">
+                    <div x-mojo-element="ListSelector" id="updateTypeList"></div>
+                </div>
+            </div>
+            <div id="intervalH" class="palm-row">
+                <div class="palm-row-wrapper">
+                    <div x-mojo-element="ListSelector" id="updateIntervalList"></div>
+                </div>
+            </div>
+            <div id="intervalW" class="palm-row">
+                <div class="palm-row-wrapper">
+                    <div x-mojo-element="ListSelector" id="updateDayList"></div>
+                </div>
+            </div>
+            <div id="intervalD" class="palm-row">
+                <div class="palm-row-wrapper">
+                    <div x-mojo-element="TimePicker" id="timePicker"></div>
+                </div>
+            </div>
+        </div>
+        <div id="wifiToggleDiv" class="palm-row">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="wifiToggle"></div>
+                <div class="title">
+                    DE Enable Wifi
+                </div>
+            </div>
+        </div>
+        <div class="palm-row">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="limitToWifiToggle"></div>
+                <div class="title">
+                    DE DL only over WiFi
+                </div>
+            </div>
+        </div>
+        <div class="palm-row last">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ListSelector" id="transitionList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="palm-group">
+    <div class="palm-group-title">DE Feed List Settings</div>
+    <div class="palm-list">
+        <div class="palm-row first">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="albumArtToggle"></div>
+                <div class="title">DE Show Album Art</div>
+            </div>
+        </div>
+        <div class="palm-row last">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="simpleToggle"></div>
+                <div class="title">DE Show Feed Details</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="palm-group">
+    <div class="palm-group-title">DE Episode List Settings</div>
+        <div class="palm-row single">
+            <div class="palm-row-wrapper">
+                <div x-mojo-element="ToggleButton" id="singleTap"></div>
+                <div class="title">DE Enable Single Tap</div>
+            </div>
+        </div>
+    </div>
+</div>

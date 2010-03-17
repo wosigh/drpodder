@@ -46,7 +46,7 @@ LoadingAssistant.prototype.activate = function() {
 LoadingAssistant.prototype.waitForFeedsReady = function() {
 	//this.spinnerModel.spinning = false;
 	//this.controller.modelChanged(this.spinnerModel);
-	this.loadingDiv.update("Loading Feed List");
+	this.loadingDiv.update($L({value:"Loading Feed List", key:"loadingFeedList"}));
 	this.stageController.swapScene({name: "feedList", transition: Prefs.transition});
 };
 

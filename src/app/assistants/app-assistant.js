@@ -39,14 +39,14 @@ AppAssistant.appMenuModel = {
 	items: [
 		Mojo.Menu.editItem,
 		{label: "OPML",
-		 items: [{label: "Import from drpodder.xml", command: "import-cmd"},
-				 {label: "Export via email", command: "export-cmd"}]
+		 items: [{label: $L({value:"Import from drpodder.xml", key:"importDrpodder"}), command: "import-cmd"},
+			 {label: $L({value:"Export via email", key:"exportDrpodder"}), command: "export-cmd"}]
 		},
-		{label: "Preferences", command: "prefs-cmd"},
-		{label: "Add Default Feeds", command: "addDefault-cmd"},
-		{label: "Report a Problem", command: "report-cmd"},
-		{label: "Help", command: "help-cmd"},
-		{label: "About...", command: "about-cmd"}
+		{label: $L("Preferences"), command: "prefs-cmd"},
+		{label: $L({value:"Add Default Feeds", key:"addDefaultFeeds"}), command: "addDefault-cmd"},
+		{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
+		{label: $L("Help"), command: "help-cmd"},
+		{label: $L("About") + '...', command: "about-cmd"}
 	]
 };
 
@@ -182,10 +182,10 @@ AppAssistant.prototype.handleCommand = function(event) {
 				var req = new Ajax.Request("/media/internal/drpodder.xml", {
 					method: 'get',
 					onFailure: function() {
-						Util.showError("Weird error reading OPML File", "I don't know what happened, but we couldn't read the drpodder.xml file.");
+						Util.showError($L({value:"Error reading OPML File", key:"errorReadingOPML"}), $L({value:"I don't know what happened, but we couldn't read the drpodder.xml file.", key:"couldntReadDrpodder"}));
 					},
 					on404: function() {
-						Util.showError("OPML File not found", "Please place the drpodder.xml file in the root of the Pre's USB directory and retry.");
+						Util.showError($L({value:"OPML File not found", key:"opmlNotFound"}), $L({value:"Please place the drpodder.xml file in the root of the Pre's USB directory and retry.", key:"pleasePlaceDrpodder"}));
 					},
 					onSuccess: function(transport) {
 						try {
@@ -225,20 +225,20 @@ AppAssistant.prototype.handleCommand = function(event) {
 							}
 							if (imported > 0) {
 								DB.saveFeeds();
-								Util.showError("OPML Import Finished", "The " + imported + " imported feed" + ((imported !== 1)?"s":"") + " can be found at the END of your feed list.");
+								Util.showError($L({value:"OPML Import Finished", key:"opmlImportFinished"}), $L({value:"The #{num} imported feed" + ((imported !== 1)?"s":"") + " can be found at the END of your feed list.", key:"opmlImportStatus"}).interpolate({num:imported}));
 							} else {
-								Util.showError("OPML Import Finished", "No valid feeds found in drpodder.xml");
+								Util.showError($L({value:"OPML Import Finished", key:"opmlImportFinished"}), $L({value:"No valid feeds found in drpodder.xml", key:"noValidFeeds"}));
 							}
 						} catch (e){
 							Mojo.Log.error("error with OPML: (%s)", e);
-							Util.showError("Error parsing OPML File", "There was an error parsing the OPML file.  Please send the file to support@drpodder.com.");
+							Util.showError($L({value:"Error parsing OPML File", key:"errorParsingOPML"}), $L({value:"There was an error parsing the OPML file.  Please send the file to support@drPodder.com.", key:"errorParsingOPMLBody"}));
 						}
 					}.bind(this)
 				});
 				break;
 			case "export-cmd":
-				var message = "Copy the following out to a file named drpodder.xml (Make sure the filename is all lowercase and Windows doesn't rename the file as drpodder.xml.txt).<br>" +
-				              "To restore this set of feeds to drPodder, simply copy drpodder.xml to the root of the Pre's USB directory." +
+				var message = $L({value:"Copy the following out to a file named drpodder.xml (Make sure the filename is all lowercase and Windows doesn't rename the file as drpodder.xml.txt).<br>" +
+				              "To restore this set of feeds to drPodder, simply copy drpodder.xml to the root of the Pre's USB directory.", key:"opmlInstructions"}) +
 							  "<br><br>&lt;opml version='1.1'>&lt;body><br>";
 				for (var i=0; i<feedModel.items.length; i++) {
 					var feed = feedModel.items[i];
@@ -258,21 +258,21 @@ AppAssistant.prototype.handleCommand = function(event) {
 					}
 				}
 				message += "&lt;/body>&lt;/opml>";
-				AppAssistant.applicationManagerService.email("drPodder OPML Export", message);
+				AppAssistant.applicationManagerService.email($L({value:"drPodder OPML Export", key:"opmlSubject"}), message);
 				break;
             case "report-cmd":
-				var dialog = new drnull.Dialog.Confirm(event.assistant, "Report A Problem?",
-					"Would you like to send an email that is prepopulated with a detailed error report? No personal information such as usernames or passwords will be included.",
+				var dialog = new drnull.Dialog.Confirm(event.assistant, $L({value:"Report A Problem", key:"reportProblem"})+'?',
+					$L({value:"Would you like to send an email that is prepopulated with a detailed error report? No personal information such as usernames or passwords will be included.", key:"reportProblemPrompt"}),
 					function() {
-						var message = "Please describe the problem you are experiencing with " + Mojo.appInfo.title + " here:<br/><br/><br/><br/><br/><br/>";
-						message += "Report Information (please do not remove)<br/>";
+						var message = $L({value:"Please describe the problem you are experiencing with drPodder here:", key:"reportProblemIntro"}) + "<br/><br/><br/><br/><br/><br/>";
+						message += $L({value:"Report Information (please do not remove)", key:"reportInfo"}) + "<br/>";
 						message += "Application: " + Mojo.appInfo.id + " v" + Mojo.Controller.appInfo.version + "<br/>";
 						message += event.data;
 						AppAssistant.applicationManagerService.email("drPodder Problem Report", message);
 					}.bind(this),
 					function() {
-						var dialog = new drnull.Dialog.Info(event.assistant, "Sorry for the inconvienence!",
-							"I hope you can resolve your problem.  Please contact support@drPodder.com if you need further assistance.");
+						var dialog = new drnull.Dialog.Info(event.assistant, $L({value:"Sorry for the inconvienence!", key:"sorry1"}),
+							$L({value:"I hope you can resolve your problem.  Please contact support@drPodder.com if you need further assistance.", key:"sorry2"}));
 						dialog.show();
 					}.bind(this));
 				dialog.show();

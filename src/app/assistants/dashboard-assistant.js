@@ -87,7 +87,7 @@ DashboardAssistant.prototype.removeMessage = function(title, message) {
 		}
 		this.count = this.messages.length;
 		if (this.count === 0) {
-			if (this.title === "Downloading" && feedModel.enabledWifi) {
+			if (this.title === $L("Downloading") && feedModel.enabledWifi) {
 				AppAssistant.wifiService.setState(null, "disabled");
 			}
 			this.controller.window.close();

@@ -44,7 +44,7 @@ DigitalPodcastSearch.prototype.search = function(keyword, filter, callback) {
 		evalJS : "false",
 		onFailure : function(transport) {
 			Mojo.Log.error("Error contacting search service: %d", transport.status);
-			Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+			Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		},
 		onSuccess : this.searchResults.bind(this, callback)
 	});
@@ -57,7 +57,7 @@ DigitalPodcastSearch.prototype.searchResults = function(callback, transport) {
 
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
 		Mojo.Log.error("Error contacting search service: %d", transport.status);
-		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		return;
 	}
 
@@ -70,7 +70,7 @@ DigitalPodcastSearch.prototype.searchResults = function(callback, transport) {
 
 	if (totalResults === undefined) {
 		Mojo.Log.error("Error contacting search service: result count not found");
-		Util.showError("Error contacting search service", "Result Count not found");
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), $L({value:"No Results Found", key:"noResults"}));
 		return;
 	}
 
@@ -117,7 +117,7 @@ PodcastDeSearch.prototype.search = function(keyword, filter, callback) {
 		},
 		onFailure : function(transport) {
 			Mojo.Log.error("Error contacting search service: %d", transport.status);
-			Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+			Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		},
 		onSuccess : this.searchResults.bind(this, callback)
 	});
@@ -129,7 +129,7 @@ PodcastDeSearch.prototype.searchResults = function(callback, transport) {
 
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
 		Mojo.Log.error("Error contacting search service: %d", transport.status);
-		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		return;
 	}
 
@@ -142,7 +142,7 @@ PodcastDeSearch.prototype.searchResults = function(callback, transport) {
 	var node = nodes.iterateNext();
 	if (!node) {
 		Mojo.Log.error("Error contacting search service: outline node not found");
-		Util.showError("Error contacting search service", "No results found");
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), $L({value:"No results found", key:"noResults"}));
 		return;
 	}
 
@@ -185,7 +185,7 @@ SpokenWordSearch.prototype.search = function(keyword, filter, callback) {
 		evalJS : "false",
 		onFailure : function(transport) {
 			Mojo.Log.error("Error contacting search service: %d", transport.status);
-			Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+			Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		},
 		onSuccess : this.searchResults.bind(this, callback)
 	});
@@ -198,7 +198,7 @@ SpokenWordSearch.prototype.searchResults = function(callback, transport) {
 
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
 		Mojo.Log.error("Error contacting search service: %d", transport.status);
-		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		return;
 	}
 
@@ -208,7 +208,7 @@ SpokenWordSearch.prototype.searchResults = function(callback, transport) {
 
 	if (totalResults === undefined) {
 		Mojo.Log.error("Error contacting search service: result count not found");
-		Util.showError("Error contacting search service", "Result Count not found");
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), $L({value:"No Results Found", key:"noResults"}));
 		return;
 	}
 
@@ -245,7 +245,7 @@ GoogleListenSearch.prototype.search = function(keyword, filter, callback) {
 		evalJS : "false",
 		onFailure : function(transport) {
 			Mojo.Log.error("Error contacting search service: %d", transport.status);
-			Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+			Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		},
 		onSuccess : this.searchResults.bind(this, callback)
 	});
@@ -258,7 +258,7 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
 		Mojo.Log.error("Error contacting search service: %d", transport.status);
-		Util.showError("Error contacting search service", "HTTP Status:"+transport.status);
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
 		return;
 	}
 
@@ -275,7 +275,7 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 
 	if (totalResults === undefined) {
 		Mojo.Log.error("Error contacting search service: result count not found");
-		Util.showError("Error contacting search service", "Result Count not found");
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), $L({value:"No Results Found", key:"noResults"}));
 		return;
 	}
 
@@ -312,15 +312,15 @@ FeedSearchAssistant.prototype.setup = function() {
 		visible: true,
 		items: [
 			Mojo.Menu.editItem,
-			{label: "Help", command: "help-cmd"},
-			{label: "About...", command: "about-cmd"}
+			{label: $L("Help"), command: "help-cmd"},
+			{label: $L("About") + '...', command: "about-cmd"}
 		]
 	};
 
 	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
 
 	this.controller.setupWidget("searchProviderList",
-		{label: "Directory",
+		{label: $L("Directory"),
 		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},
 		           {label: "Podcast.de (German)", value: "podcastDe"}
 		           //{label: "Spoken Word", value: "spokenWord"}
@@ -333,13 +333,13 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.providerDiv = this.controller.get("providerDiv");
 
 	this.controller.setupWidget("filterList",
-		{label: "Filter",
-		 choices: [{label: "No Filter", value: "nofilter"},
-				   {label: "No Adult", value: "noadult"},
-				   {label: "No Explicit", value: "noexplicit"},
-				   {label: "Clean", value: "clean"},
-				   {label: "Explicit", value: "explicit"},
-				   {label: "Adult", value: "adult"}]},
+		{label: $L("Filter"),
+		 choices: [{label: $L({value:"No Filter", key:"noFilter"}), value: "nofilter"},
+				   {label: $L({value:"No Adult", key:"noAdult"}), value: "noadult"},
+				   {label: $L({value:"No Explicit", key:"noExplicit"}), value: "noexplicit"},
+				   {label: $L("Clean"), value: "clean"},
+				   {label: $L("Explicit"), value: "explicit"},
+				   {label: $L("Adult"), value: "adult"}]},
 		this.filterModel = { value : LastSearchFilter });
 
 	this.filter = this.controller.get("filterList");
@@ -348,7 +348,7 @@ FeedSearchAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("keywordField",
 		{
-			hintText : "Search Keyword",
+			hintText : $L({value:"Search Keyword", key:"searchKeyword"}),
 			autoFocus : true,
 			limitResize : true,
 			autoReplace : false,
@@ -463,7 +463,7 @@ FeedSearchAssistant.prototype.keywordChange = function(event) {
 				this.controller.modelChanged(this.listModel);
 				this.keywordField.mojo.blur();
 			} else {
-				Util.showError("No results found", "Please try a different keyword, or ask the service provider to add your feed.");
+				Util.showError($L({value:"No Results Found", key:"noResults"}), $L({value:"Please try a different keyword, or ask the service provider to add your feed.", key:"tryDifferentKeyword"}));
 			}
 		}.bind(this));
 	}

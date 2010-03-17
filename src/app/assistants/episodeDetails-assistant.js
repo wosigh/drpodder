@@ -45,10 +45,10 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	visible: true,
 	items: [
 		Mojo.Menu.editItem,
-		{label: "Play using webOS player", command: "playExternal-cmd"},
-		{label: "Report a Problem", command: "report-cmd"},
-		{label: "Help", command: "help-cmd"},
-		{label: "About...", command: "about-cmd"}
+		{label: $L({value:"Play using webOS player", key:"playExternal"}), command: "playExternal-cmd"},
+		{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
+		{label: $L("Help"), command: "help-cmd"},
+		{label: $L("About") + '...', command: "about-cmd"}
 	]
 };
 
@@ -122,18 +122,18 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 		if (!this.isVideo()) {
 
-			this.setStatus("Extend");
+			this.setStatus($L("Extend"));
 			this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
-			this.setStatus("Class");
+			this.setStatus($L("Class"));
 			this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
 
-			this.setStatus("Bind");
+			this.setStatus($L("Bind"));
 			this.readyToPlayHandler = this.readyToPlay.bind(this);
-			this.setStatus("Event");
+			this.setStatus($L("Event"));
 			this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 			//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
 			//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
-			this.setStatus("Loading");
+			this.setStatus($L("Loading"));
 			this.disablePlay(true);
 			this.progressChangedHandler = this.progressChange.bind(this);
 			this.sliderDragStartHandler = this.sliderDragStart.bind(this);
@@ -452,7 +452,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			if (this.resume) {
 				Mojo.Log.info("resuming playback at %d", this.episodeObject.position);
 				try {
-					this.setStatus("Seeking");
+					this.setStatus($L("Seeking"));
 					this.audioObject.currentTime = this.episodeObject.position;
 					this.resume = false;
 				} catch (e) {
@@ -463,7 +463,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			break;
 		case "canplay":
 			if (!this.resume && this.audioObject.autoplay) {
-				this.setStatus("Buffering");
+				this.setStatus($L("Buffering"));
 			}
 			break;
 		case "canplaythrough":
@@ -474,13 +474,13 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			break;
 		case "seeked":
 			if (this.audioObject.paused && !this.episodeObject.downloaded) {
-				this.setStatus("Buffering");
+				this.setStatus($L("Buffering"));
 			}
 			this.cmdMenuModel.items[2].disabled = false;
 			this.refreshMenu();
 			break;
 		case "waiting":
-			this.setStatus("Buffering");
+			this.setStatus($L("Buffering"));
 			break;
 		case "play":
 			this.setStatus("");
@@ -543,7 +543,6 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
             case "about-cmd":
 				this.controller.showAlertDialog({
 						onChoose: function(value) {},
-						//title: "drPodder - v" + Mojo.Controller.appInfo.version,
 						message: "<div style='width=100%; font-size: 30px;'>drPodder - v" + Mojo.Controller.appInfo.version + "</div><HR>" +
 								"Copyright 2010 Jamie Hatfield<BR>" +
 								"Logo Design: <a href='http://jamie3d.com/'>Jamie Hamel-Smith</a><BR>" +
@@ -600,7 +599,7 @@ EpisodeDetailsAssistant.prototype.progressChange = function(event) {
 
 EpisodeDetailsAssistant.prototype.sliderDragEnd = function(event) {
 	this.audioObject.currentTime = this.progressModel.value * this.audioObject.duration;
-	this.setStatus("Seeking");
+	this.setStatus($L("Seeking"));
 	this.bookmark();
 	if (this.wasPlaying) {
 		this.audioObject.play();

@@ -27,8 +27,8 @@ PreferencesAssistant.prototype.setup = function() {
 		visible: true,
 		items: [
 			Mojo.Menu.editItem,
-			{label: "Help", command: "help-cmd"},
-			{label: "About...", command: "about-cmd"}
+			{label: $L("Help"), command: "help-cmd"},
+			{label: $L("About") + '...', command: "about-cmd"}
 		]
 	};
 
@@ -49,39 +49,39 @@ PreferencesAssistant.prototype.setup = function() {
 		{ value : Prefs.autoUpdate });
 
 	this.controller.setupWidget("updateTypeList",
-		{label: "Update Type",
+		{label: $L({value:"Update Type", key:"updateType"}),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
 		 choices: [
-				  {label: "Hourly", value: "H"},
-				  {label: "Daily", value: "D"},
-				  {label: "Weekly", value: "W"}]},
+				  {label: $L("Hourly"), value: "H"},
+				  {label: $L("Daily"), value: "D"},
+				  {label: $L("Weekly"), value: "W"}]},
 		{ value : Prefs.updateType });
 
 	this.controller.setupWidget("updateIntervalList",
-		{label: "Update Every",
+		{label: $L({value:"Update Every", key:"updateEvery"}),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
 		 choices: [
 				  //{label: "5 Minutes", value: "00:05:00"},
-				  {label: "1 Hour", value: "01:00:00"},
-				  {label: "2 Hours", value: "02:00:00"},
-				  {label: "4 Hours", value: "04:00:00"},
-				  {label: "6 Hours", value: "06:00:00"},
-				  {label: "12 Hours", value: "12:00:00"},
-				  {label: "24 Hours", value: "23:59:59"}]},
+				  {label: $L({value:"1 Hour", key:"1hour"}), value: "01:00:00"},
+				  {label: $L({value:"2 Hours", key:"2hours"}), value: "02:00:00"},
+				  {label: $L({value:"4 Hours", key:"4hours"}), value: "04:00:00"},
+				  {label: $L({value:"6 Hours", key:"6hours"}), value: "06:00:00"},
+				  {label: $L({value:"12 Hours", key:"12hours"}), value: "12:00:00"},
+				  {label: $L({value:"24 Hours", key:"24hours"}), value: "23:59:59"}]},
 		{ value : Prefs.updateInterval });
 
 	this.showIntervalSelector();
 
 	this.controller.setupWidget("updateDayList",
-		{label: "Update Day",
+		{label: $L({value:"Update Day", key:"updateDay"}),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
-		 choices: [{label: "Sunday", value: "0"},
-				   {label: "Monday", value: "1"},
- 				   {label: "Tuesday", value: "2"},
-				   {label: "Wednesday", value: "3"},
-				   {label: "Thursday", value: "4"},
-				   {label: "Friday", value: "5"},
-				   {label: "Saturday", value: "6"}
+		 choices: [{label: $L("Sunday"), value: "0"},
+				   {label: $L("Monday"), value: "1"},
+ 				   {label: $L("Tuesday"), value: "2"},
+				   {label: $L("Wednesday"), value: "3"},
+				   {label: $L("Thursday"), value: "4"},
+				   {label: $L("Friday"), value: "5"},
+				   {label: $L("Saturday"), value: "6"}
 				  ]},
 		{ value: Prefs.updateDay });
 
@@ -102,12 +102,12 @@ PreferencesAssistant.prototype.setup = function() {
 		this.limitToWifiModel = { value : Prefs.limitToWifi });
 
 	this.controller.setupWidget("transitionList",
-		{label: "Transitions",
+		{label: $L("Transitions"),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
 		 choices: [
-				  {label: "None", value: Mojo.Transition.none},
-				  {label: "Zoom Fade", value: Mojo.Transition.zoomFade},
-				  {label: "Cross Fade", value: Mojo.Transition.crossFade}]},
+				  {label: $L("None"), value: Mojo.Transition.none},
+				  {label: $L({value:"Zoom Fade", key:"zoomFade"}), value: Mojo.Transition.zoomFade},
+				  {label: $L({value:"Cross Fade", key:"crossFade"}), value: Mojo.Transition.crossFade}]},
 		{ value : Prefs.transition });
 
 	this.controller.setupWidget("albumArtToggle",
@@ -178,8 +178,8 @@ PreferencesAssistant.prototype.deactivate = function() {
 
 PreferencesAssistant.prototype.freeRotation = function(event) {
 	Prefs.freeRotation = event.value;
-	var dialog = new drnull.Dialog.Info(this, "Restart Required",
-		"Changing Free Rotation requires a restart of drPodder.");
+	var dialog = new drnull.Dialog.Info(this, $L({value:"Restart Required", key:"restartRequired"}),
+		$L({value:"Changing Free Rotation requires a restart of drPodder.", key:"changingFreeRotation"}));
 	dialog.show();
 };
 
