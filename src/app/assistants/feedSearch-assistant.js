@@ -395,7 +395,7 @@ FeedSearchAssistant.prototype.cleanup = function() {
 };
 
 FeedSearchAssistant.prototype.focusChange = function(event) {
-	if (event) {
+	if (event && event.localName==="input") {
 		this.searchBoxTitle.show();
 		this.searchBox.removeClassName("unlabeled");
 		this.providerDiv.show();
@@ -448,6 +448,7 @@ FeedSearchAssistant.prototype.keywordChange = function(event) {
 
 			if (numFeeds > 0) {
 				this.controller.modelChanged(this.listModel);
+				this.keywordField.mojo.blur();
 			} else {
 				Util.showError("No results found", "Please try a different keyword, or ask the service provider to add your feed.");
 			}
