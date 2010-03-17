@@ -43,6 +43,7 @@ AppAssistant.appMenuModel = {
 				 {label: "Export via email", command: "export-cmd"}]
 		},
 		{label: "Preferences", command: "prefs-cmd"},
+		{label: "Add Default Feeds", command: "addDefault-cmd"},
 		Mojo.Menu.helpItem,
 		{label: "About...", command: "about-cmd"}
 	]

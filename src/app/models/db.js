@@ -514,7 +514,7 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}
 	if (Prefs.simple === undefined) {Prefs.simple = false;}
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
-	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = false;}
+	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = false; Prefs.firstRun = true;}
 	this.writePrefs();
 };
 

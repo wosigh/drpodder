@@ -149,7 +149,9 @@ FeedListAssistant.prototype.activate = function(result) {
 				break;
 			}
 		}
-		if (firstLoad) {
+		if (Prefs.firstRun) {
+			Prefs.firstRun = false;
+			DB.writePrefs();
 			var dialog = new drnull.Dialog.Confirm(this, "Add Default Feeds",
 				"Welcome to drPodder!<br><br>Would you like to add some technology podcasts to get you started?",
 				function() {
@@ -158,9 +160,7 @@ FeedListAssistant.prototype.activate = function(result) {
 						"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left." +
 						"<br><br>Feel free to delete any of the default podcasts.");
 					dialog.show();
-					DB.defaultFeeds();
-					this.controller.modelChanged(feedModel);
-					this.updateFeeds();
+					this._loadDefaultFeeds();
 				}.bind(this),
 				function() {
 					var dialog = new drnull.Dialog.Info(this, "Thanks for using drPodder!",
@@ -172,6 +172,29 @@ FeedListAssistant.prototype.activate = function(result) {
 		}
 	}
 	this.onFocus();
+};
+
+FeedListAssistant.prototype.loadDefaultFeeds = function() {
+	var dialog = new drnull.Dialog.Confirm(this, "Add Default Feeds",
+		"Would you like to add the following feeds?<ul>" +
+		"<li>This Week in Tech</li>" +
+		"<li>PalmCast</li>" +
+		"<li>Engadget Podcast</li>" +
+		"<li>gdgt weekly</li>" +
+		"<li>Buzz Out Loud</li>" +
+		"<li>Java Posse</li></ul>",
+		function() {
+			Mojo.Log.warn("we want to add feeds");
+			this._loadDefaultFeeds();
+		}.bind(this),
+		function() {});
+	dialog.show();
+};
+
+FeedListAssistant.prototype._loadDefaultFeeds = function() {
+	DB.defaultFeeds();
+	this.controller.modelChanged(feedModel);
+	this.updateFeeds();
 };
 
 FeedListAssistant.prototype.deactivate = function() {
@@ -357,6 +380,9 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "refresh-cmd":
 				this.updateFeeds();
+				break;
+			case "addDefault-cmd":
+				this.loadDefaultFeeds();
 				break;
 		}
 	}
