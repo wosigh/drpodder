@@ -261,7 +261,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 				AppAssistant.applicationManagerService.email("drPodder OPML Export", message);
 				break;
             case "report-cmd":
-				var dialog = new drnull.Dialog.Confirm(event.assistant, "Report A	 Problem?",
+				var dialog = new drnull.Dialog.Confirm(event.assistant, "Report A Problem?",
 					"Would you like to send an email that is prepopulated with a detailed error report? No personal information such as usernames or passwords will be included.",
 					function() {
 						var message = "Please describe the problem you are experiencing with " + Mojo.appInfo.title + " here:<br/><br/><br/><br/><br/><br/>";
@@ -276,6 +276,38 @@ AppAssistant.prototype.handleCommand = function(event) {
 						dialog.show();
 					}.bind(this));
 				dialog.show();
+				break;
+            case "help-cmd":
+				var url="help";
+				switch (currentScene.sceneName) {
+					case "preferences":
+						url="preferences";
+						break;
+					case "feedList":
+						url="feed-list";
+						break;
+					case "episodeList":
+						url="episode-list";
+						break;
+					case "episodeDetails":
+						url="episode-player";
+						break;
+					case "feedSearch":
+						url="feed-search";
+						break;
+					case "addFeed":
+						url="edit-feed";
+						break;
+					case "addPlaylist":
+						url="edit-playlist";
+						break;
+				}
+				var obj = new Mojo.Service.Request("palm://com.palm.applicationManager", {
+					method: "open",
+					parameters: {
+						target: 'http://drPodder.com/' + url
+					}
+				});
 				break;
 		}
 	}

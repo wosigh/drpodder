@@ -55,6 +55,19 @@ function AddPlaylistAssistant(feed) {
 }
 
 AddPlaylistAssistant.prototype.setup = function() {
+	this.menuAttr = {omitDefaultItems: true};
+
+	this.menuModel = {
+		visible: true,
+		items: [
+			Mojo.Menu.editItem,
+			{label: "Help", command: "help-cmd"},
+			{label: "About...", command: "about-cmd"}
+		]
+	};
+
+	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
+
 	this.controller.get("dialogTitle").update(this.dialogTitle);
 
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);

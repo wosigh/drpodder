@@ -21,6 +21,19 @@ function PreferencesAssistant() {
 }
 
 PreferencesAssistant.prototype.setup = function() {
+	this.menuAttr = {omitDefaultItems: true};
+
+	this.menuModel = {
+		visible: true,
+		items: [
+			Mojo.Menu.editItem,
+			{label: "Help", command: "help-cmd"},
+			{label: "About...", command: "about-cmd"}
+		]
+	};
+
+	this.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
+
 	this.controller.setupWidget("freeRotationToggle",
 		{},
 		{ value : Prefs.freeRotation });

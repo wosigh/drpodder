@@ -66,7 +66,7 @@ AddFeedAssistant.prototype.setup = function() {
 		items: [
 			Mojo.Menu.editItem,
 			{label: "Authentication", command: "authentication-cmd"},
-			Mojo.Menu.helpItem,
+			{label: "Help", command: "help-cmd"},
 			{label: "About...", command: "about-cmd"}
 		]
 	};
