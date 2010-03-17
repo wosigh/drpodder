@@ -88,6 +88,15 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		this.limitToWifiModel = { value : Prefs.limitToWifi });
 
+	this.controller.setupWidget("transitionList",
+		{label: "Transitions",
+		 labelPlacement: Mojo.Widget.labelPlacementLeft,
+		 choices: [
+				  {label: "None", value: Mojo.Transition.none},
+				  {label: "Zoom Fade", value: Mojo.Transition.zoomFade},
+				  {label: "Cross Fade", value: Mojo.Transition.crossFade}]},
+		{ value : Prefs.transition });
+
 	this.controller.setupWidget("albumArtToggle",
 		{},
 		{ value : Prefs.albumArt });
@@ -109,6 +118,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.updateTimeHandler = this.updateTime.bind(this);
 	this.wifiHandler = this.wifi.bind(this);
 	this.limitToWifiHandler = this.limitToWifi.bind(this);
+	this.transitionHandler = this.transition.bind(this);
 	this.albumArtHandler = this.albumArt.bind(this);
 	this.simpleHandler = this.simple.bind(this);
 	this.singleTapHandler = this.singleTap.bind(this);
@@ -130,6 +140,7 @@ PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.listen(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.listen(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
+	Mojo.Event.listen(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.listen(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.listen(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
 	Mojo.Event.listen(this.controller.get('singleTap'),Mojo.Event.propertyChange,this.singleTapHandler);
@@ -145,6 +156,7 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.stopListening(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.stopListening(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
+	Mojo.Event.stopListening(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.stopListening(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.stopListening(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
 	Mojo.Event.stopListening(this.controller.get('singleTap'),Mojo.Event.propertyChange,this.singleTapHandler);
@@ -248,6 +260,11 @@ PreferencesAssistant.prototype.limitToWifi = function(event) {
 	}
 	*/
 	Prefs.limitToWifi = event.value;
+};
+
+PreferencesAssistant.prototype.transition = function(event) {
+	Prefs.transition = event.value;
+	this.controller.stageController.swapScene({name: "preferences", transition: Prefs.transition});
 };
 
 PreferencesAssistant.prototype.albumArt = function(event) {

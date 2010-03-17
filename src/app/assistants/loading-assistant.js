@@ -47,7 +47,7 @@ LoadingAssistant.prototype.waitForFeedsReady = function() {
 	//this.spinnerModel.spinning = false;
 	//this.controller.modelChanged(this.spinnerModel);
 	this.loadingDiv.update("Loading Feed List");
-	this.stageController.swapScene({name: "feedList", transition: Mojo.Transition.none});
+	this.stageController.swapScene({name: "feedList", transition: Prefs.transition});
 };
 
 LoadingAssistant.prototype.considerForNotification = function(params) {

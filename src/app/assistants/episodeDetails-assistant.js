@@ -283,7 +283,7 @@ EpisodeDetailsAssistant.prototype.backToList = function() {
 		this.controller.stageController.popScene(true);
 	} else {
 		var episode = this.playlist.shift();
-		this.controller.stageController.swapScene({name: "episodeDetails", transition: Mojo.Transition.none}, episode, {autoPlay: true, resume: true, playlist: this.playlist});
+		this.controller.stageController.swapScene({name: "episodeDetails", transition: Prefs.transition}, episode, {autoPlay: true, resume: true, playlist: this.playlist});
 	}
 };
 

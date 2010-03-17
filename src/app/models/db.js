@@ -515,6 +515,7 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.simple === undefined) {Prefs.simple = false;}
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
 	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = false; Prefs.firstRun = true;}
+	if (Prefs.transition === undefined) {Prefs.transition = Mojo.Transition.none;}
 	this.writePrefs();
 };
 
