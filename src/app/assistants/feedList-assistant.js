@@ -384,6 +384,13 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 			case "addDefault-cmd":
 				this.loadDefaultFeeds();
 				break;
+            case "report-cmd":
+				event.assistant = this;
+				event.data = "Feeds: <br/>";
+				feedModel.items.forEach(function(f) {
+					event.data += f.id + " URL: " + f.url + "<br/>";
+				});
+				break;
 		}
 	}
 };

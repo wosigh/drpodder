@@ -44,7 +44,8 @@ AppAssistant.appMenuModel = {
 		},
 		{label: "Preferences", command: "prefs-cmd"},
 		{label: "Add Default Feeds", command: "addDefault-cmd"},
-		Mojo.Menu.helpItem,
+		{label: "Report a Problem", command: "report-cmd"},
+		{label: "Help", command: "help-cmd"},
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -258,6 +259,23 @@ AppAssistant.prototype.handleCommand = function(event) {
 				}
 				message += "&lt;/body>&lt;/opml>";
 				AppAssistant.applicationManagerService.email("drPodder OPML Export", message);
+				break;
+            case "report-cmd":
+				var dialog = new drnull.Dialog.Confirm(event.assistant, "Report A	 Problem?",
+					"Would you like to send an email that is prepopulated with a detailed error report? No personal information such as usernames or passwords will be included.",
+					function() {
+						var message = "Please describe the problem you are experiencing with " + Mojo.appInfo.title + " here:<br/><br/><br/><br/><br/><br/>";
+						message += "Report Information (please do not remove)<br/>";
+						message += "Application: " + Mojo.appInfo.id + " v" + Mojo.Controller.appInfo.version + "<br/>";
+						message += event.data;
+						AppAssistant.applicationManagerService.email("drPodder Problem Report", message);
+					}.bind(this),
+					function() {
+						var dialog = new drnull.Dialog.Info(event.assistant, "Sorry for the inconvienence!",
+							"I hope you can resolve your problem.  Please contact support@drPodder.com if you need further assistance.");
+						dialog.show();
+					}.bind(this));
+				dialog.show();
 				break;
 		}
 	}

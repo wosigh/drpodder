@@ -113,7 +113,8 @@ EpisodeListAssistant.prototype.setup = function() {
 			{label: "Edit Feed", command: "edit-cmd"},
 			{label: "Mark all as New", command: "unlistened-cmd"},
 			{label: "Mark all as Old", command: "listened-cmd"},
-			Mojo.Menu.helpItem,
+			{label: "Report a Problem", command: "report-cmd"},
+			{label: "Help", command: "help-cmd"},
 			{label: "About...", command: "about-cmd"}
 		]
 	};
@@ -319,6 +320,18 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "filter-paused-cmd":
 				this.handleFilterCommand("Paused");
+				break;
+            case "report-cmd":
+				event.assistant = this;
+				event.data = "Feed Information:<br/>";
+				if (this.feedObject.playlist) {
+					event.data += "Playlist:<br/>";
+					this.feedObject.feedIds.forEach(function (fid) {
+						event.data += "URL: " + feedModel.getFeedById(fid).url + "<br/>";
+					});
+				} else {
+					event.data += "URL: " + this.feedObject.url + "<br/>";
+				}
 				break;
 		}
 	}

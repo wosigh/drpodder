@@ -45,7 +45,9 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	visible: true,
 	items: [
 		Mojo.Menu.editItem,
-		Mojo.Menu.helpItem,
+		{label: "Play using webOS player", command: "playExternal-cmd"},
+		{label: "Report a Problem", command: "report-cmd"},
+		{label: "Help", command: "help-cmd"},
 		{label: "About...", command: "about-cmd"}
 	]
 };
@@ -525,6 +527,19 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
             case "skipBack2-cmd":
 				this.doSkip(-60);
 				break;
+            case "report-cmd":
+				event.assistant = this;
+				event.data = "Episode Information: <br/>" +
+					"Title: " + this.episodeObject.title + "<br/>" +
+					"Enclosure: " + this.episodeObject.enclosure + "<br/>" +
+					"Type: " + this.episodeObject.type + "<br/>" +
+					"File: " + this.episodeObject.file + "<br/><br/>" +
+					"Feed Information:<br/>" +
+					"URL: " + this.episodeObject.feedObject.url + "<br/>";
+				break;
+            case "playExternal-cmd":
+				this.playExternal();
+				break;
             case "about-cmd":
 				this.controller.showAlertDialog({
 						onChoose: function(value) {},
@@ -707,6 +722,15 @@ EpisodeDetailsAssistant.prototype.launchVideo = function(uri) {
 	};
 
 	this.controller.stageController.pushScene(args, params);
+};
+
+EpisodeDetailsAssistant.prototype.playExternal = function() {
+	this.controller.serviceRequest("palm://com.palm.applicationManager", {
+		method: "open",
+		parameters: {
+			target: this.episodeObject.file || this.episodeObject.getEnclosure()
+		}
+	});
 };
 
 EpisodeDetailsAssistant.prototype.enablePlay = function(needRefresh) {
