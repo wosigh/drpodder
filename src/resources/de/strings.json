@@ -174,21 +174,7 @@
 	downloadAborted: "DE Download aborted",
 	downloadAbortedDetail: "DE There was an error downloading url:",
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 	OK: "DE OK",
 	Yes: "DE Yes",
 	No: "DE No",
-
 }

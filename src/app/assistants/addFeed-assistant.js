@@ -58,6 +58,10 @@ function AddFeedAssistant(feed) {
 
 AddFeedAssistant.prototype.menuAttr = {omitDefaultItems: true};
 
+AddFeedAssistant.prototype.localize = function() {
+	Util.localize(this, "newFeedURL", "URL");
+};
+
 AddFeedAssistant.prototype.setup = function() {
 	this.menuModel = {
 		visible: true,
