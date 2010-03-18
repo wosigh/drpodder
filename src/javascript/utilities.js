@@ -69,6 +69,17 @@ Utilities.prototype.showError = function(title, message){
 	}
 };
 
+Utilities.prototype.localize = function(assistant, element, value, key) {
+	if (key) {
+		value = $L({value: value, key: key});
+	} else {
+		value = $L(value);
+	}
+	Mojo.Log.info("localizing: %s:%s", element, value);
+	el = assistant.controller.get(element);
+	if (el) {el.update(value);}
+};
+
 Utilities.prototype.xpath = function(path, node, getData, numeric) {
     var type = XPathResult.FIRST_UNORDERED_NODE_TYPE;
     var result = node.evaluate(path, node, null, type, null);

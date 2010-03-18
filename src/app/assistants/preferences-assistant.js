@@ -118,7 +118,7 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		{ value : !Prefs.simple });
 
-	this.controller.setupWidget("singleTap",
+	this.controller.setupWidget("singleTapToggle",
 		{},
 		{ value : Prefs.singleTap });
 
@@ -141,6 +141,24 @@ PreferencesAssistant.prototype.setup = function() {
 	} else {
 		this.controller.get("updateIntervalDiv").hide();
 	}
+
+	this.localize.bind(this).defer();
+};
+
+PreferencesAssistant.prototype.localize = function() {
+	Util.localize(this, "dialogTitle", "Preferences");
+	Util.localize(this, "applicationSettings", "Application Settings", "applicationSettings");
+	Util.localize(this, "notifications", "Notifications");
+	Util.localize(this, "allowLandscape", "Allow Landscape", "allowLandscape");
+	Util.localize(this, "autoUpdate", "Auto Update", "autoUpdate");
+	Util.localize(this, "enableWifi", "Enable WiFi", "enableWifi");
+	Util.localize(this, "limitToWifi", "DL only over WiFi", "limitToWifi");
+	Util.localize(this, "feedListSettings", "Feed List Settings", "feedListSettings");
+	Util.localize(this, "albumArt", "Show Album Art", "albumArt");
+	Util.localize(this, "simple", "Show Feed Details", "simple");
+	Util.localize(this, "episodeListSettings", "Episode List Settings", "episodeListSettings");
+	Util.localize(this, "singleTap", "Enable Single Tap", "singleTap");
+	Util.localize(this, "advancedSettings", "Advanced Settings", "advancedSettings");
 };
 
 PreferencesAssistant.prototype.activate = function() {
@@ -156,7 +174,7 @@ PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.listen(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.listen(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
-	Mojo.Event.listen(this.controller.get('singleTap'),Mojo.Event.propertyChange,this.singleTapHandler);
+	Mojo.Event.listen(this.controller.get('singleTapToggle'),Mojo.Event.propertyChange,this.singleTapHandler);
 };
 
 PreferencesAssistant.prototype.deactivate = function() {
@@ -172,7 +190,7 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.stopListening(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.stopListening(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
-	Mojo.Event.stopListening(this.controller.get('singleTap'),Mojo.Event.propertyChange,this.singleTapHandler);
+	Mojo.Event.stopListening(this.controller.get('singleTapToggle'),Mojo.Event.propertyChange,this.singleTapHandler);
 	DB.writePrefs();
 };
 

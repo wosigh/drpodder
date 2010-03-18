@@ -10,7 +10,7 @@
         <div class="palm-row first">
             <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
                 <div class="title">
-                    <div class="label right">URL</div>
+                    <div id="newFeedURL" class="label right">URL</div>
                     <div x-mojo-element="TextField" id="newFeedURL"></div>
                 </div>
             </div>
@@ -18,7 +18,7 @@
         <div id="usernameDiv" class="palm-row">
             <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
                 <div class="title">
-                    <div class="label right">Username</div>
+                    <div id="username" class="label right">Username</div>
                     <div x-mojo-element="TextField" id="username"></div>
                 </div>
             </div>
@@ -26,7 +26,7 @@
         <div id="passwordDiv" class="palm-row">
             <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
                 <div class="title">
-                    <div class="label right">Password</div>
+                    <div id="password" class="label right">Password</div>
                     <div x-mojo-element="PasswordField" id="password"></div>
                 </div>
             </div>
@@ -34,7 +34,7 @@
         <div id="newFeedDiv" class="palm-row">
             <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
                 <div class="title">
-                    <div class="label right">Title</div>
+                    <div id="title" class="label right">Title</div>
                     <div x-mojo-element="TextField" id="newFeedName"></div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
         <div id="albumArtDiv" class="palm-row last">
             <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
                 <div class="title">
-                    <div class="label right">Icon</div>
+                    <div id="icon" class="label right">Icon</div>
                     <div x-mojo-element="TextField" id="albumArt"></div>
                 </div>
             </div>
@@ -51,7 +51,7 @@
 </div>
 
 <div class="palm-group">
-    <div class="palm-group-title"><span>Feed Options</span></div>
+    <div class="palm-group-title"><span id="feedOptions">Feed Options</span></div>
     <div class="palm-list">
         <!--div class="palm-row first">
             <div class="palm-row-wrapper">
@@ -61,19 +61,19 @@
         <div class="palm-row first">
             <div class="palm-row-wrapper">
                 <div x-mojo-element="ToggleButton" id="autoDeleteToggle"></div>
-                <div class="title left">Delete when finished</div>
+                <div id="deleteWhenFinished" class="title left">Delete when finished</div>
             </div>
         </div>
         <div class="palm-row">
             <div class="palm-row-wrapper">
                 <div x-mojo-element="ToggleButton" id="hideFilesToggle"></div>
-                <div class="title left">Hide Podcast Files</div>
+                <div id="hidePodcastFiles" class="title left">Hide Podcast Files</div>
             </div>
         </div>
         <div id="autoDownloadRow" class="palm-row">
             <div class="palm-row-wrapper">
                 <div x-mojo-element="ToggleButton" id="autoDownloadToggle"></div>
-                <div class="title left">Auto-Download</div>
+                <div id="autoDownload" class="title left">Auto-Download</div>
             </div>
         </div>
         <div id="maxDownloadsRow" class="palm-row last">
@@ -85,7 +85,7 @@
 </div>
 
 <div class="palm-group">
-    <div class="palm-group-title"><span>Episode Title Replacements</span></div>
+    <div class="palm-group-title"><span id="episodeTitleReplacements">Episode Title Replacements</span></div>
     <div class="palm-list">
         <div id="replacementList" x-mojo-element="List"></div>
     </div>

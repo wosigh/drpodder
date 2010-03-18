@@ -384,6 +384,12 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.selectionHandler = this.selection.bindAsEventListener(this);
 	this.focusChangeHandler = this.focusChange.bindAsEventListener(this);
 
+	this.localize.bind(this).defer();
+};
+
+FeedSearchAssistant.prototype.localize = function() {
+	Util.localize(this, "searchPodcastDirectory", "Search Podcast Directory", "searchPodcastDirectory");
+	Util.localize(this, "keyword", "Keyword");
 };
 
 FeedSearchAssistant.prototype.activate = function() {

@@ -229,7 +229,11 @@ Episode.prototype.download = function(silent) {
 	var url = this.getEnclosure();
 	if (url) {
 		Mojo.Log.warn("Downloading %s as %s", url, this.getDownloadFilename());
+		//if (Prefs.allow1xDownloads) {
 		this.downloadRequest = AppAssistant.downloadService.allow1x(null, this.doTheDownload.bind(this, url));
+		//} else {
+		//	this.doTheDownload(url);
+		//}
 	}
 };
 
@@ -345,7 +349,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadActivity();
 		this.updateUIElements();
 		this.save();
-		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 		// if the user didn't do this, let them know what happened
 		this.feedObject.downloadFinished();
 		if (!event.aborted) {
@@ -371,11 +375,12 @@ Episode.prototype.downloadingCallback = function(event) {
 			this.setDownloaded(true);
 			this.setUnlistened(true);
 
-			Util.dashboard(DrPodder.DownloadedStageName, "Downloaded", this.title);
+			Util.dashboard(DrPodder.DownloadedStageName, $L("Downloaded"), this.title);
 		} else if (event.completionStatusCode === -5) {
 			this.downloadTicket = 0;
 			Mojo.Log.error("CompletionStatusCode=%d, file=%s", event.completionStatusCode, event.destPath + event.destFile);
-			Util.showError("Download Failed", "Failure downloading " + this.title + ".  If this was a podshifter download, please try again in an hour.");
+			Util.showError($L({value: "Download Failed", key:"downloadFailed"}),
+						   $L({value: "Failure downloading #{title}.  If this was a podshifter download, please try again in an hour.", key:"downloadFailedDetail"}).interpolate({title:this.title}));
 		} else {
 			this.downloadTicket = 0;
 			Mojo.Log.error("CompletionStatusCode=%d, file=%s", event.completionStatusCode, event.destPath + event.destFile);
@@ -384,7 +389,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.updateUIElements();
 		this.feedObject.downloadFinished();
 		this.save();
-		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.warn("Redirecting...", event.target);
@@ -397,7 +402,6 @@ Episode.prototype.downloadingCallback = function(event) {
 		var req = new Ajax.Request(event.target, {
 			method: 'get',
 			onFailure: function() {
-				Util.showError("Error downloading " + this.title, "The redirection link could not be found.");
 				Mojo.Log.error("Couldn't find %s... strange", event.target);
 			}.bind(this),
 			onComplete: function(transport) {
@@ -409,7 +413,6 @@ Episode.prototype.downloadingCallback = function(event) {
 					}
 				} catch (e){
 					Mojo.Log.error("error with regex: (%j)", e);
-					Util.showError("Error parsing redirection", "There was an error parsing the mp3 url");
 				}
 				AppAssistant.downloadService.deleteFile(null, this.downloadTicket, function(event) {});
 				this.downloadTicket = null;
@@ -430,7 +433,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.downloadActivity();
 		this.updateUIElements();
 		this.save();
-		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 		this.feedObject.downloadFinished();
 	} else if (this.downloading) {
 		var per = 0;
@@ -450,7 +453,7 @@ Episode.prototype.downloadingCallback = function(event) {
 	} else if (event.aborted || this.downloadCanceled) {
 		this.downloadCanceled = false;
 		Mojo.Log.warn("Got the cancel event, but it has already been handled");
-		Util.removeMessage(DrPodder.DownloadingStageName, "Downloading", this.title);
+		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 	} else {
 		Mojo.Log.error("Unknown error message while downloading %s (%j)", this.title, event);
 		//Util.showError("Error downloading "+this.title, "There was an error downloading url:"+this.enclosure);

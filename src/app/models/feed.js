@@ -130,7 +130,7 @@ Feed.prototype.update = function(callback, url, reveal) {
 	} else {
 		if (!url) {
 			var feedTitle = (this.title)?this.title:"Unknown feed title";
-			Util.dashboard(DrPodder.DashboardStageName, "Updating Feed", feedTitle, true);
+			Util.dashboard(DrPodder.DashboardStageName, $L({value: "Updating Feed", key: "updatingFeed"}), feedTitle, true);
 			Mojo.Log.warn("Update: ", feedTitle, "(", this.url, ")");
 
 			url = this.url;
@@ -260,7 +260,7 @@ Feed.prototype.updateCheck = function(transport) {
 		updateCheckStatus = this.parseJSONFeed(transport);
 	} else {
 		if (this.gui) {
-			Util.showError("Error determing feed type", "Could not determine feed type for: " + this.url);
+			Util.showError($L({value: "Error determing feed type", key: "feedTypeError"}), $L({value: "Could not determine feed type for: ", key: "feedTypeErrorDetail"}) + this.url);
 		}
 		Mojo.Log.error("Error determing feed type for %s", this.url);
 		updateCheckStatus = UPDATECHECK_INVALID;
@@ -515,13 +515,13 @@ Feed.prototype.getTitle = function(transport) {
 	} catch (e) {
 		// bring this back once feed add dialog is its own page
 		if (this.gui) {
-			Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
+			Util.showError($L({value: "Error parsing feed", key: "parseFeedError"}), $L({value: "Could not find title in feed: ", key: "parseFeedErrorDetail"}) + this.url);
 		}
 		Mojo.Log.error("Error finding feed title: %j", e);
 	}
 	if (title === undefined || title === null) {
 		if (this.gui) {
-			Util.showError("Error parsing feed", "Could not find title in feed: " + this.url);
+			Util.showError($L({value: "Error parsing feed", key: "parseFeedError"}), $L({value: "Could not find title in feed: ", key: "parseFeedErrorDetail"}) + this.url);
 		}
 		Mojo.Log.error("Error finding feed title for feed: %s", this.url);
 	}
@@ -542,7 +542,7 @@ Feed.prototype.getJSONTitle = function(transport) {
 	} catch (e) {
 		// bring this back once feed add dialog is its own page
 		if (this.gui) {
-			Util.showError("Error parsing JSON feed", "Could not find title in JSON feed: " + this.url);
+			Util.showError($L({value: "Error parsing JSON feed", key: "parseJSONError"}), $L({value: "Could not find title in JSON feed: ", key: "parseJSONErrorDetail"}) + this.url);
 		}
 		Mojo.Log.error("Error finding JSON feed title: %j", e);
 	}
@@ -574,7 +574,7 @@ Feed.prototype.getJSONTitle = function(transport) {
 	*/
 	if (!title) {
 		if (this.gui) {
-			Util.showError("Error parsing JSON feed", "Could not find title in JSON feed: " + this.url);
+			Util.showError($L({value: "Error parsing JSON feed", key: "parseJSONError"}), $L({value: "Could not find title in JSON feed: ", key: "parseJSONErrorDetail"}) + this.url);
 		}
 		Mojo.Log.error("Error finding JSON feed title for feed: %s", this.url);
 	}
@@ -995,9 +995,8 @@ FeedModel.prototype._wifiCheck = function(eps, wifiConnected) {
 		Mojo.Log.warn("wifiCheck newEps: %d!", newEps.length);
 		if (newEps.length) {
 			Mojo.Log.warn("Skipping %d episode download because wifi isn't connected", newEps.length);
-			Util.banner(newEps.length + " Download" + ((newEps.length===1)?"":"s") +
-								" pending WiFi");
-			Util.dashboard(DrPodder.DashboardStageName, "Downloads pending WiFi",
+			Util.banner($L({value: "Downloads pending WiFi", key: "downloadsPendingWifi"}) + ": " + newEps.length);
+			Util.dashboard(DrPodder.DashboardStageName, $L({value: "Downloads pending WiFi", key: "downloadsPendingWifi"}),
 							newEps.map(function(e){return e.title;}), true);
 		} else {
 			Util.closeDashboard(DrPodder.DashboardStageName);

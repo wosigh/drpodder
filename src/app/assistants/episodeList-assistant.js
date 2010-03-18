@@ -299,8 +299,8 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 					manualPlacement: true,
 					popupClass: "titlePopup1",
 					//placeNear: event.originalEvent.target,
-					items: [{label: "Play from Top", command: "playFromNewest-cmd"},
-							{label: "Play from Bottom", command: "playFromOldest-cmd"}]
+					items: [{label: $L({value: "Play from Top", key: "playFromTop"}), command: "playFromNewest-cmd"},
+							{label: $L({value: "Play from Bottom", key: "playFromBottom"}), command: "playFromOldest-cmd"}]
 				});
 				break;
 			case "filter-all-cmd":

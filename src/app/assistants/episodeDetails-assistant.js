@@ -85,7 +85,7 @@ EpisodeDetailsAssistant.prototype.viewMenuModel = {
 EpisodeDetailsAssistant.prototype.setup = function() {
 	this.statusDiv = this.controller.get("statusDiv");
 	this.statusDiv.hide();
-	this.setStatus("Setup");
+	this.setStatus($L("Setup"));
 	this.controller.getSceneScroller().mojo.setMode("dominant");
 	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
 
@@ -312,7 +312,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 	} else {*/
 		if (this.episodeObject.file) {
 			Mojo.Log.warn("Setting [%s] file src to:[%s]", this.episodeObject.type, this.episodeObject.file);
-			this.setStatus("");
+			this.setStatus();
 			this.audioObject.src = this.episodeObject.file;
 			this.progressModel.progressStart = 0;
 			this.progressModel.progressEnd = 1;
@@ -320,7 +320,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 		} else {
 			var url = this.episodeObject.getEnclosure();
 			Mojo.Log.warn("Setting [%s] stream src to:[%s]", this.episodeObject.type, url);
-			this.setStatus("Connecting");
+			this.setStatus($L("Connecting"));
 			this.audioObject.src = url;
 			this.progressModel.progressStart = 0;
 			this.progressModel.progressEnd = 0;
@@ -445,7 +445,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 	Mojo.Log.warn("W.AudioEvent: %s", event.type);
 	switch (event.type) {
 		case "load":
-			this.setStatus("");
+			this.setStatus();
 			this.updateProgress();
 			break;
 		case "durationchange":
@@ -468,7 +468,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			break;
 		case "canplaythrough":
 			this.updateProgress();
-			this.setStatus("");
+			this.setStatus();
 			this.cmdMenuModel.items[2].disabled = false;
 			this.refreshMenu();
 			break;
@@ -483,7 +483,7 @@ EpisodeDetailsAssistant.prototype.handleAudioEvents = function(event) {
 			this.setStatus($L("Buffering"));
 			break;
 		case "play":
-			this.setStatus("");
+			this.setStatus();
 			this.playGUI();
 			break;
 		case "pause":

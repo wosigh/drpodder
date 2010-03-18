@@ -24,7 +24,6 @@ function AddPlaylistAssistant(feed) {
 
 	if (this.feed !== null) {
 		this.newFeed = false;
-		this.dialogTitle = $L({value:"Edit Dynamic Playlist", key:"editDynamicPlaylist"});
 		this.nameModel = { value: this.feed.title };
 		this.includeAllModel = { value: (this.feed.feedIds.length === 0) };
 	} else {
@@ -37,7 +36,6 @@ function AddPlaylistAssistant(feed) {
 		this.feed.details = undefined;
 
 		this.newFeed = true;
-		this.dialogTitle = $L({value:"Add Dynamic Playlist", key:"addDynamicPlaylist"});
 		this.nameModel = { value: null };
 		this.includeAllModel = { value: false };
 	}
@@ -101,6 +99,18 @@ AddPlaylistAssistant.prototype.setup = function() {
 
 	this.includeAllToggle = this.controller.get('includeAllToggle');
 	this.includeAllHandler = this.includeAllChanged.bindAsEventListener(this);
+	this.localize.bind(this).defer();
+};
+
+AddPlaylistAssistant.prototype.localize = function() {
+	if (this.newFeed) {
+		Util.localize(this, "dialogTitle", "Add Dynamic Playlist", "addDynamicPlaylist");
+	} else {
+		Util.localize(this, "dialogTitle", "Edit Dynamic Playlist", "editDynamicPlaylist");
+	}
+	Util.localize(this, "title", "Title");
+	Util.localize(this, "includeAllFeeds", "Include All Feeds", "includeAllFeeds");
+	Util.localize(this, "selectFeeds", "Select Feeds To Include In Playlist", "selectFeedsToInclude");
 };
 
 AddPlaylistAssistant.prototype.activate = function() {

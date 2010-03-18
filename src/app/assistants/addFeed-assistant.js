@@ -30,7 +30,6 @@ function AddFeedAssistant(feed) {
 		this.originalUrl = feed.url;
 		this.originalUsername = feed.username;
 		this.originalPassword = feed.password;
-		this.dialogTitle = $L({value:"Edit Podcast XML Feed", key:"editPodcastXML"});
 		this.title = this.feed.title;
 		this.url = this.feed.url;
 		this.username = this.feed.username;
@@ -43,7 +42,6 @@ function AddFeedAssistant(feed) {
 		this.replacementModel.items = this.feed.getReplacementsArray();
 	} else {
 		this.newFeed = true;
-		this.dialogTitle = $L({value:"Add Podcast XML Feed", key:"addPodcastXML"});
 		this.title = null;
 		this.url = null;
 		this.username = null;
@@ -57,10 +55,6 @@ function AddFeedAssistant(feed) {
 }
 
 AddFeedAssistant.prototype.menuAttr = {omitDefaultItems: true};
-
-AddFeedAssistant.prototype.localize = function() {
-	Util.localize(this, "newFeedURL", "URL");
-};
 
 AddFeedAssistant.prototype.setup = function() {
 	this.menuModel = {
@@ -77,7 +71,6 @@ AddFeedAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 
-	this.controller.get("dialogTitle").update(this.dialogTitle);
 	this.controller.setupWidget("newFeedURL",
 		{
 			hintText : $L({value:"RSS feed URL", key:"RSSFeedURL"}),
@@ -226,6 +219,26 @@ AddFeedAssistant.prototype.setup = function() {
 
 	this.autoDownloadToggle = this.controller.get('autoDownloadToggle');
 	this.autoDownloadHandler = this.autoDownloadChanged.bindAsEventListener(this);
+
+	this.localize.bind(this).defer();
+};
+
+AddFeedAssistant.prototype.localize = function() {
+	if (this.newFeed) {
+		Util.localize(this, "dialogTitle", "Add Podcast XML Feed", "addPodcastXML");
+	} else {
+		Util.localize(this, "dialogTitle", "Edit Podcast XML Feed", "editPodcastXML");
+	}
+	Util.localize(this, "newFeedURL", "URL");
+	Util.localize(this, "username", "Username");
+	Util.localize(this, "password", "Password");
+	Util.localize(this, "title", "Title");
+	Util.localize(this, "icon", "Icon");
+	Util.localize(this, "feedOptions", "Feed Options", "feedOptions");
+	Util.localize(this, "deleteWhenFinished", "Delete when finished", "deleteWhenFinished");
+	Util.localize(this, "hidePodcastFiles", "Hide Podcast Files", "hidePodcastFiles");
+	Util.localize(this, "autoDownload", "Auto-Download", "autoDownload");
+	Util.localize(this, "episodeTitleReplacements", "Episode Title Replacements", "episodeTitleReplacements");
 };
 
 AddFeedAssistant.prototype.activate = function() {
