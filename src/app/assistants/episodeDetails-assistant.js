@@ -228,9 +228,9 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
-		if (!this.finished) {this.bookmark();}
 		this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 		if (!this.isVideo()) {
+			if (!this.finished) {this.bookmark();}
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
 			this.audioObject.removeEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);

@@ -241,7 +241,7 @@ GoogleListenSearch.prototype.search = function(keyword, filter, callback) {
 
 	var request = new Ajax.Request(url, {
 		method : "get",
-		evalJSON : "false",
+		evalJSON : "true",
 		evalJS : "false",
 		onFailure : function(transport) {
 			Mojo.Log.error("Error contacting search service: %d", transport.status);
@@ -255,6 +255,7 @@ GoogleListenSearch.prototype.search = function(keyword, filter, callback) {
 GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 	//Mojo.Log.error("transport.status = %d", transport.status);
 	var results = [];
+	var uniq = {};
 
 	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
 		Mojo.Log.error("Error contacting search service: %d", transport.status);
@@ -262,16 +263,9 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 		return;
 	}
 
-	for (i=0; i<transport.responseText.length; i+=100) {
-		Mojo.Log.warn("%s", transport.responseText.substring(i, i+100));
-	}
-	/*
-	var doc = transport.responseXML;
-	if (!doc) {
-		doc = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
-	}
+	var json = transport.responseText.evalJSON(true);
 
-	var totalResults = Util.xmlTagValue(doc, "totalResults");
+	var totalResults = json.items.length;
 
 	if (totalResults === undefined) {
 		Mojo.Log.error("Error contacting search service: result count not found");
@@ -279,20 +273,14 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 		return;
 	}
 
-	var nodes = document.evaluate("//outline", doc, null, XPathResult.ANY_TYPE, null);
-	var node = nodes.iterateNext();
-	while (node) {
-		var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
-		var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
-		if (title !== undefined && url !== undefined) {
-			//Mojo.Log.error("found: (%s)-[%s]", title, url);
-			results.push({title:title, url:url});
-		} else {
-			//Mojo.Log.error("skipping: (%s)-[%s]", title, url);
+	json.items.forEach(function(f) {
+		var title = f.feed_title;
+		var url = f.feed_url;
+		if (!uniq[url]) {
+			uniq[url] = true;
+			results.push({title: title, url: url});
 		}
-		node = nodes.iterateNext();
-	}
-	*/
+	});
 
 	callback(results);
 };
@@ -322,9 +310,9 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.controller.setupWidget("searchProviderList",
 		{label: $L("Directory"),
 		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},
-		           {label: "Podcast.de (German)", value: "podcastDe"}
+		           {label: "Podcast.de (German)", value: "podcastDe"},
 		           //{label: "Spoken Word", value: "spokenWord"}
-		           //{label: "Google Listen", value: "googleListen"}
+		           {label: "Google Listen", value: "googleListen"}
 		]},
 		this.searchProviderModel = { value : LastSearchService });
 
