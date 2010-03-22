@@ -32,7 +32,7 @@ FeedListAssistant.prototype.cmdMenuModel = {
 FeedListAssistant.prototype.addMenuModel = {
 	items: [{label: $L({value:"Enter feed URL...", key:"enterFeedURL"}), command: "add-feed"},
 			{label: $L({value:"Search Directory...", key:"searchDirectory"}), command: "feed-search"},
-	        //{label: "Search podTrapper...", command: "pt-search"},
+	        {label: $L({value:"Search podTrapper...", key:"searchPodTrapper"}), command: "pt-search"},
 	        //{label: "Search the Web...", command: "web-search"},
 	        {label: $L({value:"Dynamic Playlist...", key:"dynamicPlaylist"}), command: "add-playlist"}
 	        ]

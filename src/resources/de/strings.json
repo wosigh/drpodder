@@ -1,4 +1,4 @@
-{
+﻿{
 	addPodcastXML: "DE Add Podcast XML Feed",
 	editPodcastXML: "DE Edit Podcast XML Feed",
 	Authentication: "DE Authentication",
@@ -122,6 +122,7 @@
 
 	enterFeedURL: "DE Enter feed URL...",
 	searchDirectory: "DE Search Directory...",
+	searchPodTrapper: "DE Search PodTrapper...",
 	dynamicPlaylist: "DE Dynamic Playlist...",
 	drpodderWelcome: "DE Welcome to drPodder!<br><br>Would you like to add some technology podcasts to get you started?",
 	drpodderThanks: "DE Thanks for using drPodder!",
