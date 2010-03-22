@@ -63,11 +63,11 @@ PreferencesAssistant.prototype.setup = function() {
 		 choices: [
 				  //{label: "5 Minutes", value: "00:05:00"},
 				  {label: $L({value:"1 Hour", key:"1hour"}), value: "01:00:00"},
-				  {label: $L({value:"2 Hours", key:"2hours"}), value: "02:00:00"},
-				  {label: $L({value:"4 Hours", key:"4hours"}), value: "04:00:00"},
-				  {label: $L({value:"6 Hours", key:"6hours"}), value: "06:00:00"},
-				  {label: $L({value:"12 Hours", key:"12hours"}), value: "12:00:00"},
-				  {label: $L({value:"24 Hours", key:"24hours"}), value: "23:59:59"}]},
+				  {label: $L({value:"2 Hours", key:"2hour"}), value: "02:00:00"},
+				  {label: $L({value:"4 Hours", key:"4hour"}), value: "04:00:00"},
+				  {label: $L({value:"6 Hours", key:"6hour"}), value: "06:00:00"},
+				  {label: $L({value:"12 Hours", key:"12hour"}), value: "12:00:00"},
+				  {label: $L({value:"24 Hours", key:"24hour"}), value: "23:59:59"}]},
 		{ value : Prefs.updateInterval });
 
 	this.showIntervalSelector();

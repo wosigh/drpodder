@@ -378,6 +378,7 @@ FeedSearchAssistant.prototype.setup = function() {
 FeedSearchAssistant.prototype.localize = function() {
 	Util.localize(this, "searchPodcastDirectory", "Search Podcast Directory", "searchPodcastDirectory");
 	Util.localize(this, "keyword", "Keyword");
+	Util.localize(this, "filter", "Filter");
 };
 
 FeedSearchAssistant.prototype.activate = function() {

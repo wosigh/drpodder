@@ -229,7 +229,7 @@ AddFeedAssistant.prototype.localize = function() {
 	} else {
 		Util.localize(this, "dialogTitle", "Edit Podcast XML Feed", "editPodcastXML");
 	}
-	Util.localize(this, "newFeedURL", "URL");
+	Util.localize(this, "url", "URL");
 	Util.localize(this, "username", "Username");
 	Util.localize(this, "password", "Password");
 	Util.localize(this, "title", "Title");
@@ -256,7 +256,7 @@ AddFeedAssistant.prototype.deactivate = function() {
 };
 
 AddFeedAssistant.prototype.listAddHandler = function(event){
-	var newItem = {from:"", to: ""};
+	var newItem = {from:"", to: "", fromLabel: $L("from"), toLabel: $L("to")};
 	this.replacementModel.items.push(newItem);
 	this.replacementList.mojo.noticeAddedItems(this.replacementModel.items.length, [newItem]);
 };
