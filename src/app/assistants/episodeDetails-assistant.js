@@ -617,7 +617,7 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 };
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) {
-	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (currentTime passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
+	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
 
 	if (isNaN(this.audioObject.currentTime) ||
 	    !isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
@@ -634,7 +634,7 @@ EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) 
 		if (buffered !== undefined && buffered !== null) {
 			// webOS 1.4 broke this
 			//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
-			Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
+			//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
 			this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
 			this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
 		}
