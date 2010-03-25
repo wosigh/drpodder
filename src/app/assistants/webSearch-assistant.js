@@ -24,6 +24,16 @@ function WebSearchAssistant(params) {
 	}
 }
 
+WebSearchAssistant.prototype.cmdMenuModel = {
+	items: [
+		{},
+		{},
+		{},
+		{},
+		{iconPath: "icon32x32.png", command: "home-cmd"}
+	]
+};
+
 WebSearchAssistant.prototype.setup = function() {
 	this.controller.setupWidget("searchWebView",
         this.attributes = {
@@ -38,6 +48,10 @@ WebSearchAssistant.prototype.setup = function() {
 	this.searchWebView = this.controller.get("searchWebView");
 
 	this.handleLinkClicked = this.linkClicked.bind(this);
+	this.cmdMenuModel.items[0] = {};
+	this.cmdMenuModel.items[1] = {};
+	this.level = 0;
+	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 };
 
 WebSearchAssistant.prototype.activate = function(event) {
@@ -56,5 +70,70 @@ WebSearchAssistant.prototype.linkClicked = function(event) {
 		this.controller.stageController.popScene({feedToAdd: {url:event.url}});
 	} else {
 		this.searchWebView.mojo.openURL(event.url);
+		this.addBack();
+		this.level++;
 	}
+};
+
+WebSearchAssistant.prototype.handleCommand = function(event) {
+	if (event.type == Mojo.Event.command) {
+        switch(event.command) {
+            case "back-cmd":
+				this.backCmd();
+				break;
+            case "forward-cmd":
+				this.forwardCmd();
+				break;
+            case "home-cmd":
+				this.homeCmd();
+				break;
+		}
+	} else if (event.type === Mojo.Event.back) {
+		event.stop();
+		event.stopPropagation();
+		this.backCmd();
+	}
+};
+
+WebSearchAssistant.prototype.backCmd = function() {
+	if (this.level === 0) {
+		this.controller.stageController.popScene();
+	} else {
+		this.level--;
+		if (this.level === 0) {
+			this.disableBack();
+		}
+		this.addForward();
+		this.searchWebView.mojo.goBack();
+	}
+};
+
+WebSearchAssistant.prototype.forwardCmd = function() {
+	this.level++;
+	this.addBack();
+	this.searchWebView.mojo.goForward();
+};
+
+WebSearchAssistant.prototype.homeCmd = function() {
+	this.controller.stageController.popScene();
+};
+
+WebSearchAssistant.prototype.addForward = function() {
+	this.cmdMenuModel.items[1] = {icon: "forward", command: "forward-cmd"};
+	this.controller.modelChanged(this.cmdMenuModel);
+};
+
+WebSearchAssistant.prototype.removeForward = function() {
+	this.cmdMenuModel.items[1] = {};
+	this.controller.modelChanged(this.cmdMenuModel);
+};
+
+WebSearchAssistant.prototype.addBack = function() {
+	this.cmdMenuModel.items[0] = {icon: "back", command: "back-cmd"};
+	this.controller.modelChanged(this.cmdMenuModel);
+};
+
+WebSearchAssistant.prototype.disableBack = function() {
+	this.cmdMenuModel.items[0].disabled = true;
+	this.controller.modelChanged(this.cmdMenuModel);
 };
