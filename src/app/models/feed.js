@@ -386,8 +386,8 @@ Feed.prototype.parseRssFeed = function(transport) {
 			episode.feedId = this.id;
 			episode.feedObject = this;
 			episode.albumArt = this.albumArt;
-			this.insertEpisodeTop(episode);
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
+			this.insertEpisodeTop(episode);
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
 			this.addToPlaylistsTop(episode);
@@ -473,8 +473,8 @@ Feed.prototype.parseJSONFeed = function(transport) {
 			episode.feedId = this.id;
 			episode.feedObject = this;
 			episode.albumArt = this.albumArt;
-			this.insertEpisodeTop(episode);
 			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
+			this.insertEpisodeTop(episode);
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
 			this.addToPlaylistsTop(episode);
