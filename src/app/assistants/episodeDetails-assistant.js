@@ -46,6 +46,7 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	items: [
 		Mojo.Menu.editItem,
 		{label: $L({value:"Play using webOS player", key:"playExternal"}), command: "playExternal-cmd"},
+		{label: $L({value:"Share Episode", key:"shareEpisode"}), command: "share-cmd"},
 		{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
 		{label: $L("Help"), command: "help-cmd"},
 		{label: $L("About") + '...', command: "about-cmd"}
@@ -536,6 +537,17 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 					"File: " + this.episodeObject.file + "<br/><br/>" +
 					"Feed Information:<br/>" +
 					"URL: " + this.episodeObject.feedObject.url + "<br/>";
+				break;
+            case "share-cmd":
+				var subject = "Check out this podcast I found with drPodder!";
+				var message = "Hi,<br/><br/>" +
+					"I thought you'd like to check out this great podcast I'm listening to with " +
+					"<a href=\"http://developer.palm.com/appredirect/?packageid=com.drnull.drpodder\">drPodder</a> on my Palm webOS phone!<br/><br/>" +
+					"To download the episode, just click this link: <a href=\"" + this.episodeObject.enclosure + "\">" + this.episodeObject.title + "</a><br/><br/>" +
+					"To subscribe to this podcast yourself, simply copy the following link and paste it into your favorite Podcatcher!<br/><br/>" +
+					"Podcast Title: <a href=\"" + this.episodeObject.feedObject.url + "\">" + this.episodeObject.feedObject.title + "</a><br/>" +
+					"Podcast URL:<br>" + this.episodeObject.feedObject.url + "<br/><br/>";
+				AppAssistant.applicationManagerService.email(subject, message);
 				break;
             case "playExternal-cmd":
 				this.playExternal();
