@@ -51,6 +51,7 @@ WebSearchAssistant.prototype.setup = function() {
 	this.cmdMenuModel.items[0] = {};
 	this.cmdMenuModel.items[1] = {};
 	this.level = 0;
+	this.maxLevel = 0;
 	this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 };
 
@@ -72,6 +73,7 @@ WebSearchAssistant.prototype.linkClicked = function(event) {
 		this.searchWebView.mojo.openURL(event.url);
 		this.addBack();
 		this.level++;
+		this.maxLevel = this.level;
 	}
 };
 
@@ -110,6 +112,9 @@ WebSearchAssistant.prototype.backCmd = function() {
 
 WebSearchAssistant.prototype.forwardCmd = function() {
 	this.level++;
+	if (this.level === this.maxLevel) {
+		this.removeForward();
+	}
 	this.addBack();
 	this.searchWebView.mojo.goForward();
 };
