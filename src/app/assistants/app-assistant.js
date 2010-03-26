@@ -267,8 +267,10 @@ AppAssistant.prototype.handleCommand = function(event) {
 						var message = $L({value:"Please describe the problem you are experiencing with drPodder here:", key:"reportProblemIntro"}) + "<br/><br/><br/><br/><br/><br/>";
 						message += $L({value:"Report Information (please do not remove)", key:"reportInfo"}) + "<br/>";
 						message += "Application: " + Mojo.appInfo.id + " v" + Mojo.Controller.appInfo.version + "<br/>";
+						message += "Phone: Palm " + Mojo.Environment.DeviceInfo.modelName + " on " + Mojo.Environment.DeviceInfo.carrierName + "(" + Mojo.Environment.DeviceInfo.platformVersion + ")<br/>";
+						message += "webOS build: " + Mojo.Environment.build + "<br/>";
 						message += event.data;
-						AppAssistant.applicationManagerService.email("drPodder Problem Report", message);
+						AppAssistant.applicationManagerService.email("drPodder Problem Report", message, true);
 					}.bind(this),
 					function() {
 						var dialog = new drnull.Dialog.Info(event.assistant, $L({value:"Sorry for the inconvienence!", key:"sorry1"}),

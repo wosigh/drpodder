@@ -135,6 +135,7 @@
 	clearNew: "Clear New",
 	cancelDownloads: "Cancel Downloads",
 
+	searchPodcastDirectory: "Search Podcast Directory",
 	errorContactingSearch: "Error contacting search service",
 	keyword: "Keyword",
 	noResults: "No Results Found",

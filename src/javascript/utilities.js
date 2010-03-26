@@ -78,6 +78,7 @@ Utilities.prototype.localize = function(assistant, element, value, key) {
 	Mojo.Log.info("localizing: %s:%s", element, value);
 	el = assistant.controller.get(element);
 	if (el) {el.update(value);}
+	else {Mojo.Log.error("Attempted to localize %s, but element wasn't found", element);}
 };
 
 Utilities.prototype.xpath = function(path, node, getData, numeric) {
