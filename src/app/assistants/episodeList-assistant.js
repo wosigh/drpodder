@@ -367,7 +367,7 @@ EpisodeListAssistant.prototype.playFrom = function(oldest) {
 	if (oldest) {playlist.reverse();}
 	if (playlist.length > 0) {
 		var e = playlist.shift();
-		this.stageController.pushScene({name: "episodeDetails", transition: Prefs.transition}, e, {autoPlay: true, resume: true, playlist: playlist});
+		this.stageController.pushScene({name: "episodeDetails", transition: Mojo.Transition.none}, e, {autoPlay: true, resume: true, playlist: playlist});
 	} else {
 		Util.showError($L({value:"Error playing episodes", key:"errorPlayingEpisodes"}), $L({value:"No New Episodes found", key:"noNewEpisodes"}));
 	}
@@ -585,7 +585,7 @@ EpisodeListAssistant.prototype.menuSelection = function(episode, command) {
 };
 
 EpisodeListAssistant.prototype.play = function(episode, autoPlay, resume) {
-	this.stageController.pushScene({name: "episodeDetails", transition: Prefs.transition}, episode, {"autoPlay": autoPlay, "resume": resume, playlist: []});
+	this.stageController.pushScene({name: "episodeDetails", transition: Mojo.Transition.none}, episode, {"autoPlay": autoPlay, "resume": resume, playlist: []});
 };
 
 EpisodeListAssistant.prototype.updatePercent = function(episode) {
