@@ -229,8 +229,8 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
-		this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 		if (!this.isVideo()) {
+			this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 			if (!this.finished) {this.bookmark();}
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
@@ -262,11 +262,13 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 };
 
 EpisodeDetailsAssistant.prototype.bookmark = function() {
-	var cur = this.audioObject.currentTime;
-	Mojo.Log.warn("BOOKMARK!!! %d", cur);
-	if (cur !== undefined && cur !== null && cur > 15) {
-		this.episodeObject.length = this.audioObject.duration;
-		this.episodeObject.bookmark(cur);
+	if (!this.isVideo()) {
+		var cur = this.audioObject.currentTime;
+		Mojo.Log.warn("BOOKMARK!!! %d", cur);
+		if (cur !== undefined && cur !== null && cur > 15) {
+			this.episodeObject.length = this.audioObject.duration;
+			this.episodeObject.bookmark(cur);
+		}
 	}
 };
 
@@ -286,7 +288,7 @@ EpisodeDetailsAssistant.prototype.backToList = function() {
 		this.controller.stageController.popScene(true);
 	} else {
 		var episode = this.playlist.shift();
-		this.controller.stageController.swapScene({name: "episodeDetails", transition: Prefs.transition}, episode, {autoPlay: true, resume: true, playlist: this.playlist});
+		this.controller.stageController.swapScene({name: "episodeDetails", transition: Mojo.Transition.none}, episode, {autoPlay: true, resume: true, playlist: this.playlist});
 	}
 };
 
@@ -629,29 +631,31 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 };
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) {
-	Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
+	if (!this.isVideo()) {
+		Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
 
-	if (isNaN(this.audioObject.currentTime) ||
-	    !isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
-		this.updateProgressLabelsValues("00:00", "00:00");
-	} else {
-		this.updateProgressLabels(currentTime);
-		if (!currentTime) {
-			this.progressModel.value = this.audioObject.currentTime/this.audioObject.duration;
+		if (isNaN(this.audioObject.currentTime) ||
+			!isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
+			this.updateProgressLabelsValues("00:00", "00:00");
+		} else {
+			this.updateProgressLabels(currentTime);
+			if (!currentTime) {
+				this.progressModel.value = this.audioObject.currentTime/this.audioObject.duration;
+			}
 		}
-	}
 
-	if (!this.episodeObject.downloaded) {
-		var buffered = this.audioObject.buffered;
-		if (buffered !== undefined && buffered !== null) {
-			// webOS 1.4 broke this
-			//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
-			//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
-			this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
-			this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
+		if (!this.episodeObject.downloaded) {
+			var buffered = this.audioObject.buffered;
+			if (buffered !== undefined && buffered !== null) {
+				// webOS 1.4 broke this
+				//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
+				//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
+				this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
+				this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
+			}
 		}
+		this.controller.modelChanged(this.progressModel);
 	}
-	this.controller.modelChanged(this.progressModel);
 };
 
 EpisodeDetailsAssistant.prototype.formatTime = function(secs) {
@@ -727,12 +731,31 @@ EpisodeDetailsAssistant.prototype.launchVideo = function(uri) {
 		target: uri,
 		title: this.episodeObject.title,
 		thumbUrl: this.episodeObject.feedObject.albumArt
-		/*,
-		initialPos: 0,
-		videoID: undefined*/
 	};
 
 	this.controller.stageController.pushScene(args, params);
+	/*
+	var params = {
+		target: uri,
+		title: this.episodeObject.title,
+		initialPos: 0,
+		videoID: undefined,
+		thumbUrl: this.episodeObject.feedObject.albumArt,
+		isNewCard: true
+		/*
+		captured: this.launchParams.captured,
+		item: {
+			videoDuration: this.launchParams.videoDuration
+		}
+		*/
+		/*
+	};
+
+
+	AppAssistant.VideoLibrary.Push(this.controller.stageController, AppAssistant.VideoLibrary.Nowplaying, params);
+
+	*/
+
 };
 
 EpisodeDetailsAssistant.prototype.playExternal = function() {

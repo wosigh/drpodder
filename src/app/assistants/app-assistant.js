@@ -312,3 +312,9 @@ AppAssistant.prototype.handleCommand = function(event) {
 		}
 	}
 };
+/*
+AppAssistant.VideoLibrary = MojoLoader.require({
+	name: "metascene.videos",
+	version: "1.0"
+})["metascene.videos"];
+*/
