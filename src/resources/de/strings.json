@@ -65,20 +65,29 @@
 	reportInfo: "Report-Information (bitte nicht entfernen)",
 	sorry1: "Entschuldigen Sie bitte die Unannehmlichkeiten!",
 	sorry2: "Ich hoffe, Sie können Ihr Problem lösen. Bitte wenden Sie sich an support@drPodder.com, wenn Sie weitere Hilfe benötigen.",
+	reportProblemSubject: "Diesen Podcast habe ich mit drPodder gefunden!",
+	reportProblemBody: "Hallo,<br/><br/>vielleicht gefällt Dir dieser tolle Podcast, den ich gerade auf meinem Palm webOS-Telefon höre! (remark: listening to a podcast is limiting in terms of excluding video podcasts, isn´t it? By now the translation listening=hören is in other words restricting to audio-podcasts)
+
+Für den Download der Episode einfach auf diesen Link klicken: #{episodeTitel}
+
+Um selber diesen Podcast zu abonnieren, kopiere einfach den folgenden Link und füge ihn in den Podcatcher Deiner Wahl ein!
+Podcast-Titel: #{podcastTitel}
+Podcast-URL:
+#{podcastURL}
 
 	playExternal: "Abspielen mit webOS-Player",
 	shareEpisode: "Verteilung Episode",
-	Setup: "DE Setup",
-	Extend: "Ausweiten",
-	Class: "DE Class",
-	Bind: "DE Bind",
-	Event: "Ereignis",
+	Setup: "Setup",
+	Extend: "Extend",
+	Class: "Class",
+	Bind: "Bind",
+	Event: "Event",
 	Connecting: "Verbinde",
 	Loading: "Lade",
 	Seeking: "Suche",
 	Buffering: "Puffere",
 
-	ALL: "Alle",
+	ALL: "ALLE",
 	New: "Neu",
 	Old: "Alt",
 	Downloaded: "Download beendet",
@@ -122,6 +131,7 @@
 	noEnclosureFound: "DE No enclosure found",
 	playFromTop: "Oben beginnend abspielen",
 	playFromBottom: "Unten beginnend abspielen",
+	View: "Zeige",
 
 	enterFeedURL: "Feed URL eingeben...",
 	searchDirectory: "Verzeichnis durchsuchen...",
@@ -135,6 +145,7 @@
 	clearNew: "Alle als Alt markieren",
 	cancelDownloads: "Downloads abbrechen",
 
+	searchPodcastDirectory: "Podcast Verzeichnis durchsuchen",
 	errorContactingSearch: "Fehler bei der Verbindung mit dem Suchdienst",
 	Keyword: "Stichwort",
 	noResults: "Keine Ergebnisse gefunden",
@@ -184,9 +195,9 @@
 	Friday: "Freitag",
 	Saturday: "Samstag",
 	Transitions: "Übergänge",
-	None: "DE None",
-	zoomFade: "DE Zoom Fade",
-	crossFade: "DE Cross Fade",
+	None: "Keine",
+	zoomFade: "Zoom Fade",
+	crossFade: "Cross Fade",
 	restartRequired: "Neustart notwendig",
 	changingFreeRotation: "Ein Neustart von drPodder ist notwendig, um die freie Orientierung zu ändern.",
 
@@ -210,8 +221,8 @@
 	Yes: "Ja",
 	No: "Nein",
 
-	updatingFeed: "Feed wird update",
-	updatingFeeds: "Feeds werden update",
+	updatingFeed: "Feed wird aktualisiert",
+	updatingFeeds: "Feeds werden aktualisiert",
 	feedTypeError: "Feedtyp konnte nicht bestimmt werden",
 	feedTypeErrorDetail: "Feedtyp konnte nicht bestimmt werden für: ",
 	parseFeedError: "Fehler bei der Verarbeitung des Feeds",

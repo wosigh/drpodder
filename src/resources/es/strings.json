@@ -122,6 +122,7 @@
 	noEnclosureFound: "No enclosure found",
 	playFromTop: "Play from Top",
 	playFromBottom: "Play from Bottom",
+	View: "View",
 
 	enterFeedURL: "Enter feed URL...",
 	searchDirectory: "Search Directory...",

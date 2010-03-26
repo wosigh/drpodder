@@ -18,6 +18,9 @@ Copyright 2010 Jamie Hatfield <support@drpodder.com>
 */
 
 var LastSearchService = "digitalPodcast";
+if ($L("ALL") === "ALLE") {
+	LastSearchService = "podcastDe";
+}
 var LastSearchFilter = "nofilter";
 var LastSearchKeyword = "";
 

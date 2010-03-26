@@ -101,7 +101,7 @@ EpisodeListAssistant.prototype.filterEpisodes = function() {
 EpisodeListAssistant.prototype.setup = function() {
 	this.cmdMenuModel = {
 		items: [
-			{label: "View: " + $L(this.feedObject.viewFilter), submenu: "filter-menu"},
+			{label: $L("View") + ": " + $L(this.feedObject.viewFilter), submenu: "filter-menu"},
 			{icon: "refresh", command: "refresh-cmd"}
 		]
 	};
@@ -339,7 +339,7 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 
 EpisodeListAssistant.prototype.handleFilterCommand = function(filter) {
 	this.feedObject.viewFilter = filter;
-	this.cmdMenuModel.items[0].label = "View: " + $L(filter);
+	this.cmdMenuModel.items[0].label = $L("View") + ": " + $L(filter);
 	this.controller.modelChanged(this.cmdMenuModel);
 	this.filterEpisodes();
 	DB.saveFeed(this.feedObject);
