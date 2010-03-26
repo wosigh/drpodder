@@ -375,6 +375,7 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.selectionHandler = this.selection.bindAsEventListener(this);
 	this.focusChangeHandler = this.focusChange.bindAsEventListener(this);
 
+	this.searchProviderChange();
 	this.localize.bind(this).defer();
 };
 
