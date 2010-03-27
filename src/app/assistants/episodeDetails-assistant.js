@@ -123,6 +123,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.progress = this.controller.get("progress");
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
 	this.titleTapHandler = this.titleTap.bind(this);
+	this.audioObject = {};
 
 	if (this.episodeObject.enclosure || this.episodeObject.downloaded) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
@@ -179,6 +180,9 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 			this.keyDownEventHandler = this.keyDownHandler.bind(this);
 		} else {
+			this.progressInfo.hide();
+			this.progressInfoHidden = true;
+			this.adjustHeader();
 			this.setStatus();
 			if (this.autoPlay) {
 				this.disablePlay();
@@ -191,6 +195,9 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 		this.updateTimer = null;
 	} else {
+		this.progressInfo.hide();
+		this.progressInfoHidden = true;
+		this.adjustHeader();
 		this.setStatus();
 	}
 
@@ -210,7 +217,7 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 	this.adjustHeader();
 	this.isForeground = true;
 	Mojo.Log.warn("isForeground = true");
-	//Mojo.Event.listen(this.header, Mojo.Event.tap, this.titleTapHandler);
+	Mojo.Event.listen(this.header, Mojo.Event.tap, this.titleTapHandler);
 
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
 		Mojo.Event.listen(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
@@ -225,7 +232,7 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 EpisodeDetailsAssistant.prototype.deactivate = function() {
 	this.isForeground = false;
 	Mojo.Log.warn("isForeground = false");
-	//Mojo.Event.stopListening(this.header, Mojo.Event.tap, this.titleTapHandler);
+	Mojo.Event.stopListening(this.header, Mojo.Event.tap, this.titleTapHandler);
 
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
 		Mojo.Event.stopListening(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
@@ -790,6 +797,7 @@ EpisodeDetailsAssistant.prototype.titleTap = function() {
 	if (this.progressInfoHidden) {
 		this.header.addClassName("multi-line");
 		this.progressInfo.show();
+		this.updateProgress();
 		this.progressInfoHidden = false;
 		this.adjustHeader();
 	} else {
