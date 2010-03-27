@@ -84,11 +84,14 @@ EpisodeDetailsAssistant.prototype.viewMenuModel = {
 };
 
 EpisodeDetailsAssistant.prototype.setup = function() {
+	this.progressInfo = this.controller.get("progress-info");
+	this.header = this.controller.get("header");
+	this.episodeDetailsTitle = this.controller.get("episodeDetailsTitle");
 	this.statusDiv = this.controller.get("statusDiv");
 	this.statusDiv.hide();
 	this.setStatus($L("Setup"));
 	this.controller.getSceneScroller().mojo.setMode("dominant");
-	this.controller.update(this.controller.get("episodeDetailsTitle"), this.episodeObject.title);
+	this.controller.update(this.episodeDetailsTitle, this.episodeObject.title);
 
 	DB.getEpisodeDescription(this.episodeObject, function(description) {
 		this.controller.update(this.controller.get("episodeDetailsDescription"), description);
@@ -119,6 +122,8 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.setupWidget("progress", this.progressAttr, this.progressModel);
 	this.progress = this.controller.get("progress");
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
+	this.titleTapHandler = this.titleTap.bind(this);
+
 	if (this.episodeObject.enclosure || this.episodeObject.downloaded) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 		if (!this.isVideo()) {
@@ -195,10 +200,17 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 };
 
-EpisodeDetailsAssistant.prototype.activate = function() {
+EpisodeDetailsAssistant.prototype.adjustHeader = function() {
 	var height=this.controller.get("topContent").getHeight();
 	this.controller.get("topSpacer").style.height = height + 'px';
 	this.controller.get("descriptionFade").style.top = height + 'px';
+};
+
+EpisodeDetailsAssistant.prototype.activate = function() {
+	this.adjustHeader();
+	this.isForeground = true;
+	Mojo.Log.warn("isForeground = true");
+	//Mojo.Event.listen(this.header, Mojo.Event.tap, this.titleTapHandler);
 
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
 		Mojo.Event.listen(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
@@ -213,6 +225,8 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 EpisodeDetailsAssistant.prototype.deactivate = function() {
 	this.isForeground = false;
 	Mojo.Log.warn("isForeground = false");
+	//Mojo.Event.stopListening(this.header, Mojo.Event.tap, this.titleTapHandler);
+
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
 		Mojo.Event.stopListening(this.progress, Mojo.Event.propertyChange, this.progressChangedHandler);
 		Mojo.Event.stopListening(this.progress, Mojo.Event.sliderDragStart, this.sliderDragStartHandler);
@@ -770,6 +784,20 @@ EpisodeDetailsAssistant.prototype.playExternal = function() {
 			target: this.episodeObject.file || this.episodeObject.getEnclosure()
 		}
 	});
+};
+
+EpisodeDetailsAssistant.prototype.titleTap = function() {
+	if (this.progressInfoHidden) {
+		this.header.addClassName("multi-line");
+		this.progressInfo.show();
+		this.progressInfoHidden = false;
+		this.adjustHeader();
+	} else {
+		this.header.removeClassName("multi-line");
+		this.progressInfo.hide();
+		this.progressInfoHidden = true;
+		this.adjustHeader();
+	}
 };
 
 EpisodeDetailsAssistant.prototype.enablePlay = function(needRefresh) {

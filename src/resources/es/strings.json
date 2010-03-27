@@ -111,6 +111,8 @@
 	Oct: "Oct",
 	Nov: "Nov",
 	Dec: "Dec",
+	pm: "",
+	am: "",
 	Delete: "Delete",
 	Download: "Download",
 	Cancel: "Cancel",

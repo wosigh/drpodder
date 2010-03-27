@@ -133,7 +133,6 @@
   background-color:#e4e4e4;
   border-bottom-style: solid;
   border-bottom-width: thin;
-  padding-bottom: 12px;
 }
 
 .playbackStatusMessage {
@@ -150,6 +149,10 @@
   width: 70%;
   margin-left: 15%;
   text-align: center;
+}
+
+.stream-info {
+	padding-bottom: 12px;
 }
 
 .stream-info .elapsed,

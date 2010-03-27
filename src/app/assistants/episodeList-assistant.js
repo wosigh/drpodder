@@ -391,10 +391,13 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		var m = d.getMonth();
 		var dom=d.getDate();
 		var dow=d.getDay();
-		var h=d.getHours()%12;
+		var h=d.getHours();
 		var min=d.getMinutes();
-		var pm = (d.getHours() >= 12)?"pm":"am";
-		if (h===0) {h=12;}
+		var pm = (d.getHours() >= 12)?$L("pm"):$L("am");
+		if ($L("pm") === "pm") {
+			h = (h%12);
+			if (h===0) {h=12;}
+		}
 		//if (m<10) {m="0"+m;}
 		if (dom<10) {dom="0"+dom;}
 		if (min<10) {min="0"+min;}
