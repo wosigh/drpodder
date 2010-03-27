@@ -541,14 +541,19 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 					"URL: " + this.episodeObject.feedObject.url + "<br/>";
 				break;
             case "share-cmd":
-				var subject = "Check out this podcast I found with drPodder!";
-				var message = "Hi,<br/><br/>" +
-					"I thought you'd like to check out this great podcast I'm listening to with " +
-					"<a href=\"http://developer.palm.com/appredirect/?packageid=com.drnull.drpodder\">drPodder</a> on my Palm webOS phone!<br/><br/>" +
-					"To download the episode, just click this link: <a href=\"" + this.episodeObject.enclosure + "\">" + this.episodeObject.title + "</a><br/><br/>" +
-					"To subscribe to this podcast yourself, simply copy the following link and paste it into your favorite Podcatcher!<br/><br/>" +
-					"Podcast Title: <a href=\"" + this.episodeObject.feedObject.url + "\">" + this.episodeObject.feedObject.title + "</a><br/>" +
-					"Podcast URL:<br>" + this.episodeObject.feedObject.url + "<br/><br/>";
+				var args = {episodeURL: this.episodeObject.enclosure,
+							episodeTitle: this.episodeObject.title,
+							podcastURL: this.episodeObject.feedObject.url,
+							podcastTitle: this.episodeObject.feedObject.title};
+				var subject = $L({value: "Check out this podcast I found with drPodder!", key: "shareEpisodeSubject"});
+				var message = $L({value: "Hi,<br/><br/>I thought you'd like to check out this great podcast I'm enjoying in " +
+								 "<a href=\"http://developer.palm.com/appredirect/?packageid=com.drnull.drpodder\">drPodder</a> " +
+								 "on my Palm webOS phone!<br/><br/>To download the episode, just click this link: " +
+								 "<a href=\"#{episodeURL}\">#{episodeTitle}</a><br/><br/>" +
+								 "To subscribe to this podcast yourself, simply copy the following link and " +
+								 "paste it into your favorite Podcatcher!<br/><br/>" +
+								 "Podcast Title: <a href=\"#{podcastURL}\">#{podcastTitle}</a><br/>" +
+								 "Podcast URL:<br>#{podcastURL}<br/><br/>", key: "shareEpisodeBody"}).interpolate(args);
 				AppAssistant.applicationManagerService.email(subject, message);
 				break;
             case "playExternal-cmd":

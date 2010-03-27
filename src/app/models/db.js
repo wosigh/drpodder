@@ -146,7 +146,7 @@ DBClass.prototype.initDB = function(db) {
 	                         "length REAL, " +
 							 "type TEXT)";
 	var allPlaylist = "INSERT INTO feed (id, title, url, albumArt, viewFilter) VALUES " +
-	                  "(0, 'All', 'drPodder://'," +
+	                  "(0, '" + $L("All") + "', 'drPodder://'," +
 	                  "'images/playlist-icon.png', 'New')";
 	var loadFeeds = this.loadFeeds.bind(this);
 	db.transaction(function(transaction) {

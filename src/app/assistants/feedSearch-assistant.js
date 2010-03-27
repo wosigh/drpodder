@@ -375,14 +375,13 @@ FeedSearchAssistant.prototype.setup = function() {
 	this.selectionHandler = this.selection.bindAsEventListener(this);
 	this.focusChangeHandler = this.focusChange.bindAsEventListener(this);
 
-	this.searchProviderChange();
 	this.localize.bind(this).defer();
 };
 
 FeedSearchAssistant.prototype.localize = function() {
 	Util.localize(this, "searchPodcastDirectory", "Search Podcast Directory", "searchPodcastDirectory");
 	Util.localize(this, "keyword", "Keyword");
-	Util.localize(this, "filter", "Filter");
+	this.searchProviderChange();
 };
 
 FeedSearchAssistant.prototype.activate = function() {
@@ -390,9 +389,11 @@ FeedSearchAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.searchProvider, Mojo.Event.propertyChange, this.searchProviderChangeHandler);
 	Mojo.Event.listen(this.feedSearchList, Mojo.Event.listTap, this.selectionHandler);
 	this.focusChanges = Mojo.Event.listenForFocusChanges(this.keywordField, this.focusChangeHandler);
+	/*
 	if (LastSearchKeyword) {
 		this.keywordChange({value: LastSearchKeyword, originalEvent: {keyCode: Mojo.Char.enter}});
 	}
+	*/
 
 };
 

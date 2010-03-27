@@ -65,15 +65,8 @@
 	reportInfo: "Report-Information (bitte nicht entfernen)",
 	sorry1: "Entschuldigen Sie bitte die Unannehmlichkeiten!",
 	sorry2: "Ich hoffe, Sie können Ihr Problem lösen. Bitte wenden Sie sich an support@drPodder.com, wenn Sie weitere Hilfe benötigen.",
-	reportProblemSubject: "Diesen Podcast habe ich mit drPodder gefunden!",
-	reportProblemBody: "Hallo,<br/><br/>vielleicht gefällt Dir dieser tolle Podcast, den ich gerade auf meinem Palm webOS-Telefon höre! (remark: listening to a podcast is limiting in terms of excluding video podcasts, isn´t it? By now the translation listening=hören is in other words restricting to audio-podcasts)
-
-Für den Download der Episode einfach auf diesen Link klicken: #{episodeTitel}
-
-Um selber diesen Podcast zu abonnieren, kopiere einfach den folgenden Link und füge ihn in den Podcatcher Deiner Wahl ein!
-Podcast-Titel: #{podcastTitel}
-Podcast-URL:
-#{podcastURL}
+	shareEpisodeSubject: "Diesen Podcast habe ich mit drPodder gefunden!",
+	shareEpisodeBody: "Hallo,<br/><br/>vielleicht gefällt Dir dieser tolle Podcast, den ich gerade mit drPodder auf meinem Palm webOS-Telefon genieße.<br/><br/>Für den Download der Episode einfach auf diesen Link klicken: <a href=\"#{episodeURL}\">#{episodeTitle}</a></a><br/><br/>Um selber diesen Podcast zu abonnieren, kopiere einfach den folgenden Link und füge ihn in den Podcatcher Deiner Wahl ein!<br/><br/>Podcast-Titel: <a href=\"#{podcastURL}\">#{podcastTitle}</a><br/>Podcast-URL:<br/>#{podcastURL}",
 
 	playExternal: "Abspielen mit webOS-Player",
 	shareEpisode: "Verteilung Episode",
