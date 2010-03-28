@@ -260,7 +260,7 @@ Feed.prototype.updateCheck = function(transport) {
 		updateCheckStatus = this.parseJSONFeed(transport);
 	} else {
 		if (this.gui) {
-			Util.showError($L({value: "Error determing feed type", key: "feedTypeError"}), $L({value: "Could not determine feed type for: ", key: "feedTypeErrorDetail"}) + this.url);
+			Util.showError($L({value: "Error determining feed type", key: "feedTypeError"}), $L({value: "Could not determine feed type for: ", key: "feedTypeErrorDetail"}) + this.url);
 		}
 		Mojo.Log.error("Error determing feed type for %s", this.url);
 		updateCheckStatus = UPDATECHECK_INVALID;

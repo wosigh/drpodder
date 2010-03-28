@@ -358,9 +358,9 @@ DBClass.prototype.saveFeed = function(f, displayOrder, functionWhenFinished) {
 					for (var i=0; i<f.episodes.length; i++) {
 						f.episodes[i].displayOrder = i;
 						if (i === f.episodes.length - 1) {
-							this.saveEpisodeTransaction(f.episodes[i], transaction, functionWhenFinished);
+							this.saveEpisodeTransaction(f.episodes[i], functionWhenFinished, transaction);
 						} else {
-							this.saveEpisodeTransaction(f.episodes[i], transaction);
+							this.saveEpisodeTransaction(f.episodes[i], null, transaction);
 						}
 					}
 					if (!f.episodes.length) {
@@ -387,18 +387,18 @@ DBClass.prototype.saveEpisodeSQLDescription = "INSERT OR REPLACE INTO episode (i
 					     "downloadTicket, downloaded, listened, file, length, type) " +
 					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-DBClass.prototype.saveEpisode = function(e, displayOrder) {
+DBClass.prototype.saveEpisode = function(e, displayOrder, functionWhenFinished) {
 
 	if (displayOrder !== undefined) {
 		e.displayOrder = displayOrder;
 	}
 
 	if (e.feedId) {
-		this.db.transaction(this.saveEpisodeTransaction.bind(this, e));
+		this.db.transaction(this.saveEpisodeTransaction.bind(this, e, functionWhenFinished));
 	}
 };
 
-DBClass.prototype.saveEpisodeTransaction = function(e, transaction, functionWhenFinished) {
+DBClass.prototype.saveEpisodeTransaction = function(e, functionWhenFinished, transaction) {
 	var updateSQL            = "UPDATE episode SET feedId=?, displayOrder=?, title=?,                enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
 	var updateSQLDescription = "UPDATE episode SET feedId=?, displayOrder=?, title=?, description=?, enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
 	var insertSQL = "INSERT INTO episode (feedId, displayOrder, title, description, " +

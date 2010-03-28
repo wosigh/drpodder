@@ -89,7 +89,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.episodeDetailsTitle = this.controller.get("episodeDetailsTitle");
 	this.statusDiv = this.controller.get("statusDiv");
 	this.statusDiv.hide();
-	this.setStatus($L("Setup"));
+	this.setStatus('Setup');
 	this.controller.getSceneScroller().mojo.setMode("dominant");
 	this.controller.update(this.episodeDetailsTitle, this.episodeObject.title);
 
@@ -129,14 +129,14 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
 		if (!this.isVideo()) {
 
-			this.setStatus($L("Extend"));
+			this.setStatus('Extend');
 			this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
-			this.setStatus($L("Class"));
+			this.setStatus('Class');
 			this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
 
-			this.setStatus($L("Bind"));
+			this.setStatus('Bind');
 			this.readyToPlayHandler = this.readyToPlay.bind(this);
-			this.setStatus($L("Event"));
+			this.setStatus('Event');
 			this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 			//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
 			//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
@@ -252,7 +252,16 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
 		if (!this.isVideo()) {
 			this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
-			if (!this.finished) {this.bookmark();}
+			if (!this.finished) {
+				var functionWhenFinished = function() {};
+				if (!this.isForeground) {
+					Util.dashboard(DrPodder.DashboardStageName, $L({value: "Saving Bookmark", key: "savingBookmark"}),
+							$L({value: "Dashboard should close automatically", key: "savingBookmarkDescription"}), true);
+					Mojo.Log.warn("Closing app, we need to bookmark though!");
+					functionWhenFinished = Util.closeDashboard.bind(this, DrPodder.DashboardStageName);
+				}
+				this.bookmark();
+			}
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
 			this.audioObject.removeEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);
@@ -282,14 +291,19 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 	}
 };
 
-EpisodeDetailsAssistant.prototype.bookmark = function() {
+EpisodeDetailsAssistant.prototype.bookmark = function(functionWhenFinished) {
+	if (!functionWhenFinished) { functionWhenFinished = function() {};}
 	if (!this.isVideo()) {
 		var cur = this.audioObject.currentTime;
 		Mojo.Log.warn("BOOKMARK!!! %d", cur);
 		if (cur !== undefined && cur !== null && cur > 15) {
 			this.episodeObject.length = this.audioObject.duration;
-			this.episodeObject.bookmark(cur);
+			this.episodeObject.bookmark(cur, functionWhenFinished);
+		} else {
+			functionWhenFinished();
 		}
+	} else {
+		functionWhenFinished();
 	}
 };
 
@@ -574,7 +588,7 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 								 "To subscribe to this podcast yourself, simply copy the following link and " +
 								 "paste it into your favorite Podcatcher!<br/><br/>" +
 								 "Podcast Title: <a href=\"#{podcastURL}\">#{podcastTitle}</a><br/>" +
-								 "Podcast URL:<br>#{podcastURL}<br/><br/>", key: "shareEpisodeBody"}).interpolate(args);
+								 "Podcast URL:<br/>#{podcastURL}<br/><br/>", key: "shareEpisodeBody"}).interpolate(args);
 				AppAssistant.applicationManagerService.email(subject, message);
 				break;
             case "playExternal-cmd":
@@ -768,7 +782,6 @@ EpisodeDetailsAssistant.prototype.launchVideo = function(uri) {
 		videoID: undefined,
 		thumbUrl: this.episodeObject.feedObject.albumArt,
 		isNewCard: true
-		/*
 		captured: this.launchParams.captured,
 		item: {
 			videoDuration: this.launchParams.videoDuration

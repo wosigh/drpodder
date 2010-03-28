@@ -273,7 +273,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 						AppAssistant.applicationManagerService.email("drPodder Problem Report", message, true);
 					}.bind(this),
 					function() {
-						var dialog = new drnull.Dialog.Info(event.assistant, $L({value:"Sorry for the inconvienence!", key:"sorry1"}),
+						var dialog = new drnull.Dialog.Info(event.assistant, $L({value:"Sorry for the inconvenience!", key:"sorry1"}),
 							$L({value:"I hope you can resolve your problem.  Please contact support@drPodder.com if you need further assistance.", key:"sorry2"}));
 						dialog.show();
 					}.bind(this));

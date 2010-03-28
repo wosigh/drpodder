@@ -163,8 +163,8 @@ Episode.prototype.updateUIElements = function(ignore) {
 	}
 };
 
-Episode.prototype.save = function(ignore) {
-	if (!ignore) {DB.saveEpisode(this);}
+Episode.prototype.save = function(ignore, functionWhenFinished) {
+	if (!ignore) {DB.saveEpisode(this, functionWhenFinished);}
 };
 
 Episode.prototype.setListened = function(ignore) {
@@ -194,7 +194,7 @@ Episode.prototype.setDownloaded = function(ignore) {
 	}
 };
 
-Episode.prototype.bookmark = function(pos) {
+Episode.prototype.bookmark = function(pos, functionWhenFinished) {
 	var newBookmark = (this.position === 0);
 
 	this.position = pos;
@@ -203,7 +203,7 @@ Episode.prototype.bookmark = function(pos) {
 	} else {
 		this.bookmarkPercent = 0;
 	}
-	this.save();
+	this.save(functionWhenFinished);
 
 	if (newBookmark) {
 		this.feedObject.episodeBookmarked();
