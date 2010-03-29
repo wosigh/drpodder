@@ -94,6 +94,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.controller.update(this.episodeDetailsTitle, this.episodeObject.title);
 
 	DB.getEpisodeDescription(this.episodeObject, function(description) {
+		description = Mojo.Format.runTextIndexer(description);
 		this.controller.update(this.controller.get("episodeDetailsDescription"), description);
 	}.bind(this));
 	/*
