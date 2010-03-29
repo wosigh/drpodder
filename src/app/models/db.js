@@ -22,6 +22,7 @@ var DB;
 
 function DBClass() {
 	this.count = 0;
+	this.ready = false;
 }
 
 // db version number, followed by the sql statements required to bring it up to the latest version
@@ -34,11 +35,11 @@ DBClass.prototype.dbVersions = [
 ];
 
 DBClass.prototype.waitForFeeds = function(callback) {
+	this.ready = true;
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage", message: $L({value:"Opening Database", key:"openingDatabase"})});
 
 	this.callback = callback;
-	this.readPrefs();
 
 	var currentVerIndex = 0;
 	do {
@@ -516,6 +517,11 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
 	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = false; Prefs.firstRun = true;}
 	if (Prefs.transition === undefined) {Prefs.transition = Mojo.Transition.none;}
+	if (Prefs.translation === undefined) {Prefs.translation = Mojo.Locale.getCurrentLocale().slice(0,2);}
+
+	if (Prefs.translation !== Mojo.Locale.getCurrentLocale().slice(0,2)) {
+		Mojo.Locale.set(Prefs.translation);
+	}
 	this.writePrefs();
 };
 

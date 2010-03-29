@@ -33,24 +33,9 @@ function AppAssistant(){
 	this.setWakeup();
 }
 
-AppAssistant.appMenuAttr = {omitDefaultItems: true};
-AppAssistant.appMenuModel = {
-	visible: true,
-	items: [
-		Mojo.Menu.editItem,
-		{label: "OPML",
-		 items: [{label: $L({value:"Import from drpodder.xml", key:"importDrpodder"}), command: "import-cmd"},
-			 {label: $L({value:"Export via email", key:"exportDrpodder"}), command: "export-cmd"}]
-		},
-		{label: $L("Preferences"), command: "prefs-cmd"},
-		{label: $L({value:"Add Default Feeds", key:"addDefaultFeeds"}), command: "addDefault-cmd"},
-		{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
-		{label: $L("Help"), command: "help-cmd"},
-		{label: $L("About") + '...', command: "about-cmd"}
-	]
-};
-
 AppAssistant.prototype.handleLaunch = function(launchParams) {
+	DB = new DBClass();
+	DB.readPrefs();
 	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(DrPodder.MainStageName);
 		if (cardStageController) {

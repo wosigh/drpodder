@@ -29,6 +29,23 @@ FeedListAssistant.prototype.cmdMenuModel = {
 	]
 };
 
+FeedListAssistant.prototype.appMenuAttr = {omitDefaultItems: true};
+FeedListAssistant.prototype.appMenuModel = {
+	visible: true,
+	items: [
+		Mojo.Menu.editItem,
+		{label: "OPML",
+		 items: [{label: $L({value:"Import from drpodder.xml", key:"importDrpodder"}), command: "import-cmd"},
+			 {label: $L({value:"Export via email", key:"exportDrpodder"}), command: "export-cmd"}]
+		},
+		{label: $L("Preferences"), command: "prefs-cmd"},
+		{label: $L({value:"Add Default Feeds", key:"addDefaultFeeds"}), command: "addDefault-cmd"},
+		{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
+		{label: $L("Help"), command: "help-cmd"},
+		{label: $L("About") + '...', command: "about-cmd"}
+	]
+};
+
 FeedListAssistant.prototype.addMenuModel = {
 	items: [{label: $L({value:"Enter feed URL...", key:"enterFeedURL"}), command: "add-feed"},
 			{label: $L({value:"Search Directory...", key:"searchDirectory"}), command: "feed-search"},
@@ -84,7 +101,7 @@ FeedListAssistant.prototype.setup = function() {
 	this.controller.setupWidget("refreshSpinner", {property: "updating"});
 	this.controller.setupWidget("downloadSpinner", {property: "downloading"});
 
-	this.controller.setupWidget(Mojo.Menu.appMenu, AppAssistant.appMenuAttr, AppAssistant.appMenuModel);
+	this.controller.setupWidget(Mojo.Menu.appMenu, this.appMenuAttr, this.appMenuModel);
 
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;

@@ -110,6 +110,15 @@ PreferencesAssistant.prototype.setup = function() {
 				  {label: $L({value:"Cross Fade", key:"crossFade"}), value: Mojo.Transition.crossFade}]},
 		{ value : Prefs.transition });
 
+	this.controller.setupWidget("translationList",
+		{label: $L("Language"),
+		 labelPlacement: Mojo.Widget.labelPlacementLeft,
+		 choices: [
+				  {label: $L("English"), value: "en"},
+				  {label: $L("German"), value: "de"},
+				  {label: $L("Spanish"), value: "es"}]},
+		{ value : Prefs.translation });
+
 	this.controller.setupWidget("albumArtToggle",
 		{},
 		{ value : Prefs.albumArt });
@@ -132,6 +141,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.wifiHandler = this.wifi.bind(this);
 	this.limitToWifiHandler = this.limitToWifi.bind(this);
 	this.transitionHandler = this.transition.bind(this);
+	this.translationHandler = this.translation.bind(this);
 	this.albumArtHandler = this.albumArt.bind(this);
 	this.simpleHandler = this.simple.bind(this);
 	this.singleTapHandler = this.singleTap.bind(this);
@@ -172,6 +182,7 @@ PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.listen(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.listen(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
+	Mojo.Event.listen(this.controller.get('translationList'),Mojo.Event.propertyChange,this.translationHandler);
 	Mojo.Event.listen(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.listen(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
 	Mojo.Event.listen(this.controller.get('singleTapToggle'),Mojo.Event.propertyChange,this.singleTapHandler);
@@ -188,6 +199,7 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.stopListening(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.stopListening(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
+	Mojo.Event.stopListening(this.controller.get('translationList'),Mojo.Event.propertyChange,this.translationHandler);
 	Mojo.Event.stopListening(this.controller.get('albumArtToggle'),Mojo.Event.propertyChange,this.albumArtHandler);
 	Mojo.Event.stopListening(this.controller.get('simpleToggle'),Mojo.Event.propertyChange,this.simpleHandler);
 	Mojo.Event.stopListening(this.controller.get('singleTapToggle'),Mojo.Event.propertyChange,this.singleTapHandler);
@@ -296,6 +308,13 @@ PreferencesAssistant.prototype.limitToWifi = function(event) {
 PreferencesAssistant.prototype.transition = function(event) {
 	Prefs.transition = event.value;
 	this.controller.stageController.swapScene({name: "preferences", transition: Prefs.transition});
+};
+
+PreferencesAssistant.prototype.translation = function(event) {
+	Prefs.translation = event.value;
+	var dialog = new drnull.Dialog.Info(this, $L({value:"Restart Required", key:"restartRequired"}),
+		$L({value:"Changing Language requires a restart of drPodder.", key:"changingTranslation"}));
+	dialog.show();
 };
 
 PreferencesAssistant.prototype.albumArt = function(event) {

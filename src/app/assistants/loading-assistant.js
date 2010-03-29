@@ -35,8 +35,7 @@ LoadingAssistant.prototype.setup = function() {
 };
 
 LoadingAssistant.prototype.activate = function() {
-	if (!DB) {
-		DB = new DBClass();
+	if (!DB.ready) {
 		DB.waitForFeeds(this.waitForFeedsReady.bind(this));
 	} else {
 		this.waitForFeedsReady();
