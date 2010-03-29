@@ -27,6 +27,7 @@ function Episode(init) {
 		this.description = init.description;
 		this.enclosure = init.enclosure;
 		this.pubDate = init.pubDate;
+		this.pubDateTime = init.pubDateTime;
 		this.guid = init.guid;
 		this.file = init.file;
 		this.downloadTicket = init.downloadTicket;
@@ -164,7 +165,7 @@ Episode.prototype.updateUIElements = function(ignore) {
 };
 
 Episode.prototype.save = function(ignore, functionWhenFinished) {
-	if (!ignore) {DB.saveEpisode(this, functionWhenFinished);}
+	if (!ignore) {DB.saveEpisode(this, undefined, functionWhenFinished);}
 };
 
 Episode.prototype.setListened = function(ignore) {
@@ -203,7 +204,7 @@ Episode.prototype.bookmark = function(pos, functionWhenFinished) {
 	} else {
 		this.bookmarkPercent = 0;
 	}
-	this.save(functionWhenFinished);
+	this.save(false, functionWhenFinished);
 
 	if (newBookmark) {
 		this.feedObject.episodeBookmarked();

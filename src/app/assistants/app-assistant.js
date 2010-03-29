@@ -34,8 +34,10 @@ function AppAssistant(){
 }
 
 AppAssistant.prototype.handleLaunch = function(launchParams) {
-	DB = new DBClass();
-	DB.readPrefs();
+	if (!DB) {
+		DB = new DBClass();
+		DB.readPrefs();
+	}
 	if (!launchParams || launchParams.action === undefined) {
 		var cardStageController = this.controller.getStageController(DrPodder.MainStageName);
 		if (cardStageController) {
@@ -50,8 +52,7 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 			this.controller.createStageWithCallback(stageArguments, pushMainScene.bind(this), "card");
 		}
 	} else {
-		if (!DB) {
-			DB = new DBClass();
+		if (!DB.ready) {
 			DB.waitForFeeds(this.handleLaunchParams.bind(this, launchParams));
 		} else {
 			this.handleLaunchParams(launchParams);

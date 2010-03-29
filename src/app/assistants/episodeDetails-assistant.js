@@ -24,6 +24,7 @@ function EpisodeDetailsAssistant(episode, options) {
 	this.autoPlay = options.autoPlay;
 	this.playlist = options.playlist;
 	this.isForeground = true;
+	Mojo.Log.info("isForeground = %s", this.isForeground);
 }
 
 EpisodeDetailsAssistant.prototype.progressAttr = {
@@ -217,7 +218,7 @@ EpisodeDetailsAssistant.prototype.adjustHeader = function() {
 EpisodeDetailsAssistant.prototype.activate = function() {
 	this.adjustHeader();
 	this.isForeground = true;
-	Mojo.Log.warn("isForeground = true");
+	Mojo.Log.info("isForeground = true");
 	Mojo.Event.listen(this.header, Mojo.Event.tap, this.titleTapHandler);
 
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
@@ -231,8 +232,6 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 };
 
 EpisodeDetailsAssistant.prototype.deactivate = function() {
-	this.isForeground = false;
-	Mojo.Log.warn("isForeground = false");
 	Mojo.Event.stopListening(this.header, Mojo.Event.tap, this.titleTapHandler);
 
 	if ((this.episodeObject.enclosure || this.episodeObject.downloaded) && !this.isVideo()) {
@@ -255,13 +254,13 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 			this.audioObject.removeEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
 			if (!this.finished) {
 				var functionWhenFinished = function() {};
-				if (!this.isForeground) {
+				if (!this.poppingScene) {
+					Mojo.Log.warn("Closing app, we need to bookmark though!");
 					Util.dashboard(DrPodder.DashboardStageName, $L({value: "Saving Bookmark", key: "savingBookmark"}),
 							$L({value: "Dashboard should close automatically", key: "savingBookmarkDescription"}), true);
-					Mojo.Log.warn("Closing app, we need to bookmark though!");
 					functionWhenFinished = Util.closeDashboard.bind(this, DrPodder.DashboardStageName);
 				}
-				this.bookmark();
+				this.bookmark(functionWhenFinished);
 			}
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
@@ -293,7 +292,6 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 };
 
 EpisodeDetailsAssistant.prototype.bookmark = function(functionWhenFinished) {
-	if (!functionWhenFinished) { functionWhenFinished = function() {};}
 	if (!this.isVideo()) {
 		var cur = this.audioObject.currentTime;
 		Mojo.Log.warn("BOOKMARK!!! %d", cur);
@@ -301,10 +299,10 @@ EpisodeDetailsAssistant.prototype.bookmark = function(functionWhenFinished) {
 			this.episodeObject.length = this.audioObject.duration;
 			this.episodeObject.bookmark(cur, functionWhenFinished);
 		} else {
-			functionWhenFinished();
+			if (functionWhenFinished) {functionWhenFinished();}
 		}
 	} else {
-		functionWhenFinished();
+		if (functionWhenFinished) {functionWhenFinished();}
 	}
 };
 
@@ -610,7 +608,10 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 				event.stopPropagation();
 				break;
 		}
+	} else if (event.type === Mojo.Event.back) {
+		this.poppingScene = true;
 	}
+
 };
 
 EpisodeDetailsAssistant.prototype.playGUI = function() {
@@ -867,6 +868,7 @@ EpisodeDetailsAssistant.prototype.refreshMenu = function() {
 EpisodeDetailsAssistant.prototype.onBlur = function() {
 	this.bookmark();
 	this.isForeground = false;
+	Mojo.Log.info("isForeground = %s", this.isForeground);
 	this.setTimer(false);
 
 	//this.audioObject.removeEventListener(Media.Event.TIMEUPDATE, this.updateProgressHandler);
@@ -877,6 +879,7 @@ EpisodeDetailsAssistant.prototype.considerForNotification = function(params) {
 		switch (params.type) {
 			case "onFocus":
 				this.isForeground = true;
+				Mojo.Log.info("isForeground = %s", this.isForeground);
 				this.updateProgress();
 				if (this.audioObject && this.audioObject.paused !== true) {
 					this.setTimer(true);
