@@ -312,6 +312,8 @@ PreferencesAssistant.prototype.transition = function(event) {
 
 PreferencesAssistant.prototype.translation = function(event) {
 	Prefs.translation = event.value;
+	Mojo.Locale.set(Prefs.translation);
+
 	var dialog = new drnull.Dialog.Info(this, $L({value:"Restart Required", key:"restartRequired"}),
 		$L({value:"Changing Language requires a restart of drPodder.", key:"changingTranslation"}));
 	dialog.show();
