@@ -27,8 +27,10 @@ function DBClass() {
 
 // db version number, followed by the sql statements required to bring it up to the latest version
 DBClass.prototype.dbVersions = [
-	{version: "0.5.1", migrationSql: []},
-	{version: "0.2", migrationSql: ["ALTER TABLE feed ADD COLUMN hideFromOS BOOLEAN",
+	{version: "0.6.1", migrationSql: []},
+	{version: "0.5.1", migrationSql: ["ALTER TABLE episode ADD COLUMN pubDateTime INTEGER"]},
+	{version: "0.2", migrationSql: ["ALTER TABLE episode ADD COLUMN pubDateTime INTEGER",
+									"ALTER TABLE feed ADD COLUMN hideFromOS BOOLEAN",
 									"ALTER TABLE feed ADD COLUMN maxEpisodes INTEGER",
 									"UPDATE feed SET hideFromOS=1, maxEpisodes=0",
 									"DROP TABLE version"]}
@@ -140,6 +142,7 @@ DBClass.prototype.initDB = function(db) {
 	                         "link TEXT, " +
 	                         "position REAL, " +
 	                         "pubDate TEXT, " +
+	                         "pubDateTime INTEGER, " +
 	                         "downloadTicket INTEGER, " +
 	                         "downloaded BOOLEAN, " +
 	                         "listened BOOLEAN, " +
@@ -236,7 +239,7 @@ DBClass.prototype.getEpisodeDescription = function(e, callback) {
 
 DBClass.prototype.loadEpisodes = function() {
 	//var loadSQL = "SELECT * FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
-	var loadSQL = "SELECT id, feedId, displayOrder, title, enclosure, guid, link, position, pubDate, downloadTicket, downloaded, listened, file, length, type FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
+	var loadSQL = "SELECT id, feedId, displayOrder, title, enclosure, guid, link, position, pubDate, pubDateTime, downloadTicket, downloaded, listened, file, length, type FROM episode ORDER BY displayOrder"; //feedId, displayOrder";
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage",
 		message: $L({value:"Loading Episodes", key:"loadingEpisodes"})});
@@ -271,6 +274,8 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 						if (e.type === "undefined") {e.type = null;}
 						if (e.pubDate === "undefined" || e.pubDate === null) {e.pubDate = new Date();}
 						else { e.pubDate = new Date(e.pubDate); }
+						if (e.pubDateTime) {e.pubDate = new Date(); e.pubDate.setTime(e.pubDateTime);}
+
 						if (e.description === "undefined") {e.description = null;}
 						f.addToPlaylistsTop(e);
 						f.insertEpisodeBottom(e);
@@ -389,7 +394,6 @@ DBClass.prototype.saveEpisodeSQLDescription = "INSERT OR REPLACE INTO episode (i
 					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 DBClass.prototype.saveEpisode = function(e, displayOrder, functionWhenFinished) {
-
 	if (displayOrder !== undefined) {
 		e.displayOrder = displayOrder;
 	}
@@ -400,16 +404,16 @@ DBClass.prototype.saveEpisode = function(e, displayOrder, functionWhenFinished) 
 };
 
 DBClass.prototype.saveEpisodeTransaction = function(e, functionWhenFinished, transaction) {
-	var updateSQL            = "UPDATE episode SET feedId=?, displayOrder=?, title=?,                enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
-	var updateSQLDescription = "UPDATE episode SET feedId=?, displayOrder=?, title=?, description=?, enclosure=?, guid=?, link=?, pubDate=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
+	var updateSQL            = "UPDATE episode SET feedId=?, displayOrder=?, title=?,                enclosure=?, guid=?, link=?, pubDateTime=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
+	var updateSQLDescription = "UPDATE episode SET feedId=?, displayOrder=?, title=?, description=?, enclosure=?, guid=?, link=?, pubDateTime=?, position=?, downloadTicket=?, downloaded=?, listened=?, file=?, length=?, type=? WHERE id=?";
 	var insertSQL = "INSERT INTO episode (feedId, displayOrder, title, description, " +
-	                     "enclosure, guid, link, pubDate, position, " +
+	                     "enclosure, guid, link, pubDateTime, position, " +
 					     "downloadTicket, downloaded, listened, file, length, type) " +
 					     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	if (!functionWhenFinished) {functionWhenFinished = function() {};}
 	if (e.id === undefined) {
 		transaction.executeSql(insertSQL, [e.feedId, e.displayOrder, e.title, e.description,
-				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
+				  e.enclosure, e.guid, e.link, e.pubDate.getTime(), e.position,
 				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type],
 			function(transaction, results) {
 				Mojo.Log.warn("Episode saved: %s", e.title);
@@ -424,12 +428,12 @@ DBClass.prototype.saveEpisodeTransaction = function(e, functionWhenFinished, tra
 	} else {
 		var sql = updateSQL;
 		var params = [e.feedId, e.displayOrder, e.title,
-				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
+				  e.enclosure, e.guid, e.link, e.pubDate.getTime(), e.position,
 				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type, e.id];
 		if (e.description) {
 			sql = updateSQLDescription;
 			params = [e.feedId, e.displayOrder, e.title, e.description,
-				  e.enclosure, e.guid, e.link, e.pubDate, e.position,
+				  e.enclosure, e.guid, e.link, e.pubDate.getTime(), e.position,
 				  e.downloadTicket, (e.downloaded)?1:0, (e.listened)?1:0, e.file, e.length, e.type, e.id];
 		}
 		transaction.executeSql(sql, params,
@@ -517,7 +521,20 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
 	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = false; Prefs.firstRun = true;}
 	if (Prefs.transition === undefined) {Prefs.transition = Mojo.Transition.none;}
-	if (Prefs.translation === undefined) {Prefs.translation = Mojo.Locale.getCurrentLocale().slice(0,2);}
+	if (Prefs.translation === undefined) {
+		Prefs.translation = Mojo.Locale.getCurrentLocale().slice(0,2);
+		switch (Prefs.translation) {
+			case "en":
+				Prefs.translation = "en_us";
+				break;
+			case "es":
+				Prefs.translation = "es_es";
+				break;
+			case "de":
+				Prefs.translation = "de_de";
+				break;
+		}
+	}
 
 	if (Prefs.translation !== Mojo.Locale.getCurrentLocale().slice(0,2)) {
 		Mojo.Locale.set(Prefs.translation);
