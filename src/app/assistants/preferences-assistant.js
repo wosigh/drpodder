@@ -72,17 +72,16 @@ PreferencesAssistant.prototype.setup = function() {
 
 	this.showIntervalSelector();
 
+	var dayChoices = [];
+	var d_names = Mojo.Locale.getDayNames('long');
+	for (var i=0; i<7; i++) {
+		dayChoices.push({label: d_names[i], value: i});
+	}
+
 	this.controller.setupWidget("updateDayList",
 		{label: $L({value:"Update Day", key:"updateDay"}),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
-		 choices: [{label: $L("Sunday"), value: "0"},
-				   {label: $L("Monday"), value: "1"},
- 				   {label: $L("Tuesday"), value: "2"},
-				   {label: $L("Wednesday"), value: "3"},
-				   {label: $L("Thursday"), value: "4"},
-				   {label: $L("Friday"), value: "5"},
-				   {label: $L("Saturday"), value: "6"}
-				  ]},
+		 choices: dayChoices},
 		{ value: Prefs.updateDay });
 
     this.controller.setupWidget("timePicker",
@@ -114,9 +113,9 @@ PreferencesAssistant.prototype.setup = function() {
 		{label: $L("Language"),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
 		 choices: [
-				  {label: $L("English"), value: "en"},
-				  {label: $L("German"), value: "de"},
-				  {label: $L("Spanish"), value: "es"}]},
+				  {label: $L("English"), value: "en_us"},
+				  {label: $L("German"), value: "de_de"},
+				  {label: $L("Spanish"), value: "es_es"}]},
 		{ value : Prefs.translation });
 
 	this.controller.setupWidget("albumArtToggle",

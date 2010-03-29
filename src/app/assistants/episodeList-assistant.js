@@ -383,9 +383,9 @@ EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 
 EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var formatted = pubDate;
-	var d_names = [$L("Sun"), $L("Mon"), $L("Tue"), $L("Wed"), $L("Thu"), $L("Fri"), $L("Sat")];
-	var m_names = [$L("Jan"), $L("Feb"), $L("Mar"), $L("Apr"), $L("May"), $L("Jun"), $L("Jul"), $L("Aug"), $L("Sep"), $L("Oct"), $L("Nov"), $L("Dec")];
 	if (formatted) {
+		var d_names = Mojo.Locale.getDayNames('medium');
+		var m_names = Mojo.Locale.getMonthNames('medium');
 		var d = formatted;
 		var y = d.getFullYear();
 		var m = d.getMonth();
@@ -404,7 +404,14 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		//formatted = y+"/"+m+"/"+dom+" "+h+":"+min+" "+pm;
 		formatted = d_names[dow] + " " + m_names[m] + " " + dom + ", " + y +
 		            " " + h + ":" + min + " " + pm;
+	/*
+	// I'd use this formatter, but I couldn't make it do what I wanted, i.e.,
+	// Mon Mar 29, 2010 03:54:00 PM
+	} else if (formatted) {
+		formatted = Mojo.Format.formatDate(formatted, 'full');
+	*/
 	}
+
 	return formatted;
 };
 
