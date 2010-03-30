@@ -371,6 +371,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	try {
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
+		Util.showError($L("Error"), $L({value: "There was an error playing the file", key: "errorPlaying"}));
 	} catch (f) {
 	}
 	this.bookmark();
@@ -378,9 +379,10 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	this.cmdMenuModel.items[1] = {};
 	this.cmdMenuModel.items[3] = {};
 	this.cmdMenuModel.items[4] = {};
-	this.disablePlay(true);
+	this.enablePlay(true);
+	this.setStatus();
 	this.resume = true;
-	this.readyToPlay();
+	//this.readyToPlay();
 };
 
 EpisodeDetailsAssistant.prototype.mediaKeyPressHandler = function(event) {

@@ -74,6 +74,8 @@
 	Loading: "Lade",
 	Seeking: "Suche",
 	Buffering: "Puffere",
+	Error: "Fehler",
+	errorPlaying: "Bei dem Abspielen der Episode trat ein Fehler auf",
 
 	ALL: "ALLE",
 	New: "Neu",
@@ -102,7 +104,7 @@
 	noEnclosureFound: "No enclosure found",
 	playFromTop: "Oben beginnend abspielen",
 	playFromBottom: "Unten beginnend abspielen",
-	downloadNew: "Download neuen Episoden",
+	downloadNew: "Neue Episoden herunterladen",
 	View: "Zeige",
 
 	enterFeedURL: "Feed URL eingeben...",
