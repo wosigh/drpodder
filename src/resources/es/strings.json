@@ -102,6 +102,7 @@
 	noEnclosureFound: "No recinto encontrado",
 	playFromTop: "Escuchar del Comienzo",
 	playFromBottom: "Escuchar desde Abajo",
+	downloadNew: "Descargar Nuevos episodios de",
 	View: "Ver",
 
 	enterFeedURL: "Introduzca URL del feed...",

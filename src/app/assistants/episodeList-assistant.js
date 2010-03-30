@@ -300,7 +300,8 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 					popupClass: "titlePopup1",
 					//placeNear: event.originalEvent.target,
 					items: [{label: $L({value: "Play from Top", key: "playFromTop"}), command: "playFromNewest-cmd"},
-							{label: $L({value: "Play from Bottom", key: "playFromBottom"}), command: "playFromOldest-cmd"}]
+							{label: $L({value: "Play from Bottom", key: "playFromBottom"}), command: "playFromOldest-cmd"},
+							{label: $L({value: "Download New Episodes", key: "downloadNew"}), command: "downloadNew-cmd"}]
 				});
 				break;
 			case "filter-all-cmd":
@@ -352,6 +353,14 @@ EpisodeListAssistant.prototype.handleFeedPopup = function(value) {
 			break;
 		case "playFromOldest-cmd":
 			this.playFrom(true);
+			break;
+		case "downloadNew-cmd":
+			for (var i=0,len=this.episodeModel.items.length; i<len; ++i) {
+				var episode = this.episodeModel.items[i];
+				if (!episode.downloading && !episode.downloaded && !episode.listened) {
+					episode.download(true);
+				}
+			}
 			break;
 	}
 };

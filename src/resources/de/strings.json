@@ -102,6 +102,7 @@
 	noEnclosureFound: "No enclosure found",
 	playFromTop: "Oben beginnend abspielen",
 	playFromBottom: "Unten beginnend abspielen",
+	downloadNew: "Download neuen Episoden",
 	View: "Zeige",
 
 	enterFeedURL: "Feed URL eingeben...",
