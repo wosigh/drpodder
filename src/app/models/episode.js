@@ -72,6 +72,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	} else {
 		this.pubDate = Feed.newDate;
 	}
+	if (this.pubDate) {this.pubDateTime = this.pubDate.getTime();}
 	this.guid = Util.xmlTagValue(xmlObject, "guid");
 	if (this.guid === undefined) {
 		this.guid = this.link + this.title + this.getDateString();
