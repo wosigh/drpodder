@@ -110,7 +110,7 @@
 	enterFeedURL: "Introduzca URL del feed...",
 	searchDirectory: "Buscar en el Directorio...",
 	searchPodTrapper: "Buscar en PodTrapper...",
-	dynamicPlaylist: "Lista de Reproducción Dinámica...",
+	dynamicPlaylist: "Lista de Reproducción...",
 	drpodderWelcome: "Vienvenido to drPodder!<br><br>¿Te gustaría añadir unos podcasts de la tecnología de para empezar?",
 	drpodderThanks: "Gracias por usar drPodder!",
 	drpodderInstructions: "Usted puede agregar podcasts por url o buscar podcasts usando el icono \"+\" en la parte inferior izquierda.",
