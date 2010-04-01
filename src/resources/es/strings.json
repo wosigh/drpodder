@@ -75,7 +75,7 @@
 	Seeking: "Buscando",
 	Buffering: "Buffering",
 	Error: "Error",
-	errorPlaying: "Error al reproducir el archivo",
+	errorPlaying: "There was a problem playing the file",
 
 	ALL: "TODO",
 	New: "Nuevo",
@@ -162,7 +162,7 @@
 	'24hour': "24 Horas",
 	updateDay: "Cheque dia",
 	Transitions: "Transiciones",
-	Language: "Idiom",
+	Language: "Idioma",
 	English: "Inglés",
 	German: "Alemán",
 	Spanish: "Español",

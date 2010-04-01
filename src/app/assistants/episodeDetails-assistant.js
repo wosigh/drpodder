@@ -371,7 +371,7 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	try {
 		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
-		Util.showError($L("Error"), $L({value: "There was an error playing the file", key: "errorPlaying"}));
+		Util.showError($L("Error"), $L({value: "There was a problem playing the file", key: "errorPlaying"}));
 	} catch (f) {
 	}
 	this.bookmark();
