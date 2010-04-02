@@ -109,13 +109,27 @@ PreferencesAssistant.prototype.setup = function() {
 				  {label: $L({value:"Cross Fade", key:"crossFade"}), value: Mojo.Transition.crossFade}]},
 		{ value : Prefs.transition });
 
+	var translations = [
+				  {label: $L("English"), value: "en_us"},
+				  {label: $L("German"), value: "de_de"},
+				  {label: $L({value:"Latino Spanish", key:"latinoSpanish"}), value: "es_mx"}
+				  ];
+
+	switch (Prefs.systemTranslation) {
+		case "en_us":
+		case "de_de":
+		case "es_mx":
+			// we are in one of the countries I used below
+			break;
+		default:
+			translations.unshift({label: $L("OS") + " (" + Prefs.systemTranslation + ")", value: Prefs.systemTranslation});
+			break;
+	}
+
 	this.controller.setupWidget("translationList",
 		{label: $L("Language"),
 		 labelPlacement: Mojo.Widget.labelPlacementLeft,
-		 choices: [
-				  {label: $L("English"), value: "en_us"},
-				  {label: $L("German"), value: "de_de"},
-				  {label: $L("Spanish"), value: "es_es"}]},
+		 choices: translations},
 		{ value : Prefs.translation });
 
 	this.controller.setupWidget("albumArtToggle",

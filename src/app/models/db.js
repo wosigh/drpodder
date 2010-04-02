@@ -521,22 +521,12 @@ DBClass.prototype.readPrefs = function() {
 	if (Prefs.singleTap === undefined) {Prefs.singleTap = true;}
 	if (Prefs.freeRotation === undefined) {Prefs.freeRotation = false; Prefs.firstRun = true;}
 	if (Prefs.transition === undefined) {Prefs.transition = Mojo.Transition.none;}
+	Prefs.systemTranslation = Mojo.Locale.getCurrentLocale();
 	if (Prefs.translation === undefined) {
-		Prefs.translation = Mojo.Locale.getCurrentLocale().slice(0,2);
-		switch (Prefs.translation) {
-			case "en":
-				Prefs.translation = "en_us";
-				break;
-			case "es":
-				Prefs.translation = "es_es";
-				break;
-			case "de":
-				Prefs.translation = "de_de";
-				break;
-		}
+		Prefs.translation = Prefs.systemTranslation;
 	}
 
-	if (Prefs.translation !== Mojo.Locale.getCurrentLocale().slice(0,2)) {
+	if (Prefs.translation !== Prefs.systemTranslation) {
 		Mojo.Locale.set(Prefs.translation);
 	}
 	this.writePrefs();
