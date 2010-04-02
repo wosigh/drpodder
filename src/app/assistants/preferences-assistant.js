@@ -112,13 +112,15 @@ PreferencesAssistant.prototype.setup = function() {
 	var translations = [
 				  {label: $L("English"), value: "en_us"},
 				  {label: $L("German"), value: "de_de"},
-				  {label: $L({value:"Latino Spanish", key:"latinoSpanish"}), value: "es_mx"}
+				  {label: $L({value:"Latino Spanish", key:"latinoSpanish"}), value: "es_mx"},
+				  {label: $L({value:"Spain Spanish", key:"spainSpanish"}), value: "es_es"}
 				  ];
 
 	switch (Prefs.systemTranslation) {
 		case "en_us":
 		case "de_de":
 		case "es_mx":
+		case "es_es":
 			// we are in one of the countries I used below
 			break;
 		default:
