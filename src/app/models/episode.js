@@ -54,7 +54,7 @@ function Episode(init) {
 	this.downloading = false;
 }
 
-Episode.prototype.findLinks = /(\b(https?|ftp|file):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%=~_|])/ig;
+Episode.prototype.findLinks = /(\b(https?|ftp|file):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%?=~_|])/ig;
 Episode.prototype.getExtension = /\.(....?)$/g;
 
 Episode.prototype.loadFromXML = function(xmlObject) {
@@ -333,6 +333,41 @@ Episode.prototype.downloadingCallback = function(event) {
 		event.serviceName === "com.palm.downloadmanager") {
 		Mojo.Log.error("Error contacting downloadmanager");
 		Util.showError($L({value:"Error Downloading Episode", key:"errorDownloadingEpisode"}), $L({value:"There was an error connecting to the download manager service.  Please ensure you are running webOS 1.2 or later", key:"errorDownloadManagerService"}));
+	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
+		Mojo.Log.warn("Redirecting...", event.target);
+		this.downloading = false;
+		this.downloadingPercent = 0;
+		this.downloadActivity();
+
+		this.feedObject.downloadFinished();
+
+		var req = new Ajax.Request(event.target, {
+			method: 'get',
+			onFailure: function() {
+				Mojo.Log.error("Couldn't find %s... strange", event.target);
+			}.bind(this),
+			onComplete: function(transport) {
+				var redirect;
+				try {
+					var matches = this.findLinks.exec(transport.responseText);
+					if (matches) {
+						redirect = matches[0];
+					}
+				} catch (e){
+					Mojo.Log.error("error with regex: (%j)", e);
+				}
+				AppAssistant.downloadService.deleteFile(null, this.downloadTicket, function(event) {});
+				this.downloadTicket = null;
+				if (redirect !== undefined) {
+					Mojo.Log.warn("Attempting to download redirected link: [%s]", redirect);
+					this.doTheDownload(redirect);
+				} else {
+					Mojo.Log.error("No download link found! [%s]", transport.responseText);
+					this.updateUIElements();
+					this.save();
+				}
+			}.bind(this)
+		});
 	} else if (this.downloading && (event.state === "completed" || event.completed === true)) {
 		Mojo.Log.warn("Download complete!", this.title);
 		this.downloading = false;
@@ -393,41 +428,6 @@ Episode.prototype.downloadingCallback = function(event) {
 				Util.showError($L({value:"Download aborted", key:"downloadAborted"}), $L({value:"There was an error downloading url:", key:"downloadAbortedDetail"})+this.enclosure);
 			}
 		}
-	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
-		Mojo.Log.warn("Redirecting...", event.target);
-		this.downloading = false;
-		this.downloadingPercent = 0;
-		this.downloadActivity();
-
-		this.feedObject.downloadFinished();
-
-		var req = new Ajax.Request(event.target, {
-			method: 'get',
-			onFailure: function() {
-				Mojo.Log.error("Couldn't find %s... strange", event.target);
-			}.bind(this),
-			onComplete: function(transport) {
-				var redirect;
-				try {
-					var matches = this.findLinks.exec(transport.responseText);
-					if (matches) {
-						redirect = matches[0];
-					}
-				} catch (e){
-					Mojo.Log.error("error with regex: (%j)", e);
-				}
-				AppAssistant.downloadService.deleteFile(null, this.downloadTicket, function(event) {});
-				this.downloadTicket = null;
-				if (redirect !== undefined) {
-					Mojo.Log.warn("Attempting to download redirected link: [%s]", redirect);
-					this.doTheDownload(redirect);
-				} else {
-					Mojo.Log.error("No download link found! [%s]", transport.responseText);
-					this.updateUIElements();
-					this.save();
-				}
-			}.bind(this)
-		});
 	} else if (event.returnValue === false) {
 		this.downloadTicket = null;
 		this.downloading = false;

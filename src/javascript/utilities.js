@@ -142,7 +142,7 @@ Utilities.prototype.escapeSpecial = function(file) {
     file = file.toString().replace(/\//g,'_').replace(/\\/g,'_').replace(/\:/g,'_').
 							replace(/\*/g,'_').replace(/\?/g,'_').replace(/\"/g,'_').
 							replace(/</g, '_').replace(/\>/g, '_').replace(/\|/g, '_').
-							replace(/'/g,'_');
+							replace(/'/g,'_').replace(/\#/g, '_');
 
 	// don't allow filenames longer than 200 chars
 	if (file.length > 200) {
