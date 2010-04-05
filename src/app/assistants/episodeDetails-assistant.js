@@ -226,6 +226,10 @@ EpisodeDetailsAssistant.prototype.activate = function() {
 		Mojo.Event.listen(this.progress, Mojo.Event.sliderDragEnd, this.sliderDragEndHandler);
 		Mojo.Event.listen(this.controller.sceneElement, Mojo.Event.keydown, this.keyDownEventHandler);
 
+		if (Prefs.dashboardControls) {
+			// throw away dashboard
+		}
+
 		this.mediaEvents = AppAssistant.mediaEventsService.registerForMediaEvents(this.controller, this.mediaKeyPressHandler.bind(this));
 	}
 };
@@ -239,6 +243,10 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 		Mojo.Event.stopListening(this.progress, Mojo.Event.sliderDragEnd, this.sliderDragEndHandler);
 		Mojo.Event.stopListening(this.controller.sceneElement, Mojo.Event.keydown, this.keyDownEventHandler);
 		Mojo.Event.stopListening(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+
+		if (Prefs.dashboardControls && this.playing) {
+			// pop up dashboard
+		}
 
 		if (this.mediaEvents) {
 			this.mediaEvents.cancel();
