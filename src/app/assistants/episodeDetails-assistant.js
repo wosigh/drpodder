@@ -132,55 +132,66 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 		if (!this.isVideo()) {
 
 			this.setStatus('Extend');
-			this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
-			this.setStatus('Class');
-			this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
+			try {
+				this.audioObject = AudioTag.extendElement(this.controller.get("episodeDetailsAudio"));
+			} catch (e) {
+				// if we get in here, we should popup a dialog to the user saying that they are
+				// experiencing a problem with webOS, and they need to doctor their phone.
+				// Link to a page on drPodder.com for more info.
+				this.extendError = true;
+				throw e;
+			}
 
-			this.setStatus('Bind');
-			this.readyToPlayHandler = this.readyToPlay.bind(this);
-			this.setStatus('Event');
-			this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
-			//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
-			//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
-			this.setStatus($L("Loading"));
-			this.disablePlay(true);
-			this.progressChangedHandler = this.progressChange.bind(this);
-			this.sliderDragStartHandler = this.sliderDragStart.bind(this);
-			this.sliderDragEndHandler = this.sliderDragEnd.bind(this);
+			if (this.audioObject.palm) {
+				this.setStatus('Class');
+				this.audioObject.palm.audioClass = Media.AudioClass.MEDIA;
 
-			this.handleErrorHandler = this.handleError.bind(this);
-			this.handleAudioEventsHandler = this.handleAudioEvents.bind(this);
+				this.setStatus('Bind');
+				this.readyToPlayHandler = this.readyToPlay.bind(this);
+				this.setStatus('Event');
+				this.audioObject.addEventListener(Media.Event.X_PALM_CONNECT, this.readyToPlayHandler);
+				//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
+				//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
+				this.setStatus($L("Loading"));
+				this.disablePlay(true);
+				this.progressChangedHandler = this.progressChange.bind(this);
+				this.sliderDragStartHandler = this.sliderDragStart.bind(this);
+				this.sliderDragEndHandler = this.sliderDragEnd.bind(this);
 
-			this.updateProgressHandler = this.updateProgress.bind(this);
+				this.handleErrorHandler = this.handleError.bind(this);
+				this.handleAudioEventsHandler = this.handleAudioEvents.bind(this);
 
-			this.audioObject.addEventListener(Media.Event.ERROR, this.handleErrorHandler);
+				this.updateProgressHandler = this.updateProgress.bind(this);
 
-			this.audioObject.addEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.PLAY, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
-			this.audioObject.addEventListener(Media.Event.ENDED, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.ABORT, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.CANPLAY, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.CANPLAYTHROUGH, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.CANSHOWFIRSTFRAME, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.EMPTIED, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.LOAD, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.LOADEDFIRSTFRAME, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.LOADEDMETADATA, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.LOADSTART, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.SEEKED, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.SEEKING, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.STALLED, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.WAITING, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.X_PALM_DISCONNECT, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.X_PALM_RENDER_MODE, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEventsHandler);
-			this.audioObject.addEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.PLAY, this.handleAudioEventsHandler);
 
-			//this.audioObject.addEventListener(Media.Event.TIMEUPDATE, this.updateProgressHandler);
+				this.audioObject.addEventListener(Media.Event.ENDED, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.ABORT, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.CANPLAY, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.CANPLAYTHROUGH, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.CANSHOWFIRSTFRAME, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.EMPTIED, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.LOAD, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.LOADEDFIRSTFRAME, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.LOADEDMETADATA, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.LOADSTART, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.SEEKED, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.SEEKING, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.STALLED, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.WAITING, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.X_PALM_DISCONNECT, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.X_PALM_RENDER_MODE, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEventsHandler);
+				this.audioObject.addEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEventsHandler);
 
-			this.keyDownEventHandler = this.keyDownHandler.bind(this);
+				//this.audioObject.addEventListener(Media.Event.TIMEUPDATE, this.updateProgressHandler);
+
+				this.keyDownEventHandler = this.keyDownHandler.bind(this);
+			}
 		} else {
 			this.progressInfo.hide();
 			this.progressInfoHidden = true;
@@ -216,6 +227,9 @@ EpisodeDetailsAssistant.prototype.adjustHeader = function() {
 };
 
 EpisodeDetailsAssistant.prototype.activate = function() {
+	if (this.extendError) {
+		Util.showError.defer($L("Error"), $L({value: "A webOS update failed or you are running this in the emulator.  Please read the following.<br><br><a href='http://drPodder.com'>Extend Problems</a>", key: "extendError"}));
+	}
 	this.adjustHeader();
 	this.isForeground = true;
 	Mojo.Log.info("isForeground = true");

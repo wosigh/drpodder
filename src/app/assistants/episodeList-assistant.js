@@ -441,6 +441,7 @@ EpisodeListAssistant.prototype._doRefresh = function() {
 	if (this.needRefresh) {
 		//Mojo.Log.error("ela refresh");
 		this.controller.modelChanged(this.episodeModel);
+		// this is causing a blank list.  See: https://developer.palm.com/distribution/viewtopic.php?f=11&t=6242&view=unread#unread
 		this.needRefresh = false;
 	}
 };
