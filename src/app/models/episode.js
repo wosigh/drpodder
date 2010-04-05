@@ -333,37 +333,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		event.serviceName === "com.palm.downloadmanager") {
 		Mojo.Log.error("Error contacting downloadmanager");
 		Util.showError($L({value:"Error Downloading Episode", key:"errorDownloadingEpisode"}), $L({value:"There was an error connecting to the download manager service.  Please ensure you are running webOS 1.2 or later", key:"errorDownloadManagerService"}));
-	} else 	if (event.returnValue) {
-		this.downloadCanceled = false;
-		this.downloadTicket = event.ticket;
-		this.downloadingPercent = 0;
-		if (!this.downloading) {
-			this.downloading = true;
-			this.updateUIElements();
-			this.save();
-			this.feedObject.downloadingEpisode();
-			this.downloadActivity();
-		}
-	} else if (this.downloading && event.completed === false) {
-		this.downloading = false;
-		this.downloadTicket = null;
-		this.downloadingPercent = 0;
-		this.downloadActivity();
-		this.updateUIElements();
-		this.save();
-		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
-		// if the user didn't do this, let them know what happened
-		this.feedObject.downloadFinished();
-		if (!event.aborted) {
-			if (event.completionStatusCode === 401) {
-				Mojo.Log.error("Authentication error during download. %j", event);
-				Util.showError($L({value:"Authentication Error", key:"authenticationError"}), $L({value:"The username and/or password for this feed is incorrect. Please correct and try your download again.", key:"authenticationErrorDetail"}));
-			} else {
-				Mojo.Log.error("Download error=%j", event);
-				Util.showError($L({value:"Download aborted", key:"downloadAborted"}), $L({value:"There was an error downloading url:", key:"downloadAbortedDetail"})+this.enclosure);
-			}
-		}
-	} else if (this.downloading && event.completed) {
+	} else if (this.downloading && (event.state === "completed" || event.completed === true)) {
 		Mojo.Log.warn("Download complete!", this.title);
 		this.downloading = false;
 		this.downloadingPercent = 0;
@@ -393,6 +363,36 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.save();
 		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 
+	} else if (event.returnValue) {
+		this.downloadCanceled = false;
+		this.downloadTicket = event.ticket;
+		this.downloadingPercent = 0;
+		if (!this.downloading) {
+			this.downloading = true;
+			this.updateUIElements();
+			this.save();
+			this.feedObject.downloadingEpisode();
+			this.downloadActivity();
+		}
+	} else if (this.downloading && event.completed === false) {
+		this.downloading = false;
+		this.downloadTicket = null;
+		this.downloadingPercent = 0;
+		this.downloadActivity();
+		this.updateUIElements();
+		this.save();
+		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
+		// if the user didn't do this, let them know what happened
+		this.feedObject.downloadFinished();
+		if (!event.aborted) {
+			if (event.completionStatusCode === 401) {
+				Mojo.Log.error("Authentication error during download. %j", event);
+				Util.showError($L({value:"Authentication Error", key:"authenticationError"}), $L({value:"The username and/or password for this feed is incorrect. Please correct and try your download again.", key:"authenticationErrorDetail"}));
+			} else {
+				Mojo.Log.error("Download error=%j", event);
+				Util.showError($L({value:"Download aborted", key:"downloadAborted"}), $L({value:"There was an error downloading url:", key:"downloadAbortedDetail"})+this.enclosure);
+			}
+		}
 	} else if (this.downloading && event.completed && (event.completionStatusCode === 302 || event.completionStatusCode === 301)) {
 		Mojo.Log.warn("Redirecting...", event.target);
 		this.downloading = false;
