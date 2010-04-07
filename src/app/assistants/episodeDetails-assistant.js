@@ -136,9 +136,6 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 			//this.audioExt = this.libs.mediaextension.MediaExtension.getInstance(this.audioObject);
 			//this.audioExt.audioClass = Media.AudioClass.MEDIA;
 
-			// as soon as setup finishes, we are ready to play
-			this.readyToPlay.bind(this).defer();
-
 			//this.audioObject.addEventListener(Media.Event.PROGRESS, this.updateProgress.bind(this));
 			//this.audioObject.addEventListener(Media.Event.DURATIONCHANGE, this.updateProgress.bind(this));
 			this.setStatus($L("Loading"));
@@ -180,6 +177,9 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 			//this.audioObject.addEventListener(Media.Event.TIMEUPDATE, this.updateProgressHandler);
 
 			this.keyDownEventHandler = this.keyDownHandler.bind(this);
+
+			// as soon as setup finishes, we are ready to play
+			this.readyToPlay.bind(this).defer();
 		} else {
 			this.progressInfo.hide();
 			this.progressInfoHidden = true;
@@ -258,8 +258,6 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
 		if (!this.isVideo()) {
-			// remove this when we want to have continual playback
-			this.audioObject.pause();
 			if (!this.finished) {
 				var functionWhenFinished = function() {};
 				if (!this.poppingScene) {
@@ -269,6 +267,10 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 					functionWhenFinished = Util.closeDashboard.bind(this, DrPodder.DashboardStageName);
 				}
 				this.bookmark(functionWhenFinished);
+
+				// remove this when we want to have continual playback
+				this.audioObject.pause();
+				this.audioObject.currentTime = 0;
 			}
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
