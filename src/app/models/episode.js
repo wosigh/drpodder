@@ -250,7 +250,7 @@ Episode.prototype.getEnclosure = function() {
 	var url = this.enclosure;
 	if (url) {
 		if (this.feedObject.username) {
-			url = url.replace("http://", "http://" +
+			url = url.replace(/http(s?):\/\//, "http$1://" +
 							encodeURIComponent(this.feedObject.username) + ":" +
 							encodeURIComponent(this.feedObject.password) + "@");
 		}

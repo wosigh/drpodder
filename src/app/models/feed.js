@@ -137,7 +137,7 @@ Feed.prototype.update = function(callback, url, reveal) {
 		}
 
 		if (this.username) {
-			url = url.replace("http://", "http://" +
+			url = url.replace(/http(s?):\/\//, "http$1://" +
 							encodeURIComponent(this.username) + ":" +
 							encodeURIComponent(this.password) + "@");
 		}
