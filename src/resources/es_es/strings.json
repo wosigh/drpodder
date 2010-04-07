@@ -1,6 +1,6 @@
 {
-	addPodcastXML: "Añadir feed XML del podcast",
-	editPodcastXML: "Editar feed XML del podcast",
+	addPodcastXML: "Añadir feed del podcast",
+	editPodcastXML: "Editar feed del podcast",
 	Authentication: "Autentificación",
 	Cancel: "Cancelar",
 	Help: "Ayuda",
@@ -17,7 +17,7 @@
 	hidePodcastFiles: "Ocultar archivos del podcast",
 	autoDownload: "Autodescargar",
 	episodeTitleReplacements: "Reemplazar título del episodio",
-	albumArtSpaceClears: "Imagen ("espacio"=nada)",
+	albumArtSpaceClears: "Imagen (\"espacio\"=nada)",
 	KAM: "Conservar Max.",
 	All: "Todo",
 	Add: "Añadir",
