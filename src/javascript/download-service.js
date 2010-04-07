@@ -94,6 +94,14 @@ DownloadService.prototype.downloadStatus = function(sceneController, ticket, cal
 		parameters: {ticket: ticket, subscribe: true}});
 };
 
+DownloadService.prototype.resumeDownload = function(sceneController, ticket, callback) {
+	return this._serviceRequest(sceneController, this.URI, {
+		method: "resumeDownload",
+		onSuccess: callback,
+		onFailure: callback,
+		parameters: {ticket: ticket, subscribe: true}});
+};
+
 DownloadService.prototype.cancelDownload = function(sceneController, ticket, callback) {
 	return this._serviceRequest(sceneController, this.URI, {
 		method: "cancelDownload",

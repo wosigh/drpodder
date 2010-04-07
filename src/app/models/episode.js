@@ -258,6 +258,14 @@ Episode.prototype.getEnclosure = function() {
 	return url;
 };
 
+Episode.prototype.resumeDownload = function() {
+	if (this.downloadTicket) {
+		Mojo.Log.warn("Resuming downloadTicket(%s) for %s", this.downloadTicket, this.title);
+		if (this.downloadRequest) {this.downloadRequest.cancel();}
+		this.downloadRequest = AppAssistant.downloadService.resumeDownload(null, this.downloadTicket, this.downloadingCallback.bind(this));
+	}
+};
+
 Episode.prototype.getDateString = function() {
 	var date = this.pubDate;
 	if (date === undefined || date === null || isNaN(date)) {
@@ -398,7 +406,7 @@ Episode.prototype.downloadingCallback = function(event) {
 		this.save();
 		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
 
-	} else if (event.returnValue) {
+	} else if (event.returnValue && event.ticket) {
 		this.downloadCanceled = false;
 		this.downloadTicket = event.ticket;
 		this.downloadingPercent = 0;
@@ -410,22 +418,26 @@ Episode.prototype.downloadingCallback = function(event) {
 			this.downloadActivity();
 		}
 	} else if (this.downloading && event.completed === false) {
-		this.downloading = false;
-		this.downloadTicket = null;
-		this.downloadingPercent = 0;
-		this.downloadActivity();
-		this.updateUIElements();
-		this.save();
-		Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
-		// if the user didn't do this, let them know what happened
-		this.feedObject.downloadFinished();
-		if (!event.aborted) {
-			if (event.completionStatusCode === 401) {
-				Mojo.Log.error("Authentication error during download. %j", event);
-				Util.showError($L({value:"Authentication Error", key:"authenticationError"}), $L({value:"The username and/or password for this feed is incorrect. Please correct and try your download again.", key:"authenticationErrorDetail"}));
-			} else {
-				Mojo.Log.error("Download error=%j", event);
-				Util.showError($L({value:"Download aborted", key:"downloadAborted"}), $L({value:"There was an error downloading url:", key:"downloadAbortedDetail"})+this.enclosure);
+		if (event.interrupted) {
+			this.resumeDownload();
+		} else {
+			this.downloading = false;
+			this.downloadTicket = null;
+			this.downloadingPercent = 0;
+			this.downloadActivity();
+			this.updateUIElements();
+			this.save();
+			Util.removeMessage(DrPodder.DownloadingStageName, $L("Downloading"), this.title);
+			// if the user didn't do this, let them know what happened
+			this.feedObject.downloadFinished();
+			if (!event.aborted) {
+				if (event.completionStatusCode === 401) {
+					Mojo.Log.error("Authentication error during download. %j", event);
+					Util.showError($L({value:"Authentication Error", key:"authenticationError"}), $L({value:"The username and/or password for this feed is incorrect. Please correct and try your download again.", key:"authenticationErrorDetail"}));
+				} else {
+					Mojo.Log.error("Download error=%j", event);
+					Util.showError($L({value:"Download aborted", key:"downloadAborted"}), $L({value:"There was an error downloading url:", key:"downloadAbortedDetail"})+this.enclosure);
+				}
 			}
 		}
 	} else if (event.returnValue === false) {
