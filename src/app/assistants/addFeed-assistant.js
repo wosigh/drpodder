@@ -354,6 +354,9 @@ AddFeedAssistant.prototype.check = function(url) {
 		method : "get",
 		evalJSON : "false",
 		evalJS : "false",
+		requestHeaders : {
+			"X-Requested-With": undefined
+		},
 		onSuccess : this.checkSuccess.bind(this),
 		onFailure : this.checkFailure.bind(this)
 	});

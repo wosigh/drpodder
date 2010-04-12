@@ -148,6 +148,9 @@ Feed.prototype.update = function(callback, url, reveal) {
 			method: "get",
 			evalJSON : "false",
 			evalJS : "false",
+			requestHeaders : {
+				"X-Requested-With": undefined
+			},
 			onFailure: this.checkFailure.bind(this, callback),
 			onSuccess: this.checkSuccess.bind(this, callback)
 		});
