@@ -168,7 +168,6 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.handleDeleteHandler = this.handleDelete.bindAsEventListener(this);
 	this.handleHoldHandler = this.handleHold.bindAsEventListener(this);
 	this.dragStartHandler = this.clearPopupMenuOnSelection.bindAsEventListener(this);
-	this.orientationChangeHandler = this.orientationChange.bindAsEventListener(this);
 
 	this.controller.setupWidget("episodeSpinner", {property: "downloading"});
 
@@ -178,23 +177,19 @@ EpisodeListAssistant.prototype.setup = function() {
 	this.needRefresh = false;
 };
 
-EpisodeListAssistant.prototype.orientationChange = function(event) {
+EpisodeListAssistant.prototype.orientationChanged = function(orientation) {
+	Mojo.Log.info("Orientation Changed: %s", orientation);
+	Mojo.Log.info("orientation: %j", orientation);
 	var changed = false;
 	var item = this.viewMenuModel.items[0].items[1];
 	var width = Mojo.Environment.DeviceInfo.screenWidth - 120;
 	var height = Mojo.Environment.DeviceInfo.screenHeight - 120;
-	if (event.position==4 || event.position==5) {
-		if (item.width != height) {
-			item.width = height; changed = true;
-		}
-	} else if (event.position==2 || event.position==3) {
-		if (item.width != width) {
-			item.width = width; changed = true;
-		}
+	if (orientation === 'left' || orientation === 'right') {
+		item.width = height;
+	} else if (orientation === 'up' || orientation === 'down') {
+		item.width = width;
 	}
-	if (changed) {
-		this.controller.modelChanged(this.viewMenuModel);
-	}
+	this.controller.modelChanged(this.viewMenuModel);
 };
 
 EpisodeListAssistant.prototype.downloadingPercentFormatter = function(downloadingPercent, model) {
@@ -228,9 +223,6 @@ EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 EpisodeListAssistant.prototype.activate = function(changes) {
 	this.refresh();
 	this.filterEpisodes();
-	if (Prefs.freeRotation) {
-		this.controller.listen(this.controller.stageController.document, 'orientationchange', this.orientationChangeHandler);
-	}
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.listen(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);
@@ -238,9 +230,6 @@ EpisodeListAssistant.prototype.activate = function(changes) {
 };
 
 EpisodeListAssistant.prototype.deactivate = function(changes) {
-	if (Prefs.freeRotation) {
-		this.controller.stopListening(this.controller.stageController.document, 'orientationchange', this.orientationChangeHandler);
-	}
 	Mojo.Event.stopListening(this.episodeList, Mojo.Event.listTap, this.handleSelectionHandler);
 	Mojo.Event.stopListening(this.episodeList, Mojo.Event.listDelete, this.handleDeleteHandler);
 	Mojo.Event.stopListening(this.episodeList, Mojo.Event.hold, this.handleHoldHandler);
