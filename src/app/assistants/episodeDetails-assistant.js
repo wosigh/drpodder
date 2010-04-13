@@ -256,6 +256,7 @@ EpisodeDetailsAssistant.prototype.deactivate = function() {
 };
 
 EpisodeDetailsAssistant.prototype.cleanup = function() {
+	this.setTimer(false);
 	if (this.episodeObject.enclosure) {
 		if (!this.isVideo()) {
 			if (!this.finished) {
@@ -297,7 +298,6 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 			this.audioObject.removeEventListener(Media.Event.X_PALM_SUCCESS, this.handleAudioEventsHandler);
 			this.audioObject.removeEventListener(Media.Event.X_PALM_WATCHDOG, this.handleAudioEventsHandler);
 		}
-		this.setTimer(false);
 	}
 };
 
