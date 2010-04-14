@@ -75,7 +75,7 @@
 	Seeking: "Buscando",
 	Buffering: "Buffering",
 	Error: "Error",
-	errorPlaying: "There was a problem playing the file",
+	errorPlaying: "Error al reproducir el archivo",
 
 	ALL: "TODO",
 	New: "Nuevo",

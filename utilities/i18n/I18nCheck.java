@@ -1,3 +1,10 @@
+/*
+ * Usage: run.sh PATH_TO_APP_SOURCE
+ * Checks for a base.strings.json file which is your English or base translation
+ * Compares all keys against all resources/xyz/strings.json files
+ * If any are missing, it lets you know.
+ * Also ensures that the files don't have the BOM header that breaks webOS
+ */
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.JsonParseException;

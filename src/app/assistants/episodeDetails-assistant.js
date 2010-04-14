@@ -47,7 +47,11 @@ EpisodeDetailsAssistant.prototype.menuModel = {
 	items: [
 		Mojo.Menu.editItem,
 		{label: $L({value:"Play using webOS player", key:"playExternal"}), command: "playExternal-cmd"},
-		{label: $L({value:"Share Episode", key:"shareEpisode"}), command: "share-cmd"},
+		{label: $L({value:"Share Episode", key:"shareEpisode"}),
+		 items: [{label: $L({value:"Via Email", key:"viaEmail"}), command: "share-cmd"},
+				{label: $L({value:"Copy Episode URL", key:"copyEpisodeURL"}), command: "copyEpisode-cmd"},
+				{label: $L({value:"Copy Feed URL", key:"copyFeedURL"}), command: "copyFeed-cmd"}]
+		},
 		{label: $L({value:"Report a Problem", key:"reportProblem"}), command: "report-cmd"},
 		{label: $L("Help"), command: "help-cmd"},
 		{label: $L("About") + '...', command: "about-cmd"}
@@ -595,6 +599,14 @@ EpisodeDetailsAssistant.prototype.handleCommand = function(event) {
 								 "Podcast Title: <a href=\"#{podcastURL}\">#{podcastTitle}</a><br/>" +
 								 "Podcast URL:<br/>#{podcastURL}<br/><br/>", key: "shareEpisodeBody"}).interpolate(args);
 				AppAssistant.applicationManagerService.email(subject, message);
+				break;
+            case "copyEpisode-cmd":
+				this.controller.stageController.setClipboard(this.episodeObject.enclosure);
+				Util.banner($L({value:"Episode URL copied", key:"episodeURLCopied"}));
+				break;
+            case "copyFeed-cmd":
+				this.controller.stageController.setClipboard(this.episodeObject.feedObject.url);
+				Util.banner($L({value:"Feed URL copied", key:"feedURLCopied"}));
 				break;
             case "playExternal-cmd":
 				this.playExternal();

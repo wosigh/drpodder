@@ -70,12 +70,17 @@
 
 	playExternal: "Play using webOS player",
 	shareEpisode: "Share this Episode",
+	viaEmail: "Via Email",
+	copyEpisodeURL: "Copy Episode URL",
+	copyFeedURL: "Copy Feed URL",
+	episodeURLCopied: "Episode URL Copied",
+	feedURLCopied: "Feed URL Copied",
 	Connecting: "Connecting",
 	Loading: "Loading",
 	Seeking: "Seeking",
 	Buffering: "Buffering",
 	Error: "Error",
-	errorPlaying: "Error al reproducir el archivo",
+	errorPlaying: "There was a problem playing the file",
 
 	ALL: "ALL",
 	New: "New",

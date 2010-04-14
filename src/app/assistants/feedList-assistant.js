@@ -34,7 +34,7 @@ FeedListAssistant.prototype.appMenuModel = {
 	visible: true,
 	items: [
 		Mojo.Menu.editItem,
-		{label: "OPML",
+		{label: 'OPML',
 		 items: [{label: $L({value:"Import from drpodder.xml", key:"importDrpodder"}), command: "import-cmd"},
 			 {label: $L({value:"Export via email", key:"exportDrpodder"}), command: "export-cmd"}]
 		},
