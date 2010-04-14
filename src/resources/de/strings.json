@@ -203,5 +203,5 @@
 	parseFeedErrorDetail: "Titel im Feed nicht auffindbar: ",
 	parseJSONError: "Fehler bei der Verarbeitung des JSON-Feeds",
 	parseJSONErrorDetail: "Titel im JSON-Feed nicht auffindbar: ",
-	downloadsPendingWifi: "WLAN Downloads anhängig",
+	downloadsPendingWifi: "WLAN Downloads anhängig"
 }

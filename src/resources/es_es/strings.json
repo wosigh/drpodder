@@ -139,7 +139,7 @@
 	Preferences: "Preferencias",
 	applicationSettings: "Configuración de la aplicación",
 	allowLandscape: "Modo apaisado",
-	notifications: "Notificaciones",
+	Notifications: "Notificaciones",
 	autoUpdate: "Auto-actualizar",
 	enableWifi: "Permitir Wifi",
 	limitToWifi: "Bajar solo con Wifi",
@@ -203,5 +203,5 @@
 	parseFeedErrorDetail: "No se pudo encontrar el título del feed: ",
 	parseJSONError: "Error de análisis JSON feed",
 	parseJSONErrorDetail: "No se pudo encontrar el título en JSON feed: ",
-	downloadsPendingWifi: "Descargas esperando Wifi",
+	downloadsPendingWifi: "Descargas esperando Wifi"
 }

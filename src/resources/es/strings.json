@@ -121,7 +121,7 @@
 
 	searchPodcastDirectory: "Buscar Directorio de Podcast",
 	errorContactingSearch: "Error Contactando el servicio de búsqueda",
-	keyword: "Palabra clave",
+	Keyword: "Palabra clave",
 	noResults: "No se encontraron resultados",
 	Directory: "Directorio",
 	Filter: "Filtro",
@@ -139,7 +139,7 @@
 	Preferences: "Preferencias",
 	applicationSettings: "Configuración de la Aplicación",
 	allowLandscape: "Permitir Apaisado",
-	notifications: "Notificaciones",
+	Notifications: "Notificaciones",
 	autoUpdate: "Auto Actualización",
 	enableWifi: "Permitir WiFi",
 	limitToWifi: "Bajar solo en WiFi",
@@ -203,5 +203,5 @@
 	parseFeedErrorDetail: "No se pudo encontrar el título del feed: ",
 	parseJSONError: "Error de análisis JSON feed",
 	parseJSONErrorDetail: "No se pudo encontrar el título en JSON feed: ",
-	downloadsPendingWifi: "Descargas pendiendo WiFi",
+	downloadsPendingWifi: "Descargas pendiendo WiFi"
 }
