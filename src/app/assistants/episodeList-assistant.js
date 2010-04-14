@@ -175,6 +175,15 @@ EpisodeListAssistant.prototype.setup = function() {
 
 	this.refresh = Mojo.Function.debounce(this._refreshDebounced.bind(this), this._refreshDelayed.bind(this), 1);
 	this.needRefresh = false;
+
+	this.d_names = Mojo.Locale.getDayNames('medium');
+	this.m_names = Mojo.Locale.getMonthNames('medium');
+	if (!this.d_names) {
+		Mojo.Locale.set(Prefs.systemTranslation);
+		this.d_names = Mojo.Locale.getDayNames('medium');
+		this.m_names = Mojo.Locale.getMonthNames('medium');
+		Mojo.Locale.set(Prefs.translation);
+	}
 };
 
 EpisodeListAssistant.prototype.orientationChanged = function(orientation) {
@@ -382,8 +391,6 @@ EpisodeListAssistant.prototype.titleFormatter = function(title, model) {
 EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 	var formatted = pubDate;
 	if (formatted) {
-		var d_names = Mojo.Locale.getDayNames('medium');
-		var m_names = Mojo.Locale.getMonthNames('medium');
 		var d = formatted;
 		var y = d.getFullYear();
 		var m = d.getMonth();
@@ -400,7 +407,7 @@ EpisodeListAssistant.prototype.pubDateFormatter = function(pubDate, model) {
 		if (dom<10) {dom="0"+dom;}
 		if (min<10) {min="0"+min;}
 		//formatted = y+"/"+m+"/"+dom+" "+h+":"+min+" "+pm;
-		formatted = d_names[dow] + " " + m_names[m] + " " + dom + ", " + y +
+		formatted = this.d_names[dow] + " " + this.m_names[m] + " " + dom + ", " + y +
 		            " " + h + ":" + min + " " + pm;
 	/*
 	// I'd use this formatter, but I couldn't make it do what I wanted, i.e.,

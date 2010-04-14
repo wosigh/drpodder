@@ -74,6 +74,12 @@ PreferencesAssistant.prototype.setup = function() {
 
 	var dayChoices = [];
 	var d_names = Mojo.Locale.getDayNames('long');
+	if (!d_names) {
+		Mojo.Locale.set(Prefs.systemTranslation);
+		d_names = Mojo.Locale.getDayNames('long');
+		Mojo.Locale.set(Prefs.translation);
+	}
+
 	for (var i=0; i<7; i++) {
 		dayChoices.push({label: d_names[i], value: i});
 	}
@@ -113,7 +119,8 @@ PreferencesAssistant.prototype.setup = function() {
 				  {label: $L("English"), value: "en_us"},
 				  {label: $L("German"), value: "de_de"},
 				  {label: $L({value:"Latino Spanish", key:"latinoSpanish"}), value: "es_mx"},
-				  {label: $L({value:"Spain Spanish", key:"spainSpanish"}), value: "es_es"}
+				  {label: $L({value:"Spain Spanish", key:"spainSpanish"}), value: "es_es"}/*,
+				  {label: $L("Klingon"), value: "tlh"}*/
 				  ];
 
 	switch (Prefs.systemTranslation) {
@@ -121,6 +128,7 @@ PreferencesAssistant.prototype.setup = function() {
 		case "de_de":
 		case "es_mx":
 		case "es_es":
+		case "klingon":
 			// we are in one of the countries I used below
 			break;
 		default:
