@@ -274,8 +274,14 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 				this.bookmark(functionWhenFinished);
 
 				// remove this when we want to have continual playback
-				this.audioObject.pause();
-				this.audioObject.currentTime = 0;
+				if (this.audioObject) {
+					this.audioObject.pause();
+					try {
+						this.audioObject.currentTime = 0;
+					} catch (e) {
+						Mojo.Log.error("Error setting currentTime: %s", e.message);
+					}
+				}
 			}
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
@@ -390,6 +396,7 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 	this.enablePlay(true);
 	this.setStatus();
 	this.resume = true;
+	this.setTimer(false);
 	//this.readyToPlay();
 };
 
@@ -465,12 +472,12 @@ EpisodeDetailsAssistant.prototype.setStatus = function(message, maxDisplay) {
 	this.statusDiv.update(message);
 	if (message) {
 		this.statusDiv.show();
-		if (!this.statusTimerID) {
+		if (!this.statusTimerID && this.controller) {
 			this.statusTimerID = this.controller.window.setInterval(this.statusTimer.bind(this), 400);
 		}
 	} else {
 		this.statusDiv.hide();
-		if (this.statusTimerID) {
+		if (this.statusTimerID && this.controller) {
 			this.controller.window.clearInterval(this.statusTimerID);
 			this.statusTimerID = null;
 		}
@@ -702,19 +709,18 @@ EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) 
 			if (!currentTime) {
 				this.progressModel.value = this.audioObject.currentTime/this.audioObject.duration;
 			}
-		}
-
-		if (!this.episodeObject.downloaded) {
-			var buffered = this.audioObject.buffered;
-			if (buffered !== undefined && buffered !== null) {
-				// webOS 1.4 broke this
-				//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
-				//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
-				this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
-				this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
+			if (!this.episodeObject.downloaded) {
+				var buffered = this.audioObject.buffered;
+				if (buffered !== undefined && buffered !== null) {
+					// webOS 1.4 broke this
+					//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
+					//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
+					this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
+					this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
+				}
 			}
+			this.controller.modelChanged(this.progressModel);
 		}
-		this.controller.modelChanged(this.progressModel);
 	}
 };
 
@@ -880,7 +886,9 @@ EpisodeDetailsAssistant.prototype.setPlayPause = function(isPlay, isEnabled, nee
 };
 
 EpisodeDetailsAssistant.prototype.refreshMenu = function() {
-	this.controller.modelChanged(this.cmdMenuModel);
+	if (this.controller) {
+		this.controller.modelChanged(this.cmdMenuModel);
+	}
 };
 
 EpisodeDetailsAssistant.prototype.onBlur = function() {
