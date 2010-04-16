@@ -229,11 +229,11 @@ AddFeedAssistant.prototype.localize = function() {
 	} else {
 		Util.localize(this, "dialogTitle", "Edit Podcast XML Feed", "editPodcastXML");
 	}
-	Util.localize(this, "url", "URL");
-	Util.localize(this, "username", "Username");
-	Util.localize(this, "password", "Password");
-	Util.localize(this, "title", "Title");
-	Util.localize(this, "icon", "Icon");
+	Util.localize(this, "urlLabel", "URL");
+	Util.localize(this, "usernameLabel", "Username");
+	Util.localize(this, "passwordLabel", "Password");
+	Util.localize(this, "titleLabel", "Title");
+	Util.localize(this, "iconLabel", "Icon");
 	Util.localize(this, "feedOptions", "Feed Options", "feedOptions");
 	Util.localize(this, "deleteWhenFinished", "Delete when finished", "deleteWhenFinished");
 	Util.localize(this, "hidePodcastFiles", "Hide Podcast Files", "hidePodcastFiles");
