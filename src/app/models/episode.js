@@ -65,7 +65,8 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	if (itunesSummary && itunesSummary.length > this.description.length) {
 		this.description = itunesSummary;
 	}
-	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url");
+	this.enclosure = Util.xmlTagAttributeValue(xmlObject, "enclosure", "url") ||
+					 Util.xmlTagAttributeValue(xmlObject, "content", "url");
 	this.pubDate = Util.xmlTagValue(xmlObject, "pubDate");
 	if (this.pubDate) {
 		this.pubDate = new Date(this.pubDate);
