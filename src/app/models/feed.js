@@ -370,8 +370,6 @@ Feed.prototype.parseRssFeed = function(transport) {
 	}
 
 	var result = nodes.iterateNext();
-	var newEpisodeCount = 0;
-	var noEnclosureCount = 0;
 	//while (result && this.episodes.length < this.maxDisplay) {
 
 	Feed.newDate = new Date();
@@ -389,7 +387,7 @@ Feed.prototype.parseRssFeed = function(transport) {
 			episode.feedId = this.id;
 			episode.feedObject = this;
 			episode.albumArt = this.albumArt;
-			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
+			if (!episode.enclosure) {episode.listened = true; }
 			this.insertEpisodeTop(episode);
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
@@ -400,7 +398,11 @@ Feed.prototype.parseRssFeed = function(transport) {
 			e.pubDate = episode.pubDate;
 			e.description = episode.description;
 			e.link = episode.link;
-			if (episode.enclosure) { e.enclosure = episode.enclosure; }
+			if (episode.enclosure && e.enclosure !== episode.enclosure) {
+				var hadEnclosure = e.enclosure;
+				e.enclosure = episode.enclosure;
+				if (!hadEnclosure) { e.listened = false; this.numNew++; e.updateUIElements(true); }
+			}
 			e.type = episode.type;
 		}
 		result = nodes.iterateNext();
@@ -458,8 +460,6 @@ Feed.prototype.parseJSONFeed = function(transport) {
 	}
 
 	var result = nodes.iterateNext();
-	var newEpisodeCount = 0;
-	var noEnclosureCount = 0;
 	//while (result && this.episodes.length < this.maxDisplay) {
 
 	Feed.newDate = new Date();
@@ -476,7 +476,7 @@ Feed.prototype.parseJSONFeed = function(transport) {
 			episode.feedId = this.id;
 			episode.feedObject = this;
 			episode.albumArt = this.albumArt;
-			if (!episode.enclosure) {episode.listened = true; noEnclosureCount++;}
+			if (!episode.enclosure) {episode.listened = true;}
 			this.insertEpisodeTop(episode);
 			episode.updateUIElements(true);
 			updateCheckStatus = UPDATECHECK_UPDATES;
