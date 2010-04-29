@@ -75,7 +75,7 @@
 	Seeking: "Suche",
 	Buffering: "Puffere",
 	Error: "Fehler",
-	errorPlaying: "Bei dem Abspielen der Episode trat ein Problem auf",
+	errorPlaying: "Bei dem Abspielen der Episode trat ein Problem auf.",
 
 	ALL: "ALLE",
 	New: "Neu",

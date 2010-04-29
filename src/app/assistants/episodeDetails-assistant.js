@@ -386,11 +386,74 @@ EpisodeDetailsAssistant.prototype.readyToPlay = function() {
 };
 
 EpisodeDetailsAssistant.prototype.handleError = function(event) {
+	// much of this shameless copied from http://ampache-mobile.googlecode.com/svn/trunk/src/javascript/AudioPlayer.js
 	try {
-		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! %j", event);
-		Util.showError($L("Error"), $L({value: "There was a problem playing the file", key: "errorPlaying"}));
+		var error = event.currentTarget.error;
+		Mojo.Log.error("Error playing audio!!!!!!!!!!!!!!!!!!! code=%s", error.code);
+		var message = $L({value: "There was a problem playing the file.", key: "errorPlaying"});
+		switch (error.code) {
+			case error.MEDIA_ERR_ABORTED:
+				message += "<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.";
+				break;
+			case error.MEDIA_ERR_NETWORK:
+				message += "<BR>A network error has occurred.  The network cannot support an audio stream at this time";
+				break;
+			case error.MEDIA_ERR_DECODE:
+				message += "<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.";
+				break;
+			case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+				message += "<BR>This episode is not suitable for streaming.";
+				break;
+		}
+		Util.showError($L("Error"), message);
+
+		/*
+		// getErrorCode doesn't seem to be available
+		if (!event.currentTarget.getErrorCode) {
+			Mojo.Log.error("Error Code: unavailable since event.currentTarget.getErrorCode is null");
+		}
+		var errorCode = event.currentTarget.getErrorCode();
+		Mojo.Log.error("errorCode=%d", errorCode);
+		var errorCodeString = "Unknown: (0x" + errorCode.toString(16).toUpperCase() + ")";
+
+		switch (Number(errorCode)) {
+			case 1:
+				errorCodeString = "DecodeErrorFileNotFound(1)";
+				break;
+			case 2:
+				errorCodeString = "DecodeErrorBadParam(2)";
+				break;
+			case 3:
+				errorCodeString = "DecodeErrorPipeline(3)";
+				break;
+			case 4:
+				errorCodeString = "DecodeErrorUnsupported(4)";
+				break;
+			case 5:
+				errorCodeString = "DecodeErrorNoMemory(5)";
+				break;
+			case 6:
+				errorCodeString = "NetworkErrorHttp(6)";
+				break;
+			case 7:
+				errorCodeString = "NetworkErrorRtsp(7)";
+				break;
+			case 8:
+				errorCodeString = "NetworkErrorMobi(8)";
+				break;
+			case 9:
+				errorCodeString = "NetworkErrorOther(9)";
+				break;
+			case 12:
+				errorCodeString = "NetworkErrorPowerDown(12)";
+				break;
+		}
+
+		Mojo.Log.error("Error Code: %s", errorCodeString);
+		*/
 	} catch (f) {
 	}
+
 	this.bookmark();
 	this.cmdMenuModel.items[0] = {};
 	this.cmdMenuModel.items[1] = {};

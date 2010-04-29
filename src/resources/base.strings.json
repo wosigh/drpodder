@@ -80,7 +80,7 @@
 	Seeking: "Seeking",
 	Buffering: "Buffering",
 	Error: "Error",
-	errorPlaying: "There was a problem playing the file",
+	errorPlaying: "There was a problem playing the file.",
 
 	ALL: "ALL",
 	New: "New",
