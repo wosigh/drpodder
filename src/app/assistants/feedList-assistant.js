@@ -111,6 +111,13 @@ FeedListAssistant.prototype.setup = function() {
 	this.onFocusHandler = this.onFocus.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageActivate, this.onFocusHandler);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+
+	try {
+		this.sceneScroller = this.controller.getSceneScroller();
+		this.topScrollerElement = this.controller.get('topFadeIndicator');
+	} catch (e) {
+		Mojo.Log.error("Error getting scroller fade: %j", e);
+	}
 };
 
 FeedListAssistant.prototype.activate = function(result) {
@@ -150,6 +157,16 @@ FeedListAssistant.prototype.activate = function(result) {
 		}
 	} else {
 		this.controller.stageController.setWindowOrientation("up");
+	}
+
+	// without this hack, the top scroller is activated when at the top of the list if you scrolled down
+	// in the episode list any
+	try {
+		this.topPosition = this.sceneScroller.mojo.getScrollPosition().top;
+		var topIndicator = new Mojo.Widget.Scroller.Indicator(this.topScrollerElement, function(){return this.topPosition!==0;}.bind(this));
+		topIndicator.update();
+	} catch (e) {
+		Mojo.Log.error("Error updating scroller fade: %j", e);
 	}
 
 	if (Prefs.reload) {

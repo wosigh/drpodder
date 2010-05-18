@@ -118,7 +118,9 @@ AppAssistant.prototype.setWakeup = function() {
 		if (alarmType === "at") {
 			// verify that the time is at least 6 minutes in the future
 			// if not, jump forward a day or a week depending on Prefs.updateType
-			if (now.valueOf() + 6*60*1000 > alarmDate.valueOf()) {
+			// ACTUALLY this isn't necessary.  AT alarms can fire off whenever.
+			// just make sure it's not earlier today, otherwise it fires off immediately
+			 if (now.valueOf() > alarmDate.valueOf()) {
 				alarmDate.setDate(alarmDate.getDate() + ((Prefs.updateType==="D")?1:7));
 			}
 			// "mm/dd/yyyy hh:mm:ss"

@@ -267,10 +267,11 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 	if (this.episodeObject.enclosure) {
 		if (!this.isVideo()) {
 			if (!this.finished) {
+				var beforeSave = function() {};
 				var functionWhenFinished = function() {};
 				if (!this.poppingScene) {
 					Mojo.Log.warn("Closing app, we need to bookmark though!");
-					Util.dashboard(DrPodder.DashboardStageName, $L({value: "Saving Bookmark", key: "savingBookmark"}),
+					beforeSave = Util.dashboard.bind(this, DrPodder.DashboardStageName, $L({value: "Saving Bookmark", key: "savingBookmark"}),
 							$L({value: "Dashboard should close automatically", key: "savingBookmarkDescription"}), true);
 					functionWhenFinished = Util.closeDashboard.bind(this, DrPodder.DashboardStageName);
 				}
@@ -279,6 +280,7 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 				// remove this when we want to have continual playback
 				if (this.audioObject) {
 					this.audioObject.pause();
+					this.audioObject.url = '';
 					try {
 						this.audioObject.currentTime = 0;
 					} catch (e) {
@@ -314,18 +316,15 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 	}
 };
 
-EpisodeDetailsAssistant.prototype.bookmark = function(functionWhenFinished) {
+EpisodeDetailsAssistant.prototype.bookmark = function(beforeSave, functionWhenFinished) {
 	if (!this.isVideo()) {
 		var cur = this.audioObject.currentTime;
 		Mojo.Log.warn("BOOKMARK!!! %d", cur);
 		if (cur !== undefined && cur !== null && cur > 15) {
 			this.episodeObject.length = this.audioObject.duration;
+			if (beforeSave) {beforeSave();}
 			this.episodeObject.bookmark(cur, functionWhenFinished);
-		} else {
-			if (functionWhenFinished) {functionWhenFinished();}
 		}
-	} else {
-		if (functionWhenFinished) {functionWhenFinished();}
 	}
 };
 
