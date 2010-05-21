@@ -511,6 +511,7 @@ Feed.prototype.getTitle = function(transport) {
 				var firstChild = node.firstChild;
 				if (firstChild) {
 					title = firstChild.nodeValue;
+					title = title.replace(/\n/g, '').replace(/\t/g, '').replace(/^\s*/, '').replace(/\s*$/, '');
 					Mojo.Log.info("title: %s", title);
 				}
 			}

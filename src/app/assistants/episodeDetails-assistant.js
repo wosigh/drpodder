@@ -213,6 +213,26 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 	this.onBlurHandler = this.onBlur.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+
+	this.orientationChanged(this.stageController.getWindowOrientation());
+};
+
+EpisodeDetailsAssistant.prototype.orientationChanged = function(orientation) {
+	var item = this.controller.get('progress');
+	item.removeClassName('portrait');
+	item.removeClassName('landscape480');
+	item.removeClassName('landscape400');
+
+	var width = Mojo.Environment.DeviceInfo.screenWidth;
+	var height = Mojo.Environment.DeviceInfo.screenHeight;
+
+	if (orientation === 'left' || orientation === 'right') {
+		item.addClassName('landscape' + height);
+	} else if (orientation === 'up' || orientation === 'down') {
+		item.addClassName('portrait');
+	}
+
+	this.adjustHeader();
 };
 
 EpisodeDetailsAssistant.prototype.adjustHeader = function() {

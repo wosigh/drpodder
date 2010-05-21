@@ -184,12 +184,11 @@ EpisodeListAssistant.prototype.setup = function() {
 		this.m_names = Mojo.Locale.getMonthNames('medium');
 		Mojo.Locale.set(Prefs.translation);
 	}
+
+	this.orientationChanged(this.stageController.getWindowOrientation());
 };
 
 EpisodeListAssistant.prototype.orientationChanged = function(orientation) {
-	Mojo.Log.info("Orientation Changed: %s", orientation);
-	Mojo.Log.info("orientation: %j", orientation);
-	var changed = false;
 	var item = this.viewMenuModel.items[0].items[1];
 	var width = Mojo.Environment.DeviceInfo.screenWidth - 120;
 	var height = Mojo.Environment.DeviceInfo.screenHeight - 120;
@@ -325,9 +324,17 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				event.data = "Feed Information:<br/>";
 				if (this.feedObject.playlist) {
 					event.data += "Playlist:<br/>";
-					this.feedObject.feedIds.forEach(function (fid) {
-						event.data += "URL: " + feedModel.getFeedById(fid).url + "<br/>";
-					});
+					if (this.feedObject.feedIds.length) {
+						this.feedObject.feedIds.forEach(function (fid) {
+							Mojo.Log.error('fid: %s', fid);
+							event.data += "URL: " + feedModel.getFeedById(fid).url + "<br/>";
+						});
+					} else {
+						feedModel.items.forEach(function (feed) {
+							Mojo.Log.error('feed: %s', feed.title);
+							event.data += "URL: " + feed.url + "<br/>";
+						});
+					}
 				} else {
 					event.data += "URL: " + this.feedObject.url + "<br/>";
 				}
