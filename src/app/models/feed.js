@@ -205,7 +205,7 @@ Feed.prototype.getEpisodesToDownload = function() {
 		var downloaded = 0;
 		this.episodes.forEach(function (e) {
 			if (e.downloaded) {
-				if (this.maxDownloads > 0 && downloaded > this.maxDownloads &&
+				if (this.maxDownloads > 0 && downloaded >= this.maxDownloads &&
 					!e.position) {
 					e.deleteFile();
 				} else {
