@@ -429,7 +429,7 @@ FeedListAssistant.prototype.handleCommand = function(event) {
 FeedListAssistant.prototype.handleDelete = function(event) {
 	DB.removeFeed(event.model.items[event.index]);
 	event.model.items.splice(event.index, 1);
-	DB.saveFeeds();
+	DB.saveFeedsOnly();
 };
 
 FeedListAssistant.prototype.handleReorder = function(event) {

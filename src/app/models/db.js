@@ -320,6 +320,14 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 	this.callback();
 };
 
+DBClass.prototype.saveFeedsOnly = function() {
+	for (var i=0; i<feedModel.items.length; i++) {
+		var feed = feedModel.items[i];
+		feed.displayOrder = i;
+		this.saveFeed(feed, i, undefined, true);
+	}
+};
+
 DBClass.prototype.saveFeeds = function() {
 	for (var i=0; i<feedModel.items.length; i++) {
 		var feed = feedModel.items[i];
@@ -328,7 +336,7 @@ DBClass.prototype.saveFeeds = function() {
 	}
 };
 
-DBClass.prototype.saveFeed = function(f, displayOrder, functionWhenFinished) {
+DBClass.prototype.saveFeed = function(f, displayOrder, functionWhenFinished, feedOnly) {
 	var saveFeedSQL = "INSERT OR REPLACE INTO feed (id, displayOrder, title, url, albumArt, " +
 	                  "autoDelete, autoDownload, maxDownloads, interval, lastModified, replacements, maxDisplay, " +
 					  "viewFilter, username, password, hideFromOS, maxEpisodes) " +
@@ -360,7 +368,7 @@ DBClass.prototype.saveFeed = function(f, displayOrder, functionWhenFinished) {
 						});
 					}
 				}
-				if (!f.playlist) {
+				if (!f.playlist && !feedOnly) {
 					for (var i=0; i<f.episodes.length; i++) {
 						f.episodes[i].displayOrder = i;
 						if (i === f.episodes.length - 1) {
