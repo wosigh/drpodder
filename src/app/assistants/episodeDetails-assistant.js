@@ -214,7 +214,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.onBlurHandler = this.onBlur.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
 
-	this.orientationChanged(this.stageController.getWindowOrientation());
+	this.orientationChanged(this.controller.stageController.getWindowOrientation());
 };
 
 EpisodeDetailsAssistant.prototype.orientationChanged = function(orientation) {
