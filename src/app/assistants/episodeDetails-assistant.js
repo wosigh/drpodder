@@ -295,7 +295,7 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 							$L({value: "Dashboard should close automatically", key: "savingBookmarkDescription"}), true);
 					functionWhenFinished = Util.closeDashboard.bind(this, DrPodder.DashboardStageName);
 				}
-				this.bookmark(functionWhenFinished);
+				this.bookmark(beforeSave, functionWhenFinished);
 
 				// remove this when we want to have continual playback
 				if (this.audioObject) {
@@ -784,8 +784,6 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) {
 	if (!this.isVideo()) {
-		Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
-
 		if (isNaN(this.audioObject.currentTime) ||
 			!isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 			this.updateProgressLabelsValues("00:00", "00:00");
