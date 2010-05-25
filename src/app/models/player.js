@@ -21,4 +21,23 @@ function Player(audioObject) {
 	this.audioObject = audioObject;
 }
 
-Player.prototype.
+Player.prototype.getProgress = function() {
+	var progress = {current: 0, remain: 0, duration: 0, currentPer: 0, progressStart: 0, progressEnd: 1};
+	if (!isNaN(this.audioObject.currentTime) &&
+		isFinite(this.audioObject.duration) && !isNaN(this.audioObject.duration) && this.audioObject.duration !== 0) {
+		progress.current = this.audioObject.currentTime;
+		progress.duration = this.audioObject.duration;
+		progress.remain = progress.duration - progress.current;
+		progress.currentPer = progress.current / progress.duration;
+		if (!this.episodeObject.downloaded) {
+			var buffered = this.audioObject.buffered;
+			if (buffered !== undefined && buffered !== null) {
+				// webOS 1.4 broke this
+				//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
+				//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
+				this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
+				this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
+			}
+		}
+	}
+};

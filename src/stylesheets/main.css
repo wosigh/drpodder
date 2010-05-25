@@ -176,8 +176,16 @@
 	width: 20%;
 }
 
-.progress-widget-width {
+.portrait > .progress-widget-width {
 	width: 200px;
+}
+
+.landscape480 > .progress-widget-width {
+	width: 360px;
+}
+
+.landscape400 > .progress-widget-width {
+	width: 280px;
 }
 
 .episodeStatus {

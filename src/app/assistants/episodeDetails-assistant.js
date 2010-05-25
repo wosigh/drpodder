@@ -213,6 +213,26 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 	this.onBlurHandler = this.onBlur.bind(this);
 	Mojo.Event.listen(this.controller.stageController.document, Mojo.Event.stageDeactivate, this.onBlurHandler);
+
+	this.orientationChanged(this.controller.stageController.getWindowOrientation());
+};
+
+EpisodeDetailsAssistant.prototype.orientationChanged = function(orientation) {
+	var item = this.controller.get('progress');
+	item.removeClassName('portrait');
+	item.removeClassName('landscape480');
+	item.removeClassName('landscape400');
+
+	var width = Mojo.Environment.DeviceInfo.screenWidth;
+	var height = Mojo.Environment.DeviceInfo.screenHeight;
+
+	if (orientation === 'left' || orientation === 'right') {
+		item.addClassName('landscape' + height);
+	} else if (orientation === 'up' || orientation === 'down') {
+		item.addClassName('portrait');
+	}
+
+	this.adjustHeader();
 };
 
 EpisodeDetailsAssistant.prototype.adjustHeader = function() {
@@ -275,7 +295,7 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 							$L({value: "Dashboard should close automatically", key: "savingBookmarkDescription"}), true);
 					functionWhenFinished = Util.closeDashboard.bind(this, DrPodder.DashboardStageName);
 				}
-				this.bookmark(functionWhenFinished);
+				this.bookmark(beforeSave, functionWhenFinished);
 
 				// remove this when we want to have continual playback
 				if (this.audioObject) {
@@ -764,8 +784,6 @@ EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playback
 
 EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) {
 	if (!this.isVideo()) {
-		Mojo.Log.warn("updateProgress: currentTime: %d, duration: %d (passed in: %d)", this.audioObject.currentTime, this.audioObject.duration, currentTime);
-
 		if (isNaN(this.audioObject.currentTime) ||
 			!isFinite(this.audioObject.duration) || isNaN(this.audioObject.duration) || this.audioObject.duration === 0) {
 			this.updateProgressLabelsValues("00:00", "00:00");

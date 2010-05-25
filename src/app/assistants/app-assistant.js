@@ -154,6 +154,55 @@ AppAssistant.prototype.setWakeup = function() {
 	}
 };
 
+
+AppAssistant.prototype.importOpml = function(opml) {
+	try {
+		var doc = (new DOMParser()).parseFromString(opml, "text/xml");
+		var nodes = document.evaluate("//outline", doc, null, XPathResult.ANY_TYPE, null);
+		var node = nodes.iterateNext();
+		var imported = 0;
+		while (node) {
+			var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
+			var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
+			var autoDownload = Util.xmlGetAttributeValue(node, "autoDownload");
+			var autoDelete = Util.xmlGetAttributeValue(node, "autoDelete");
+			var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
+			var replacements = Util.xmlGetAttributeValue(node, "replacements");
+			var hideFromOS = Util.xmlGetAttributeValue(node, "hideFromOS");
+			var username = Util.xmlGetAttributeValue(node, "username");
+			var password = Util.xmlGetAttributeValue(node, "password");
+			if (title !== undefined && url !== undefined) {
+				Mojo.Log.warn("Importing feed: (%s)-[%s]", title, url);
+				feed = new Feed();
+				feed.url = url;
+				feed.title = title;
+				if (autoDownload !== undefined) {feed.autoDownload = (autoDownload==='1');}
+				if (autoDelete !== undefined) {feed.autoDelete = (autoDelete==='1');}
+				if (maxDownloads !== undefined) {feed.maxDownloads = maxDownloads;}
+				if (replacements !== undefined) {feed.replacements = replacements;}
+				if (hideFromOS !== undefined) {feed.hideFromOS = hideFromOS;}
+				if (username !== undefined) {feed.username = username;}
+				if (password !== undefined) {feed.password = password;}
+				feedModel.items.push(feed);
+				feed.update(null, null, true);
+				imported++;
+			} else {
+				Mojo.Log.warn("Skipping import: (%s)-[%s]", title, url);
+			}
+			node = nodes.iterateNext();
+		}
+		if (imported > 0) {
+			DB.saveFeeds();
+			Util.showError($L({value:"OPML Import Finished", key:"opmlImportFinished"}), $L({value:"The #{num} imported feed" + ((imported !== 1)?"s":"") + " can be found at the END of your feed list.", key:"opmlImportStatus"}).interpolate({num:imported}));
+							} else {
+			Util.showError($L({value:"OPML Import Finished", key:"opmlImportFinished"}), $L({value:"No valid feeds found in drpodder.xml", key:"noValidFeeds"}));
+		}
+	} catch (e){
+		Mojo.Log.error("error with OPML: (%s)", e);
+		Util.showError($L({value:"Error parsing OPML File", key:"errorParsingOPML"}), $L({value:"There was an error parsing the OPML file.  Please send the file to support@drPodder.com.", key:"errorParsingOPMLBody"}));
+	}
+};
+
 AppAssistant.prototype.handleCommand = function(event) {
 	var stageController = this.controller.getActiveStageController();
 	var currentScene = stageController.activeScene();
@@ -166,6 +215,9 @@ AppAssistant.prototype.handleCommand = function(event) {
 			case "about-cmd":
 				stageController.pushAppSupportInfoScene();
 				break;
+			case "import-clipboard-cmd":
+				this.importOpml("");
+				break;
 			case "import-cmd":
 				var req = new Ajax.Request("/media/internal/drpodder.xml", {
 					method: 'get',
@@ -176,51 +228,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 						Util.showError($L({value:"OPML File not found", key:"opmlNotFound"}), $L({value:"Please place the drpodder.xml file in the root of the Pre's USB directory and retry.", key:"pleasePlaceDrpodder"}));
 					},
 					onSuccess: function(transport) {
-						try {
-							var doc = transport.responseXML = (new DOMParser()).parseFromString(transport.responseText, "text/xml");
-							var nodes = document.evaluate("//outline", doc, null, XPathResult.ANY_TYPE, null);
-							var node = nodes.iterateNext();
-							var imported = 0;
-							while (node) {
-								var title = Util.xmlGetAttributeValue(node, "title") || Util.xmlGetAttributeValue(node, "text");
-								var url   = Util.xmlGetAttributeValue(node, "xmlUrl") || Util.xmlGetAttributeValue(node, "url");
-								var autoDownload = Util.xmlGetAttributeValue(node, "autoDownload");
-								var autoDelete = Util.xmlGetAttributeValue(node, "autoDelete");
-								var maxDownloads = Util.xmlGetAttributeValue(node, "maxDownloads");
-								var replacements = Util.xmlGetAttributeValue(node, "replacements");
-								var hideFromOS = Util.xmlGetAttributeValue(node, "hideFromOS");
-								var username = Util.xmlGetAttributeValue(node, "username");
-								var password = Util.xmlGetAttributeValue(node, "password");
-								if (title !== undefined && url !== undefined) {
-									Mojo.Log.warn("Importing feed: (%s)-[%s]", title, url);
-									feed = new Feed();
-									feed.url = url;
-									feed.title = title;
-									if (autoDownload !== undefined) {feed.autoDownload = (autoDownload==='1');}
-									if (autoDelete !== undefined) {feed.autoDelete = (autoDelete==='1');}
-									if (maxDownloads !== undefined) {feed.maxDownloads = maxDownloads;}
-									if (replacements !== undefined) {feed.replacements = replacements;}
-									if (hideFromOS !== undefined) {feed.hideFromOS = hideFromOS;}
-									if (username !== undefined) {feed.username = username;}
-									if (password !== undefined) {feed.password = password;}
-									feedModel.items.push(feed);
-									feed.update(null, null, true);
-									imported++;
-								} else {
-									Mojo.Log.warn("Skipping import: (%s)-[%s]", title, url);
-								}
-								node = nodes.iterateNext();
-							}
-							if (imported > 0) {
-								DB.saveFeeds();
-								Util.showError($L({value:"OPML Import Finished", key:"opmlImportFinished"}), $L({value:"The #{num} imported feed" + ((imported !== 1)?"s":"") + " can be found at the END of your feed list.", key:"opmlImportStatus"}).interpolate({num:imported}));
-							} else {
-								Util.showError($L({value:"OPML Import Finished", key:"opmlImportFinished"}), $L({value:"No valid feeds found in drpodder.xml", key:"noValidFeeds"}));
-							}
-						} catch (e){
-							Mojo.Log.error("error with OPML: (%s)", e);
-							Util.showError($L({value:"Error parsing OPML File", key:"errorParsingOPML"}), $L({value:"There was an error parsing the OPML file.  Please send the file to support@drPodder.com.", key:"errorParsingOPMLBody"}));
-						}
+						this.importOpml(transport.responseText);
 					}.bind(this)
 				});
 				break;
