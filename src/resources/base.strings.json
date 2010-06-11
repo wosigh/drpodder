@@ -209,5 +209,11 @@
 	parseFeedErrorDetail: "Could not find title in feed: ",
 	parseJSONError: "Error parsing JSON feed",
 	parseJSONErrorDetail: "Could not find title in JSON feed: ",
-	downloadsPendingWifi: "Downloads Pending WiFi"
+	downloadsPendingWifi: "Downloads Pending WiFi",
+
+"<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.": "<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.",
+"<BR>A network error has occurred.  The network cannot support an audio stream at this time": "<BR>A network error has occurred.  The network cannot support an audio stream at this time",
+"<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.": "<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.",
+"<BR>This episode is not suitable for streaming.": "<BR>This episode is not suitable for streaming.",
+
 }
