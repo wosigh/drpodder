@@ -412,16 +412,16 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 		var message = $L({value: "There was a problem playing the file.", key: "errorPlaying"});
 		switch (error.code) {
 			case error.MEDIA_ERR_ABORTED:
-				message += "<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.";
+				message += $L("<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.");
 				break;
 			case error.MEDIA_ERR_NETWORK:
-				message += "<BR>A network error has occurred.  The network cannot support an audio stream at this time";
+				message += $L("<BR>A network error has occurred.  The network cannot support an audio stream at this time");
 				break;
 			case error.MEDIA_ERR_DECODE:
-				message += "<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.";
+				message += $L("<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.");
 				break;
 			case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-				message += "<BR>This episode is not suitable for streaming.";
+				message += $L("<BR>This episode is not suitable for streaming.");
 				break;
 		}
 		Util.showError($L("Error"), message);
