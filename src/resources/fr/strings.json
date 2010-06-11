@@ -208,5 +208,11 @@
 	parseFeedErrorDetail: "Impossible de trouver le titre dans le flux: ",
 	parseJSONError: "Erreur de parsing/parsage du flux JSON",
 	parseJSONErrorDetail: "Impossible de trouver le titre dans le flux JSON: ",
-	downloadsPendingWifi: "Téléchargements en attente par WiFi"
+	downloadsPendingWifi: "Téléchargements en attente par WiFi",
+
+"<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.": "<BR>Le flux audio a été interrompu par webOS. Le plus souvent celà se produit lorsque vous n'avez pas une connexion assez rapide pour supporter un flux audio.",
+"<BR>A network error has occurred.  The network cannot support an audio stream at this time": "<BR>Une erreur réseau s'est produite. Le réseau ne peut pas soutenir un flux audio en ce moment",
+"<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.": "<BR>Une erreur s'est produite lors de la tentative de la lecture de l'épisode. L'épisode est soit corrompu ou dans un format non pris en charge (ex: m4p, ogg, flac). Veuillez trouver une version au format .mp3 de ce flux.",
+"<BR>This episode is not suitable for streaming.": "<BR>Cet épisode n'est pas adapté pour le streaming.",
+
 }
