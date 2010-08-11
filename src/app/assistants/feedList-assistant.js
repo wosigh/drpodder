@@ -210,10 +210,10 @@ FeedListAssistant.prototype.loadDefaultFeeds = function() {
 		$L({value:"Would you like to add the following feeds?", key:"drpodderDefaults"}) +
 		"<ul><li>This Week in Tech</li>" +
 		"<li>PalmCast</li>" +
+		"<li>webOSRadio</li>" +
 		"<li>Engadget Podcast</li>" +
 		"<li>gdgt weekly</li>" +
-		"<li>Buzz Out Loud</li>" +
-		"<li>Java Posse</li></ul>",
+		"<li>Buzz Out Loud</li></ul>",
 		function() {
 			Mojo.Log.warn("we want to add feeds");
 			this._loadDefaultFeeds();

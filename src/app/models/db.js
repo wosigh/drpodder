@@ -560,6 +560,12 @@ DBClass.prototype.defaultFeeds = function() {
 	feedModel.add(feed);
 
 	feed = new Feed();
+	feed.url = "http://feeds.feedburner.com/WORPodcasts";
+	feed.title = "webOSRadio";
+	feed.interval = 45000;
+	feedModel.add(feed);
+
+	feed = new Feed();
 	feed.url = "http://podcasts.engadget.com/rss.xml";
 	feed.title = "Engadget";
 	feed.interval = 60000;
@@ -577,13 +583,13 @@ DBClass.prototype.defaultFeeds = function() {
 	feed.interval = 60000;
 	feedModel.add(feed);
 
+	/*
 	feed = new Feed();
 	feed.url = "http://feeds2.feedburner.com/javaposse";
 	feed.title = "The Java Posse";
 	feed.interval = 60000;
 	feedModel.add(feed);
 
-	/*
 	feed = new Feed();
 	feed.url = "http://blog.stackoverflow.com/index.php?feed=podcast";
 	feed.title = "Stack Overflow";
