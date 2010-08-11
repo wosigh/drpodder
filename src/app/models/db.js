@@ -523,6 +523,7 @@ DBClass.prototype.readPrefs = function() {
 		Prefs.updateTime.setHours(Prefs.updateHour, Prefs.updateMinute);
 	}
 	if (Prefs.enableWifi === undefined) {Prefs.enableWifi = false;}
+	if (Prefs.playbackDashboard === undefined) {Prefs.playbackDashboard = true;}
 	if (Prefs.limitToWifi === undefined) {Prefs.limitToWifi = true;}
 	if (Prefs.albumArt === undefined) {Prefs.albumArt = true;}
 	if (Prefs.simple === undefined) {Prefs.simple = false;}

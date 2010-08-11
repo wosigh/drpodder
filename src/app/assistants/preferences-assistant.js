@@ -102,6 +102,10 @@ PreferencesAssistant.prototype.setup = function() {
 
 	this.controller.get("wifiToggleDiv").hide();
 
+	this.controller.setupWidget("playbackDashboardToggle",
+		{},
+		this.playbackDashboardModel = { value : Prefs.playbackDashboard });
+
 	this.controller.setupWidget("limitToWifiToggle",
 		{},
 		this.limitToWifiModel = { value : Prefs.limitToWifi });
@@ -119,8 +123,9 @@ PreferencesAssistant.prototype.setup = function() {
 				  {label: $L("English"), value: "en_us"},
 				  {label: $L("German"), value: "de_de"},
 				  {label: $L({value:"Latino Spanish", key:"latinoSpanish"}), value: "es_mx"},
-				  {label: $L({value:"Spain Spanish", key:"spainSpanish"}), value: "es_es"}/*,
-				  {label: $L("Klingon"), value: "tlh"}*/
+				  {label: $L({value:"Spain Spanish", key:"spainSpanish"}), value: "es_es"},
+				  {label: $L("French"), value: "fr"},
+				  {label: $L("Klingon"), value: "tlh"}
 				  ];
 
 	switch (Prefs.systemTranslation) {
@@ -128,7 +133,8 @@ PreferencesAssistant.prototype.setup = function() {
 		case "de_de":
 		case "es_mx":
 		case "es_es":
-		case "klingon":
+		case "fr":
+		case "tlh":
 			// we are in one of the countries I used below
 			break;
 		default:
@@ -162,6 +168,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.updateDayHandler = this.updateDay.bind(this);
 	this.updateTimeHandler = this.updateTime.bind(this);
 	this.wifiHandler = this.wifi.bind(this);
+	this.playbackDashboardHandler = this.playbackDashboard.bind(this);
 	this.limitToWifiHandler = this.limitToWifi.bind(this);
 	this.transitionHandler = this.transition.bind(this);
 	this.translationHandler = this.translation.bind(this);
@@ -185,6 +192,7 @@ PreferencesAssistant.prototype.localize = function() {
 	Util.localize(this, "allowLandscape", "Allow Landscape", "allowLandscape");
 	Util.localize(this, "autoUpdate", "Auto Update", "autoUpdate");
 	Util.localize(this, "enableWifi", "Enable WiFi", "enableWifi");
+	Util.localize(this, "playbackDashboard", "Dashboard Ctrls", "playbackDashboard");
 	Util.localize(this, "limitToWifi", "DL only over WiFi", "limitToWifi");
 	Util.localize(this, "feedListSettings", "Feed List Settings", "feedListSettings");
 	Util.localize(this, "albumArt", "Show Album Art", "albumArt");
@@ -203,6 +211,7 @@ PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('updateDayList'),Mojo.Event.propertyChange,this.updateDayHandler);
 	Mojo.Event.listen(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.listen(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
+	Mojo.Event.listen(this.controller.get('playbackDashboardToggle'),Mojo.Event.propertyChange,this.playbackDashboardHandler);
 	Mojo.Event.listen(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.listen(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.listen(this.controller.get('translationList'),Mojo.Event.propertyChange,this.translationHandler);
@@ -220,6 +229,7 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('updateDayList'),Mojo.Event.propertyChange,this.updateDayHandler);
 	Mojo.Event.stopListening(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.stopListening(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
+	Mojo.Event.stopListening(this.controller.get('playbackDashboardToggle'),Mojo.Event.propertyChange,this.playbackDashboard);
 	Mojo.Event.stopListening(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.stopListening(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.stopListening(this.controller.get('translationList'),Mojo.Event.propertyChange,this.translationHandler);
@@ -295,6 +305,10 @@ PreferencesAssistant.prototype.showIntervalSelector = function() {
 
 PreferencesAssistant.prototype.wifi = function(event) {
 	Prefs.enableWifi = event.value;
+};
+
+PreferencesAssistant.prototype.playbackDashboard = function(event) {
+	Prefs.playbackDashboard = event.value;
 };
 
 PreferencesAssistant.prototype.limitToWifi = function(event) {

@@ -106,10 +106,10 @@ DashboardPlayerAssistant.prototype.tap = function(event) {
 			this.showPlay();
 			break;
 		case "prev":
-			this.player.skip(-60);
+			this.player.skip(-20);
 			break;
 		case "next":
-			this.player.skip(60);
+			this.player.skip(20);
 			break;
 		default:
 			this.mainStageController.activate();
