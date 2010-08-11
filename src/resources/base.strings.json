@@ -90,6 +90,7 @@
 	New: "New",
 	Old: "Old",
 	Downloaded: "Downloaded",
+	"Downloaded & Old": "Downloaded & Old",
 	Downloading: "Downloading",
 	Paused: "Paused",
 	editFeed: "Edit Feed",

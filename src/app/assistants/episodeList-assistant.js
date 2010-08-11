@@ -44,6 +44,7 @@ EpisodeListAssistant.prototype.filterMenuModel = {
 		{label: $L("New"), command: "filter-new-cmd"},
 		{label: $L("Old"), command: "filter-old-cmd"},
 		{label: $L("Downloaded"), command: "filter-downloaded-cmd"},
+		{label: $L("Downloaded & Old"), command: "filter-downloadedold-cmd"},
 		{label: $L("Downloading"), command: "filter-downloading-cmd"},
 		{label: $L("Paused"), command: "filter-paused-cmd"}
 	]
@@ -64,6 +65,9 @@ EpisodeListAssistant.prototype.filterEpisodes = function() {
 				break;
 			case "Downloaded":
 				filterFunc = function(e) {return e.downloaded;};
+				break;
+			case "Downloaded & Old":
+				filterFunc = function(e) {return e.downloaded && e.listened;};
 				break;
 			case "Downloading":
 				filterFunc = function(e) {return e.downloading;};
@@ -312,6 +316,9 @@ EpisodeListAssistant.prototype.handleCommand = function(event) {
 				break;
 			case "filter-downloaded-cmd":
 				this.handleFilterCommand("Downloaded");
+				break;
+			case "filter-downloadedold-cmd":
+				this.handleFilterCommand("Downloaded & Old");
 				break;
 			case "filter-downloading-cmd":
 				this.handleFilterCommand("Downloading");
