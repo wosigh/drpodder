@@ -206,6 +206,16 @@ Utilities.prototype.closeDashboard = function(stageName) {
 	if (cont) {cont.window.close();}
 };
 
+Utilities.prototype.formatTime = function(secs) {
+	if (secs < 0) {
+		return "00:00";
+	}
+	var mins = Math.floor(secs / 60);
+	secs = Math.floor(secs % 60);
+	if (mins<10) {mins = "0"+mins;}
+	if (secs<10) {secs = "0"+secs;}
+	return mins+":"+secs;
+};
 
 
 Util = new Utilities();

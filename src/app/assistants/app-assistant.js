@@ -264,7 +264,7 @@ AppAssistant.prototype.handleCommand = function(event) {
 						message += $L({value:"Report Information (please do not remove)", key:"reportInfo"}) + "<br/>";
 						message += "Application: " + Mojo.appInfo.id + " v" + Mojo.Controller.appInfo.version + "<br/>";
 						message += "Phone: Palm " + Mojo.Environment.DeviceInfo.modelName + " on " + Mojo.Environment.DeviceInfo.carrierName + "(" + Mojo.Environment.DeviceInfo.platformVersion + ")<br/>";
-						message += "webOS build: " + Mojo.Environment.build + "<br/>";
+						message += "webOS Mojo build: " + Mojo.Environment.build + "<br/>";
 						message += event.data;
 						AppAssistant.applicationManagerService.email("drPodder Problem Report", message, true);
 					}.bind(this),

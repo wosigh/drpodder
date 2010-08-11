@@ -1,11 +1,29 @@
-function DashboardAssistant(player, mainStageController) {
+/*
+This file is part of drPodder.
+
+drPodder is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+drPodder is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with drPodder.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright 2010 Jamie Hatfield <support@drpodder.com>
+*/
+
+function DashboardPlayerAssistant(player, mainStageController) {
 	this.player = player;
 	this.mainStageController = mainStageController;
 	this.appController = Mojo.Controller.getAppController();
 }
 
-DashboardAssistant.prototype.setup = function() {
-	Widget.Shared.DashboardWidget.dashboardAssistant = this;
+DashboardPlayerAssistant.prototype.setup = function() {
 	this.dashboardPlayer = this.controller.get("dashboard-player");
 	this.tapHandler = this.tap.bindAsEventListener(this);
 	this.dashboardPlayer.addEventListener(Mojo.Event.tap, this.tapHandler);
@@ -17,34 +35,37 @@ DashboardAssistant.prototype.setup = function() {
 
 	this.deactivateStageHandler = this.deactivateStage.bindAsEventListener(this);
 	this.stageDocument.addEventListener(Mojo.Event.stageDeactivate, this.deactivateStageHandler);
-
 };
 
-DashboardAssistant.prototype.cleanup = function() {
+DashboardPlayerAssistant.prototype.updatePlayer = function(player) {
+	this.player = player;
+	this.init();
+};
+
+DashboardPlayerAssistant.prototype.cleanup = function() {
 	this.dashboardPlayer.removeEventListener(Mojo.Event.tap, this.tapHandler);
 	this.stageDocument.removeEventListener(Mojo.Event.stageActivate, this.activateStageHandler);
 	this.stageDocument.removeEventListener(Mojo.Event.stageDeactivate, this.deactivateStageHandler);
-	Widget.Shared.DashboardWidget.dashboardAssistant = null;
 };
 
-DashboardAssistant.prototype.close = function() {
+DashboardPlayerAssistant.prototype.close = function() {
 	this.controller.window.close();
 };
 
-DashboardAssistant.prototype.getPlaybackStatus = function() {
+DashboardPlayerAssistant.prototype.getPlaybackStatus = function() {
 	var playbackStatus = "";
-	var params = this.player.getProgress();
-	if (params && params.currentTime) {
-		playbackStatus = EpisodeAssistant.prototype.formatTime(params.currentTime);
-		if (params.duration) {
-			playbackStatus += "/" + EpisodeAssistant.prototype.formatTime(params.duration);
+	var progress = this.player.getProgress();
+	if (progress && progress.current) {
+		playbackStatus = Util.formatTime(progress.current);
+		if (progress.duration) {
+			playbackStatus += "/" + Util.formatTime(progress.duration);
 		}
 	}
 
 	return playbackStatus;
 };
 
-DashboardAssistant.prototype.init = function(event) {
+DashboardPlayerAssistant.prototype.init = function(event) {
 	var status = this.player.getStatus();
 	data = {};
 	data.playbackStatus = this.getPlaybackStatus();
@@ -52,7 +73,7 @@ DashboardAssistant.prototype.init = function(event) {
 	data.albumArtUrl = "";
 	data.showPlay = (status.playing)?"none":"block";
 	data.showPause = (status.playing)?"block":"none";
-	var renderedInfo = Mojo.View.render({object: data, template: 'dashboard/dashboard-player'});
+	var renderedInfo = Mojo.View.render({object: data, template: 'dashboardPlayer/dashboardPlayer-controls'});
 	Element.update(this.dashboardPlayer, renderedInfo);
 
 	this.playbackStatus = this.controller.get("playbackStatus");
@@ -60,30 +81,29 @@ DashboardAssistant.prototype.init = function(event) {
 	this.pauseButton = this.controller.get("pause");
 };
 
-DashboardAssistant.prototype.activateStage = function() {
-	Mojo.Log.error("dashboardAssistant activateStage");
+DashboardPlayerAssistant.prototype.activateStage = function() {
+	Mojo.Log.error("dashboardPlayerAssistant activateStage");
 	this.startTimer();
 	// also check to see if pause/play need updating
 	// afterwards, any play/pause event that comes in should be exposed to us
 };
 
-DashboardAssistant.prototype.deactivateStage = function() {
-	Mojo.Log.error("dashboardAssistant deactivateStage");
+DashboardPlayerAssistant.prototype.deactivateStage = function() {
+	Mojo.Log.error("dashboardPlayerAssistant deactivateStage");
 	this.stopTimer();
 };
 
-DashboardAssistant.prototype.tap = function(event) {
-	Mojo.Log.error("tap");
+DashboardPlayerAssistant.prototype.tap = function(event) {
 	var id = event.target.id;
 	Mojo.Log.error("You tapped on %s", id);
 	switch (id) {
 		case "play":
 			this.player.play();
-			//this.showPause();
+			this.showPause();
 			break;
 		case "pause":
 			this.player.pause();
-			//this.showPlay();
+			this.showPlay();
 			break;
 		case "prev":
 			this.player.skip(-60);
@@ -92,38 +112,37 @@ DashboardAssistant.prototype.tap = function(event) {
 			this.player.skip(60);
 			break;
 		default:
-			this.mainStageController.assistant.playEpisode(this.player.episode);
-			this.keepPlaying = true;
-			this.controller.window.close();
+			this.mainStageController.activate();
 			break;
 	}
 };
 
-DashboardAssistant.prototype.startTimer = function() {
+DashboardPlayerAssistant.prototype.startTimer = function() {
 	this.interval = 1000;
 	if (!this.timer) {
 		this.timer = this.controller.window.setInterval(this.updatePlaybackStatus.bind(this), this.interval);
 	}
 };
 
-DashboardAssistant.prototype.showPlay = function() {
+DashboardPlayerAssistant.prototype.showPlay = function() {
 	this.playButton.show();
 	this.pauseButton.hide();
 };
 
-DashboardAssistant.prototype.showPause = function() {
+DashboardPlayerAssistant.prototype.showPause = function() {
 	this.playButton.hide();
 	this.pauseButton.show();
 };
 
-DashboardAssistant.prototype.stopTimer = function() {
+DashboardPlayerAssistant.prototype.stopTimer = function() {
 	if (this.timer) {
 		this.controller.window.clearInterval(this.timer);
 		this.timer = undefined;
 	}
 };
 
-DashboardAssistant.prototype.updatePlaybackStatus = function() {
+DashboardPlayerAssistant.prototype.updatePlaybackStatus = function() {
+	//this.playbackStatus.update("Yeah, whatever");
 	this.playbackStatus.update(this.getPlaybackStatus());
 	var status = this.player.getStatus();
 	if (status.playing) {
@@ -133,24 +152,24 @@ DashboardAssistant.prototype.updatePlaybackStatus = function() {
 	}
 };
 
-DashboardAssistant.prototype.stopMessage = function() {
+DashboardPlayerAssistant.prototype.stopMessage = function() {
 	if (this.timer) {
 		this.controller.window.clearInterval(this.timer);
 		this.timer = undefined;
 	}
 };
 
-DashboardAssistant.prototype.handleCommand = function(event) {
+DashboardPlayerAssistant.prototype.handleCommand = function(event) {
 };
 
-DashboardAssistant.prototype.activate = function(event) {
+DashboardPlayerAssistant.prototype.activate = function(event) {
 };
 
-DashboardAssistant.prototype.deactivate = function(event) {
-	Mojo.Log.error("deactivate");
+DashboardPlayerAssistant.prototype.deactivate = function(event) {
+	Mojo.Log.error("dashboardPlayer.deactivate");
 };
 
-DashboardAssistant.prototype.considerForNotification = function(params) {
+DashboardPlayerAssistant.prototype.considerForNotification = function(params) {
 	if (params) {
 		switch (params.type) {
 			case "playEvent":

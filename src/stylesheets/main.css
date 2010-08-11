@@ -364,3 +364,55 @@
   background: url(../images/scene-fade-bottom.png) top center repeat-x;
   -webkit-palm-mouse-target: ignore;
 }
+
+.dashboard-notification-module.music-player .dashboard-title,
+.dashboard-notification-module.music-player .palm-dashboard-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 175px;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container {
+  position: absolute;
+  right: 5px;
+  z-index: 2;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container div {
+  width: 48px;
+  height: 48px;
+  float: left;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .previous {
+  background: url(../images/dashboard/previous-button.png) top left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .previous:active {
+  background: url(../images/dashboard/previous-button.png) bottom left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .pause {
+  background: url(../images/dashboard/pause-button.png) top left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .pause:active {
+  background: url(../images/dashboard/pause-button.png) bottom left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .play {
+  background: url(../images/dashboard/play-button.png) top left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .play:active {
+  background: url(../images/dashboard/play-button.png) bottom left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .next {
+  background: url(../images/dashboard/next-button.png) top left no-repeat;
+}
+
+.dashboard-notification-module .palm-dashboard-controls-container .next:active {
+  background: url(../images/dashboard/next-button.png) bottom left no-repeat;
+}

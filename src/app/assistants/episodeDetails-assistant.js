@@ -89,6 +89,7 @@ EpisodeDetailsAssistant.prototype.viewMenuModel = {
 };
 
 EpisodeDetailsAssistant.prototype.setup = function() {
+	this.isForeground = this.controller.stageController.isActiveAndHasScenes();
 	this.progressInfo = this.controller.get("progress-info");
 	this.header = this.controller.get("header");
 	this.episodeDetailsTitle = this.controller.get("episodeDetailsTitle");
@@ -133,6 +134,7 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 	this.cmdMenuModel = {items: [{},{},{},{},{}]};
 	this.titleTapHandler = this.titleTap.bind(this);
 	this.audioObject = {};
+	this.player = {};
 
 	if (this.episodeObject.enclosure || this.episodeObject.downloaded) {
 		this.controller.setupWidget(Mojo.Menu.commandMenu, this.handleCommand, this.cmdMenuModel);
@@ -140,6 +142,10 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 
 			//this.libs = MojoLoader.require({ name: "mediaextension", version: "1.0"});
 			this.audioObject = this.controller.get('audioTag');
+			this.player = new Player(this.audioObject, this.episodeObject);
+			if (!this.isForeground) {
+				this.player.showDashboard(this.controller.stageController);
+			}
 			//this.audioExt = this.libs.mediaextension.MediaExtension.getInstance(this.audioObject);
 			//this.audioExt.audioClass = Media.AudioClass.MEDIA;
 
@@ -308,6 +314,11 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 					}
 				}
 			}
+
+			if (!this.playingNextEpisode) {
+				this.player.hideDashboard();
+			}
+
 			this.audioObject.removeEventListener(Media.Event.ERROR, this.handleErrorHandler);
 
 			this.audioObject.removeEventListener(Media.Event.PAUSE, this.handleAudioEventsHandler);
@@ -363,6 +374,7 @@ EpisodeDetailsAssistant.prototype.backToList = function() {
 	if (!this.playlist || this.playlist.length === 0) {
 		this.controller.stageController.popScene(true);
 	} else {
+		this.playingNextEpisode = true;
 		var episode = this.playlist.shift();
 		this.controller.stageController.swapScene({name: "episodeDetails", transition: Mojo.Transition.none}, episode, {autoPlay: true, resume: true, playlist: this.playlist});
 	}
@@ -412,16 +424,16 @@ EpisodeDetailsAssistant.prototype.handleError = function(event) {
 		var message = $L({value: "There was a problem playing the file.", key: "errorPlaying"});
 		switch (error.code) {
 			case error.MEDIA_ERR_ABORTED:
-				message += $L("<BR>The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.");
+				message += "<BR>" + $L({value: "The audio stream was aborted by webOS.  Most often this happens when you do not have a fast enough connection to support an audio stream.", key: "errorAborted"});
 				break;
 			case error.MEDIA_ERR_NETWORK:
-				message += $L("<BR>A network error has occurred.  The network cannot support an audio stream at this time");
+				message += "<BR>" + $L({value: "A network error has occurred.  The network cannot support an audio stream at this time.", key: "errorNetwork"});
 				break;
 			case error.MEDIA_ERR_DECODE:
-				message += $L("<BR>An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).  Please find an .mp3 version of this feed.");
+				message += "<BR>" + $L({value: "An error has occurred while attempting to play the episode.  The episode is either corrupt or an unsupported format (ex: m4p, ogg, flac).", key: "errorDecode"});
 				break;
 			case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-				message += $L("<BR>This episode is not suitable for streaming.");
+				message += "<BR>" + $L({value: "This episode is not suitable for streaming.", key: "errorNotSupported"});
 				break;
 		}
 		Util.showError($L("Error"), message);
@@ -773,8 +785,8 @@ EpisodeDetailsAssistant.prototype.sliderDragEnd = function(event) {
 };
 
 EpisodeDetailsAssistant.prototype.updateProgressLabels = function(currentTime) {
-	this.updateProgressLabelsValues(this.formatTime(currentTime||this.audioObject.currentTime),
-									this.formatTime(this.audioObject.duration-(currentTime||this.audioObject.currentTime)));
+	this.updateProgressLabelsValues(Util.formatTime(currentTime||this.audioObject.currentTime),
+									Util.formatTime(this.audioObject.duration-(currentTime||this.audioObject.currentTime)));
 };
 
 EpisodeDetailsAssistant.prototype.updateProgressLabelsValues = function(playbackProgress, playbackRemaining) {
@@ -805,17 +817,6 @@ EpisodeDetailsAssistant.prototype.updateProgress = function(event, currentTime) 
 			this.controller.modelChanged(this.progressModel);
 		}
 	}
-};
-
-EpisodeDetailsAssistant.prototype.formatTime = function(secs) {
-	if (secs < 0) {
-		return "00:00";
-	}
-	var mins = Math.floor(secs / 60);
-	secs = Math.floor(secs % 60);
-	if (mins<10) {mins = "0"+mins;}
-	if (secs<10) {secs = "0"+secs;}
-	return mins+":"+secs;
 };
 
 EpisodeDetailsAssistant.prototype.download = function() {
@@ -980,6 +981,8 @@ EpisodeDetailsAssistant.prototype.onBlur = function() {
 	Mojo.Log.info("isForeground = %s", this.isForeground);
 	this.setTimer(false);
 
+	this.player.showDashboard(this.controller.stageController);
+
 	//this.audioObject.removeEventListener(Media.Event.TIMEUPDATE, this.updateProgressHandler);
 };
 
@@ -990,6 +993,7 @@ EpisodeDetailsAssistant.prototype.considerForNotification = function(params) {
 				this.isForeground = true;
 				Mojo.Log.info("isForeground = %s", this.isForeground);
 				this.updateProgress();
+				this.player.hideDashboard();
 				if (this.audioObject && this.audioObject.paused !== true) {
 					this.setTimer(true);
 				}

@@ -17,8 +17,11 @@ along with drPodder.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Jamie Hatfield <support@drpodder.com>
 */
 
-function Player(audioObject) {
+function Player(audioObject, episode) {
 	this.audioObject = audioObject;
+	this.episode = episode;
+	this.appController = Mojo.Controller.appController;
+	this.stageName = "dashboardPlayer";
 }
 
 Player.prototype.getProgress = function() {
@@ -29,7 +32,7 @@ Player.prototype.getProgress = function() {
 		progress.duration = this.audioObject.duration;
 		progress.remain = progress.duration - progress.current;
 		progress.currentPer = progress.current / progress.duration;
-		if (!this.episodeObject.downloaded) {
+		if (!this.episode.downloaded) {
 			var buffered = this.audioObject.buffered;
 			if (buffered !== undefined && buffered !== null) {
 				// webOS 1.4 broke this
@@ -40,4 +43,54 @@ Player.prototype.getProgress = function() {
 			}
 		}
 	}
+	return progress;
+};
+
+Player.prototype.getStatus = function() {
+	var status = {playing: true};
+	if (this.audioObject && this.audioObject.paused) {
+		status.playing = false;
+	}
+	return status;
+};
+
+Player.prototype.play = function() {
+	this.audioObject.play();
+};
+
+Player.prototype.pause = function() {
+	this.audioObject.pause();
+};
+
+Player.prototype.skip = function(secs) {
+	var wasPlaying = !this.audioObject.paused;
+	this.audioObject.currentTime += secs;
+	if (wasPlaying) {this.audioObject.play();}
+};
+
+Player.prototype.showDashboard = function(mainStageController) {
+	var cont = this.appController.getStageProxy(this.stageName);
+	if (cont) {
+		// already have a dashboard, just update items
+		cont.delegateToSceneAssistant("updatePlayer", this);
+	} else {
+		// no dashboard, make one
+		var callback = function(stageController) {
+			stageController.pushScene('dashboardPlayer', this, mainStageController);
+		}.bind(this);
+
+		var params = {
+			name: this.stageName,
+			clickableWhenLocked: true,
+			lightweight: true
+		};
+
+		this.appController.createStageWithCallback(params, callback, "dashboard");
+	}
+
+};
+
+Player.prototype.hideDashboard = function() {
+	var cont = this.appController.getStageProxy(this.stageName);
+	if (cont) {cont.window.close();}
 };
