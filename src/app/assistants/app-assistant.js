@@ -30,6 +30,8 @@ function AppAssistant(){
 	AppAssistant.mediaEventsService = new MediaEventsService();
 	AppAssistant.wifiService = new WifiService();
 
+	DrPodder.Metrix = new Metrix();
+
 	this.setWakeup();
 }
 

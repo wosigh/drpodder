@@ -35,5 +35,7 @@
     {"source": "app\/assistants\/webSearch-assistant.js",
      "scenes": "webSearch"},
     {"source": "app\/common\/common.js"},
-    {"source": "app\/common\/dialog.js"}
+    {"source": "app\/common\/dialog.js"},
+    {"source": "app\/models\/metrix.js"},
+    {"source": "app\/models\/asyncWrappers.js"}
 ]

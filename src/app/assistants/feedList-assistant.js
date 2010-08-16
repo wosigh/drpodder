@@ -174,13 +174,6 @@ FeedListAssistant.prototype.activate = function(result) {
 		DB.writePrefs();
 		this.stageController.swapScene({name: "feedList", transition: Prefs.transition});
 	} else {
-		var firstLoad = true;
-		for (var i=0; i<feedModel.items.length; i++) {
-			if (feedModel.items[i].title != "All") {
-				firstLoad = false;
-				break;
-			}
-		}
 		if (Prefs.firstRun) {
 			Prefs.firstRun = false;
 			DB.writePrefs();
@@ -190,19 +183,47 @@ FeedListAssistant.prototype.activate = function(result) {
 					Mojo.Log.warn("we want to add feeds");
 					var dialog = new drnull.Dialog.Info(this, $L({value:"Thanks for using drPodder!", key:"drpodderThanks"}),
 						$L({value:"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left.", key:"drpodderInstructions"}) +
-						"<br><br>" + $L({value:"Feel free to delete any of the default podcasts.", key:"drpodderDeleteDefaults"}));
+						"<br><br>" + $L({value:"Feel free to delete any of the default podcasts.", key:"drpodderDeleteDefaults"}),
+						this.promptMetrix.bind(this));
 					dialog.show();
 					this._loadDefaultFeeds();
 				}.bind(this),
 				function() {
 					var dialog = new drnull.Dialog.Info(this, $L({value:"Thanks for using drPodder!", key:"drpodderThanks"}),
-						$L({value:"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left.", key:"drpodderInstructions"}));
+						$L({value:"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left.", key:"drpodderInstructions"}),
+						this.promptMetrix.bind(this));
 					dialog.show();
 				}.bind(this));
 			dialog.show();
+		} else {
+			this.promptMetrix();
 		}
 	}
 	this.onFocus();
+};
+
+FeedListAssistant.prototype.hitMetrix = function() {
+	if (Prefs.useMetrix && !this.dontUseMetrixYet) {
+		Mojo.Log.info("hitting metrix");
+		DrPodder.Metrix.postDeviceData();
+		DrPodder.Metrix.checkBulletinBoard(this.controller, 0);
+	}
+};
+
+FeedListAssistant.prototype.promptMetrix = function() {
+	if (Prefs.useMetrix === undefined) {
+		var dialog = new drnull.Dialog.Info(this, $L({value:"Enable Anonymous Statistics", key:"enableAnonymousStatistics"}),
+			$L({value:"drPodder now uses <a href='http://metrix.webosroundup.com'>metrix</a> to help track usage and facilitate notifications about new versions or other infrequent notifications.<br><br>No personally identifying information is tracked using metrix.<br><br>To disable metrix, go to Preferences and turn off 'Statistics'.", key:"metrixInfo"}),
+			function() {
+				Mojo.Log.warn("Setting useMetrix to true");
+				Prefs.useMetrix = true;
+				this.dontUseMetrixYet = true;
+				DB.writePrefs();
+			}.bind(this));
+		dialog.show();
+	} else {
+		this.hitMetrix();
+	}
 };
 
 FeedListAssistant.prototype.loadDefaultFeeds = function() {

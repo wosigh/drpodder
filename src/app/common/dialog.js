@@ -48,7 +48,8 @@ drnull.Dialog.BaseDialog = Class.create({
 });
 
 drnull.Dialog.Info = Class.create(drnull.Dialog.BaseDialog, {
-	initialize: function($super, assistant, title, message) {
+	initialize: function($super, assistant, title, message, callback) {
+		this.callback = callback;
 		var choices = [{
 			label: $L('OK'),
 			value: 'ok',
@@ -57,6 +58,7 @@ drnull.Dialog.Info = Class.create(drnull.Dialog.BaseDialog, {
 		$super(assistant, title, message, choices);
 	},
 	onChoose: function(value) {
+		if (this.callback) { this.callback(); }
 	}
 });
 

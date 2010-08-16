@@ -106,6 +106,10 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		this.playbackDashboardModel = { value : Prefs.playbackDashboard });
 
+	this.controller.setupWidget("useMetrixToggle",
+		{},
+		this.useMetrixModel = { value : Prefs.useMetrix });
+
 	this.controller.setupWidget("limitToWifiToggle",
 		{},
 		this.limitToWifiModel = { value : Prefs.limitToWifi });
@@ -169,6 +173,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.updateTimeHandler = this.updateTime.bind(this);
 	this.wifiHandler = this.wifi.bind(this);
 	this.playbackDashboardHandler = this.playbackDashboard.bind(this);
+	this.useMetrixHandler = this.useMetrix.bind(this);
 	this.limitToWifiHandler = this.limitToWifi.bind(this);
 	this.transitionHandler = this.transition.bind(this);
 	this.translationHandler = this.translation.bind(this);
@@ -193,6 +198,7 @@ PreferencesAssistant.prototype.localize = function() {
 	Util.localize(this, "autoUpdate", "Auto Update", "autoUpdate");
 	Util.localize(this, "enableWifi", "Enable WiFi", "enableWifi");
 	Util.localize(this, "playbackDashboard", "Dashboard Ctrls", "playbackDashboard");
+	Util.localize(this, "useMetrix", "Statistics");
 	Util.localize(this, "limitToWifi", "DL only over WiFi", "limitToWifi");
 	Util.localize(this, "feedListSettings", "Feed List Settings", "feedListSettings");
 	Util.localize(this, "albumArt", "Show Album Art", "albumArt");
@@ -212,6 +218,7 @@ PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.listen(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.listen(this.controller.get('playbackDashboardToggle'),Mojo.Event.propertyChange,this.playbackDashboardHandler);
+	Mojo.Event.listen(this.controller.get('useMetrixToggle'),Mojo.Event.propertyChange,this.useMetrixHandler);
 	Mojo.Event.listen(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.listen(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.listen(this.controller.get('translationList'),Mojo.Event.propertyChange,this.translationHandler);
@@ -230,6 +237,7 @@ PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('timePicker'),Mojo.Event.propertyChange,this.updateTimeHandler);
 	Mojo.Event.stopListening(this.controller.get('wifiToggle'),Mojo.Event.propertyChange,this.wifiHandler);
 	Mojo.Event.stopListening(this.controller.get('playbackDashboardToggle'),Mojo.Event.propertyChange,this.playbackDashboard);
+	Mojo.Event.stopListening(this.controller.get('useMetrixToggle'),Mojo.Event.propertyChange,this.useMetrixHandler);
 	Mojo.Event.stopListening(this.controller.get('limitToWifiToggle'),Mojo.Event.propertyChange,this.limitToWifiHandler);
 	Mojo.Event.stopListening(this.controller.get('transitionList'),Mojo.Event.propertyChange,this.transitionHandler);
 	Mojo.Event.stopListening(this.controller.get('translationList'),Mojo.Event.propertyChange,this.translationHandler);
@@ -309,6 +317,10 @@ PreferencesAssistant.prototype.wifi = function(event) {
 
 PreferencesAssistant.prototype.playbackDashboard = function(event) {
 	Prefs.playbackDashboard = event.value;
+};
+
+PreferencesAssistant.prototype.useMetrix = function(event) {
+	Prefs.useMetrix = event.value;
 };
 
 PreferencesAssistant.prototype.limitToWifi = function(event) {
