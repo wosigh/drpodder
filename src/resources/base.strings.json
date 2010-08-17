@@ -48,7 +48,7 @@
 	exportDrpodder: "Export via email",
 	Preferences: "Preferences",
 	enableAnonymousStatistics: "Enable Anonymous Statistics",
-	metrixInfo: "drPodder now uses <a href='http://metrix.webosroundup.com'>metrix</a> to help track usage and facilitate notifications about new versions or other infrequent notifications.<br><br>No personally identifying information is tracked using metrix.<br><br>To disable metrix, go to Preferences and turn off 'Statistics'.",
+	metrixInfo: "drPodder now uses <a href='http://metrix.webosroundup.com'>metrix</a> to deliver update notifications and keep track of OS versions being used.<br><br>No personally identifying information is tracked using metrix.<br><br>To disable metrix, go to Preferences and turn off 'Statistics'",
 	addDefaultFeeds: "Add Default Feeds",
 	reportProblem: "Report a Problem",
 	errorReadingOPML: "Error reading OPML File",

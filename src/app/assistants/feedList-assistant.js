@@ -211,7 +211,7 @@ FeedListAssistant.prototype.hitMetrix = function() {
 FeedListAssistant.prototype.promptMetrix = function() {
 	if (Prefs.useMetrix === undefined) {
 		var dialog = new drnull.Dialog.Info(this, $L({value:"Enable Anonymous Statistics", key:"enableAnonymousStatistics"}),
-			$L({value:"drPodder now uses <a href='http://metrix.webosroundup.com'>metrix</a> to help track usage and facilitate notifications about new versions or other infrequent notifications.<br><br>No personally identifying information is tracked using metrix.<br><br>To disable metrix, go to Preferences and turn off 'Statistics'.", key:"metrixInfo"}),
+			$L({value:"drPodder now uses <a href='http://metrix.webosroundup.com'>metrix</a> to deliver update notifications and keep track of OS versions being used.<br><br>No personally identifying information is tracked using metrix.<br><br>To disable metrix, go to Preferences and turn off 'Statistics'.", key:"metrixInfo"}),
 			function() {
 				Prefs.useMetrix = true;
 				this.dontUseMetrixYet = true;
