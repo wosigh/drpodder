@@ -69,7 +69,7 @@ Player.prototype.skip = function(secs) {
 };
 
 Player.prototype.showDashboard = function(mainStageController) {
-	if (!Prefs.playbackDashboard) { return };
+	if (!Prefs.playbackDashboard) { return; }
 	var cont = this.appController.getStageProxy(this.stageName);
 	if (cont) {
 		// already have a dashboard, just update items
@@ -92,7 +92,7 @@ Player.prototype.showDashboard = function(mainStageController) {
 };
 
 Player.prototype.hideDashboard = function() {
-	if (!Prefs.playbackDashboard) { return };
+	if (!Prefs.playbackDashboard) { return; }
 	var cont = this.appController.getStageProxy(this.stageName);
 	if (cont) {cont.window.close();}
 };

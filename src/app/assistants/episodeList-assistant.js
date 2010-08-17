@@ -224,9 +224,12 @@ EpisodeListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 	var formatted = albumArt;
 
 	if (formatted && formatted.indexOf("/") === 0) {
-		formatted = "/var/luna/data/extractfs" +
-						encodeURIComponent("/media/internal" + formatted) +
-						":0:0:48:48:3";
+		formatted = "/media/internal" + formatted;
+		if (!formatted.toUpperCase().match(/.GIF$/)) {
+			formatted = "/var/luna/data/extractfs" +
+							encodeURIComponent(formatted) +
+							":0:0:48:48:3";
+		}
 	}
 
 	return formatted;

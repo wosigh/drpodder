@@ -306,12 +306,8 @@ EpisodeDetailsAssistant.prototype.cleanup = function() {
 				// remove this when we want to have continual playback
 				if (this.audioObject) {
 					this.audioObject.pause();
-					this.audioObject.url = '';
-					try {
-						this.audioObject.currentTime = 0;
-					} catch (e) {
-						Mojo.Log.error("Error setting currentTime: %s", e.message);
-					}
+					this.audioObject.src = undefined;
+					this.audioObject.load();
 				}
 			}
 

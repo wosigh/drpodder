@@ -21,6 +21,7 @@ function DashboardPlayerAssistant(player, mainStageController) {
 	this.player = player;
 	this.mainStageController = mainStageController;
 	this.appController = Mojo.Controller.getAppController();
+	this.interval = 1000;
 }
 
 DashboardPlayerAssistant.prototype.setup = function() {
@@ -82,20 +83,17 @@ DashboardPlayerAssistant.prototype.init = function(event) {
 };
 
 DashboardPlayerAssistant.prototype.activateStage = function() {
-	Mojo.Log.error("dashboardPlayerAssistant activateStage");
 	this.startTimer();
 	// also check to see if pause/play need updating
 	// afterwards, any play/pause event that comes in should be exposed to us
 };
 
 DashboardPlayerAssistant.prototype.deactivateStage = function() {
-	Mojo.Log.error("dashboardPlayerAssistant deactivateStage");
 	this.stopTimer();
 };
 
 DashboardPlayerAssistant.prototype.tap = function(event) {
 	var id = event.target.id;
-	Mojo.Log.error("You tapped on %s", id);
 	switch (id) {
 		case "play":
 			this.player.play();
@@ -115,12 +113,16 @@ DashboardPlayerAssistant.prototype.tap = function(event) {
 			this.mainStageController.activate();
 			break;
 	}
+	this.updatePlaybackStatus();
 };
 
 DashboardPlayerAssistant.prototype.startTimer = function() {
-	this.interval = 1000;
 	if (!this.timer) {
 		this.timer = this.controller.window.setInterval(this.updatePlaybackStatus.bind(this), this.interval);
+	}
+	if (this.slowTimer) {
+		this.controller.window.clearInterval(this.slowTimer);
+		this.slowTimer = undefined;
 	}
 };
 
@@ -139,16 +141,27 @@ DashboardPlayerAssistant.prototype.stopTimer = function() {
 		this.controller.window.clearInterval(this.timer);
 		this.timer = undefined;
 	}
+	if (!this.slowTimer) {
+		this.slowTimer = this.controller.window.setInterval(this.updatePlaybackStatus.bind(this), this.interval*5);
+	}
 };
 
 DashboardPlayerAssistant.prototype.updatePlaybackStatus = function() {
-	//this.playbackStatus.update("Yeah, whatever");
 	this.playbackStatus.update(this.getPlaybackStatus());
-	var status = this.player.getStatus();
-	if (status.playing) {
-		this.showPause();
+	if (this.controller.stageController.isActiveAndHasScenes()) {
+		Mojo.Log.error("active=true");
 	} else {
-		this.showPlay();
+		Mojo.Log.error("active=false");
+	}
+	var status = this.player.getStatus();
+	if (status.playing != this.playing) {
+		if (status.playing) {
+			this.showPause();
+			this.playing = true;
+		} else {
+			this.showPlay();
+			this.playing = false;
+		}
 	}
 };
 
@@ -166,7 +179,6 @@ DashboardPlayerAssistant.prototype.activate = function(event) {
 };
 
 DashboardPlayerAssistant.prototype.deactivate = function(event) {
-	Mojo.Log.error("dashboardPlayer.deactivate");
 };
 
 DashboardPlayerAssistant.prototype.considerForNotification = function(params) {

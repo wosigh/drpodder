@@ -180,7 +180,6 @@ FeedListAssistant.prototype.activate = function(result) {
 			var dialog = new drnull.Dialog.Confirm(this, $L({value:"Add Default Feeds", key:"addDefaultFeeds"}),
 				$L({value:"Welcome to drPodder!<br><br>Would you like to add some technology podcasts to get you started?", key:"drpodderWelcome"}),
 				function() {
-					Mojo.Log.warn("we want to add feeds");
 					var dialog = new drnull.Dialog.Info(this, $L({value:"Thanks for using drPodder!", key:"drpodderThanks"}),
 						$L({value:"You can add podcasts by url or search for podcasts using the '+' icon in the bottom left.", key:"drpodderInstructions"}) +
 						"<br><br>" + $L({value:"Feel free to delete any of the default podcasts.", key:"drpodderDeleteDefaults"}),
@@ -204,9 +203,8 @@ FeedListAssistant.prototype.activate = function(result) {
 
 FeedListAssistant.prototype.hitMetrix = function() {
 	if (Prefs.useMetrix && !this.dontUseMetrixYet) {
-		Mojo.Log.info("hitting metrix");
 		DrPodder.Metrix.postDeviceData();
-		DrPodder.Metrix.checkBulletinBoard(this.controller, 0);
+		DrPodder.Metrix.checkBulletinBoard(this.controller, 68);
 	}
 };
 
@@ -215,7 +213,6 @@ FeedListAssistant.prototype.promptMetrix = function() {
 		var dialog = new drnull.Dialog.Info(this, $L({value:"Enable Anonymous Statistics", key:"enableAnonymousStatistics"}),
 			$L({value:"drPodder now uses <a href='http://metrix.webosroundup.com'>metrix</a> to help track usage and facilitate notifications about new versions or other infrequent notifications.<br><br>No personally identifying information is tracked using metrix.<br><br>To disable metrix, go to Preferences and turn off 'Statistics'.", key:"metrixInfo"}),
 			function() {
-				Mojo.Log.warn("Setting useMetrix to true");
 				Prefs.useMetrix = true;
 				this.dontUseMetrixYet = true;
 				DB.writePrefs();
@@ -236,7 +233,6 @@ FeedListAssistant.prototype.loadDefaultFeeds = function() {
 		"<li>gdgt weekly</li>" +
 		"<li>Buzz Out Loud</li></ul>",
 		function() {
-			Mojo.Log.warn("we want to add feeds");
 			this._loadDefaultFeeds();
 		}.bind(this),
 		function() {});
@@ -332,9 +328,12 @@ FeedListAssistant.prototype.albumArtFormatter = function(albumArt, model) {
 	var formatted = albumArt;
 
 	if (formatted && formatted.indexOf("/") === 0) {
-		formatted = "/var/luna/data/extractfs" +
-						encodeURIComponent("/media/internal" + formatted) +
-						":0:0:56:56:3";
+		formatted = "/media/internal" + formatted;
+		if (!formatted.toUpperCase().match(/.GIF$/)) {
+			formatted = "/var/luna/data/extractfs" +
+							encodeURIComponent(formatted) +
+							":0:0:56:56:3";
+		}
 	}
 
 	return formatted;
