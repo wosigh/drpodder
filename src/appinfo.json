@@ -13,7 +13,7 @@
   "noDeprecatedStyles":true,
 
   "smallicon": "icon32x32.png",
-  "copyright": "&copy; Copyright 2010 Jamie Hatfield<br><br>drPodder is an open source podcatcher.  It is licensed under the GNU General Public License (GPL) Version 3.  The full text of the GPLv3 can be found at: <a href='http://www.gnu.org/licenses/gpl-3.0-standalone.html'>http://www.gnu.org/licenses/gpl-3.0.txt</a>.<br><br>Logo Design: <a href='http://jamie3d.com/'>Jamie Hamel-Smith</a><br>Original Logo Concept: <a href='http://www.userinterfaceicons.com/preview.php'>UII</a><br><br>Translations:<br>  German: Toby (tklr@P|C)<br>  Spain-Spanish: Alejandro (erdosh@P|C)<br>  Latino-Spanish: Eli (Spyderekz@P|C)",
+  "copyright": "&copy; Copyright 2010 Jamie Hatfield<br><br>drPodder is an open source podcatcher.  It is licensed under the GNU General Public License (GPL) Version 3.  The full text of the GPLv3 can be found at: <a href='http://www.gnu.org/licenses/gpl-3.0-standalone.html'>http://www.gnu.org/licenses/gpl-3.0.txt</a>.<br><br>Logo Design: <a href='http://jamie3d.com/'>Jamie Hamel-Smith</a><br>Original Logo Concept: <a href='http://www.userinterfaceicons.com/preview.php'>UII</a><br><br>Translations:<br>  German: Toby (tklr@P|C)<br>  Spain-Spanish: Alejandro (erdosh@P|C)<br>  Latino-Spanish: Eli (Spyderekz@P|C)<br>  French: Yannick (yannick56@P|C)<br>  Klingon: Michael (roneyii@P|C)",
   "support": {
     "email": {
       "address": "support@drPodder.com",
