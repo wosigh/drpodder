@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.PrintStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
 import java.nio.charset.Charset;
@@ -40,14 +43,17 @@ public class I18nCheck {
 		Map<String, Map<String, String>> missing = checker.findMissing();
 
 		
-		if (missing.keySet().size() > 0) { System.out.println("Missing:"); }
+		PrintStream out = new PrintStream(System.out, true, "UTF-8");
+		if (missing.keySet().size() > 0) { out.println("Missing:"); }
 		for (String key : missing.keySet()) {
-			System.out.println("  " + key);
+			out.println("  " + key);
 			Map<String, String> entry = missing.get(key);
 			for (String lang : entry.keySet()) {
-				System.out.println("  - " + lang + ": " + entry.get(lang));
+				out.println("  - " + lang + ": " + entry.get(lang));
 			}
 		}
+
+		System.out.println("ñ");
 	}
 
 	public I18nCheck(String baseDir) throws IOException {
@@ -129,14 +135,23 @@ public class I18nCheck {
 	}
 
 	private String readFromFile(String path) throws IOException {
+		BufferedReader read = new BufferedReader(new InputStreamReader(new FileInputStream(new File(path)), Charset.forName("UTF8")));
+		String currentLine;
+		StringBuffer result = new StringBuffer();
+		while ((currentLine = read.readLine()) != null) {
+			result.append(currentLine);
+		}
+		return result.toString();
+
+		/*
 		FileInputStream stream = new FileInputStream(new File(path));
 		try {
 			FileChannel fc = stream.getChannel();
 			MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-			/* Instead of using default, pass in a decoder. */
 			return Charset.forName("UTF8").defaultCharset().decode(bb).toString();
 		} finally {
 			stream.close();
 		}
+	*/
 	}
 }

@@ -151,7 +151,6 @@
 	Preferences: "Preferences",
 	applicationSettings: "Application Settings",
 	allowLandscape: "Allow Landscape",
-	Notifications: "Notifications",
 	autoUpdate: "Auto Update",
 	enableWifi: "Enable WiFi",
 	playbackDashboard: "Dashboard Ctrls",

@@ -38,12 +38,6 @@ PreferencesAssistant.prototype.setup = function() {
 		{},
 		{ value : Prefs.freeRotation });
 
-	/*
-	this.controller.setupWidget("enableNotificationsToggle",
-		{},
-		{ value : Prefs.enableNotifications });
-	*/
-
 	this.controller.setupWidget("autoUpdateToggle",
 		{},
 		{ value : Prefs.autoUpdate });
@@ -165,7 +159,6 @@ PreferencesAssistant.prototype.setup = function() {
 		{ value : Prefs.singleTap });
 
 	this.freeRotationHandler = this.freeRotation.bind(this);
-	//this.enableNotificationsHandler = this.enableNotifications.bind(this);
 	this.autoUpdateHandler = this.autoUpdate.bind(this);
 	this.updateIntervalHandler = this.updateInterval.bind(this);
 	this.updateTypeHandler = this.updateType.bind(this);
@@ -193,7 +186,6 @@ PreferencesAssistant.prototype.setup = function() {
 PreferencesAssistant.prototype.localize = function() {
 	Util.localize(this, "dialogTitle", "Preferences");
 	Util.localize(this, "applicationSettings", "Application Settings", "applicationSettings");
-	Util.localize(this, "notifications", "Notifications");
 	Util.localize(this, "allowLandscape", "Allow Landscape", "allowLandscape");
 	Util.localize(this, "autoUpdate", "Auto Update", "autoUpdate");
 	Util.localize(this, "enableWifi", "Enable WiFi", "enableWifi");
@@ -210,7 +202,6 @@ PreferencesAssistant.prototype.localize = function() {
 
 PreferencesAssistant.prototype.activate = function() {
 	Mojo.Event.listen(this.controller.get('freeRotationToggle'),Mojo.Event.propertyChange,this.freeRotationHandler);
-	//Mojo.Event.listen(this.controller.get('enableNotificationsToggle'),Mojo.Event.propertyChange,this.enableNotificationsHandler);
 	Mojo.Event.listen(this.controller.get('autoUpdateToggle'),Mojo.Event.propertyChange,this.autoUpdateHandler);
 	Mojo.Event.listen(this.controller.get('updateIntervalList'),Mojo.Event.propertyChange,this.updateIntervalHandler);
 	Mojo.Event.listen(this.controller.get('updateTypeList'),Mojo.Event.propertyChange,this.updateTypeHandler);
@@ -229,7 +220,6 @@ PreferencesAssistant.prototype.activate = function() {
 
 PreferencesAssistant.prototype.deactivate = function() {
 	Mojo.Event.stopListening(this.controller.get('freeRotationToggle'),Mojo.Event.propertyChange,this.freeRotationHandler);
-	//Mojo.Event.stopListening(this.controller.get('enableNotificationsToggle'),Mojo.Event.propertyChange,this.enableNotificationsHandler);
 	Mojo.Event.stopListening(this.controller.get('autoUpdateToggle'),Mojo.Event.propertyChange,this.autoUpdateHandler);
 	Mojo.Event.stopListening(this.controller.get('updateIntervalList'),Mojo.Event.propertyChange,this.updateIntervalHandler);
 	Mojo.Event.stopListening(this.controller.get('updateTypeList'),Mojo.Event.propertyChange,this.updateTypeHandler);
@@ -252,10 +242,6 @@ PreferencesAssistant.prototype.freeRotation = function(event) {
 	var dialog = new drnull.Dialog.Info(this, $L({value:"Restart Required", key:"restartRequired"}),
 		$L({value:"Changing Free Rotation requires a restart of drPodder.", key:"changingFreeRotation"}));
 	dialog.show();
-};
-
-PreferencesAssistant.prototype.enableNotifications = function(event) {
-	Prefs.enableNotifications = event.value;
 };
 
 PreferencesAssistant.prototype.autoUpdate = function(event) {

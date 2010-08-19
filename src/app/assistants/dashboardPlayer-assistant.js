@@ -148,11 +148,6 @@ DashboardPlayerAssistant.prototype.stopTimer = function() {
 
 DashboardPlayerAssistant.prototype.updatePlaybackStatus = function() {
 	this.playbackStatus.update(this.getPlaybackStatus());
-	if (this.controller.stageController.isActiveAndHasScenes()) {
-		Mojo.Log.error("active=true");
-	} else {
-		Mojo.Log.error("active=false");
-	}
 	var status = this.player.getStatus();
 	if (status.playing != this.playing) {
 		if (status.playing) {

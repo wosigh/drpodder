@@ -38,8 +38,8 @@ Player.prototype.getProgress = function() {
 				// webOS 1.4 broke this
 				//this.progressModel.progressStart = buffered.start(0)/this.audioObject.duration;
 				//Mojo.Log.info("buffered.start(0)=%d", buffered.start(0));
-				this.progressModel.progressStart = this.audioObject.currentTime/this.audioObject.duration;
-				this.progressModel.progressEnd = buffered.end(0)/this.audioObject.duration;
+				progress.progressStart = this.audioObject.currentTime/this.audioObject.duration;
+				progress.progressEnd = buffered.end(0)/this.audioObject.duration;
 			}
 		}
 	}
