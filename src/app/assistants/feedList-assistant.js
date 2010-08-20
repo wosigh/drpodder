@@ -204,7 +204,7 @@ FeedListAssistant.prototype.activate = function(result) {
 FeedListAssistant.prototype.hitMetrix = function() {
 	if (Prefs.useMetrix && !this.dontUseMetrixYet) {
 		DrPodder.Metrix.postDeviceData();
-		DrPodder.Metrix.checkBulletinBoard(this.controller, 68);
+		DrPodder.Metrix.checkBulletinBoard(this.controller, 69);
 	}
 };
 
