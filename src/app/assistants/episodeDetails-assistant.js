@@ -224,21 +224,23 @@ EpisodeDetailsAssistant.prototype.setup = function() {
 };
 
 EpisodeDetailsAssistant.prototype.orientationChanged = function(orientation) {
-	var item = this.controller.get('progress');
-	item.removeClassName('portrait');
-	item.removeClassName('landscape480');
-	item.removeClassName('landscape400');
+	if (Prefs.freeRotation) {
+		var item = this.controller.get('progress');
+		item.removeClassName('portrait');
+		item.removeClassName('landscape480');
+		item.removeClassName('landscape400');
 
-	var width = Mojo.Environment.DeviceInfo.screenWidth;
-	var height = Mojo.Environment.DeviceInfo.screenHeight;
+		var width = Mojo.Environment.DeviceInfo.screenWidth;
+		var height = Mojo.Environment.DeviceInfo.screenHeight;
 
-	if (orientation === 'left' || orientation === 'right') {
-		item.addClassName('landscape' + height);
-	} else if (orientation === 'up' || orientation === 'down') {
-		item.addClassName('portrait');
+		if (orientation === 'left' || orientation === 'right') {
+			item.addClassName('landscape' + height);
+		} else if (orientation === 'up' || orientation === 'down') {
+			item.addClassName('portrait');
+		}
+
+		this.adjustHeader();
 	}
-
-	this.adjustHeader();
 };
 
 EpisodeDetailsAssistant.prototype.adjustHeader = function() {

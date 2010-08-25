@@ -239,9 +239,11 @@ PreferencesAssistant.prototype.deactivate = function() {
 
 PreferencesAssistant.prototype.freeRotation = function(event) {
 	Prefs.freeRotation = event.value;
+	/*
 	var dialog = new drnull.Dialog.Info(this, $L({value:"Restart Required", key:"restartRequired"}),
 		$L({value:"Changing Free Rotation requires a restart of drPodder.", key:"changingFreeRotation"}));
 	dialog.show();
+	*/
 };
 
 PreferencesAssistant.prototype.autoUpdate = function(event) {

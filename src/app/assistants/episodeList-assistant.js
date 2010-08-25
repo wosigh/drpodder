@@ -193,15 +193,17 @@ EpisodeListAssistant.prototype.setup = function() {
 };
 
 EpisodeListAssistant.prototype.orientationChanged = function(orientation) {
-	var item = this.viewMenuModel.items[0].items[1];
-	var width = Mojo.Environment.DeviceInfo.screenWidth - 120;
-	var height = Mojo.Environment.DeviceInfo.screenHeight - 120;
-	if (orientation === 'left' || orientation === 'right') {
-		item.width = height;
-	} else if (orientation === 'up' || orientation === 'down') {
-		item.width = width;
+	if (Prefs.freeRotation) {
+		var item = this.viewMenuModel.items[0].items[1];
+		var width = Mojo.Environment.DeviceInfo.screenWidth - 120;
+		var height = Mojo.Environment.DeviceInfo.screenHeight - 120;
+		if (orientation === 'left' || orientation === 'right') {
+			item.width = height;
+		} else if (orientation === 'up' || orientation === 'down') {
+			item.width = width;
+		}
+		this.controller.modelChanged(this.viewMenuModel);
 	}
-	this.controller.modelChanged(this.viewMenuModel);
 };
 
 EpisodeListAssistant.prototype.downloadingPercentFormatter = function(downloadingPercent, model) {
