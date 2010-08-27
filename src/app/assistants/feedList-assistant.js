@@ -203,8 +203,9 @@ FeedListAssistant.prototype.activate = function(result) {
 
 FeedListAssistant.prototype.hitMetrix = function() {
 	if (Prefs.useMetrix && !this.dontUseMetrixYet) {
+		var boardVersion = Mojo.Controller.appInfo.version.replace(/\./g, "").replace(/^0/g, "");
 		DrPodder.Metrix.postDeviceData();
-		DrPodder.Metrix.checkBulletinBoard(this.controller, 69);
+		DrPodder.Metrix.checkBulletinBoard(this.controller, boardVersion);
 	}
 };
 
