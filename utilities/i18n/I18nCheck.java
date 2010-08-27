@@ -41,8 +41,8 @@ public class I18nCheck {
 		I18nCheck checker = new I18nCheck(baseDir);
 
 		Map<String, Map<String, String>> missing = checker.findMissing();
+		Map<String, Map<String, String>> fix = new LinkedHashMap<String, Map<String, String>>();
 
-		
 		PrintStream out = new PrintStream(System.out, true, "UTF-8");
 		if (missing.keySet().size() > 0) { out.println("Missing:"); }
 		for (String key : missing.keySet()) {
@@ -50,10 +50,26 @@ public class I18nCheck {
 			Map<String, String> entry = missing.get(key);
 			for (String lang : entry.keySet()) {
 				out.println("  - " + lang + ": " + entry.get(lang));
+				if (entry.get(lang) == "(null)") {
+					Map<String, String> langFix = fix.get(lang);
+					if (langFix == null) {
+						langFix = new LinkedHashMap<String, String>();
+						fix.put(lang, langFix);
+					}
+					langFix.put(key, entry.get(lang));
+				}
 			}
 		}
 
-		System.out.println("ñ");
+		if (fix.keySet().size() > 0) { out.println("\n\nEmail:\n"); }
+		for (String lang : fix.keySet()) {
+			out.println("Lanugage: " + lang);
+			Map<String, String> entry = fix.get(lang);
+			for (String key : entry.keySet()) {
+				out.println("\t" + key + ": " + missing.get(key).get(BASE_NAME));
+			}
+			out.println("\n");
+		}
 	}
 
 	public I18nCheck(String baseDir) throws IOException {
