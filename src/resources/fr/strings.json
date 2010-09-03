@@ -102,7 +102,6 @@
 	am: "am",
 	Delete: "Supprimer",
 	Download: "Télécharger",
-	Cancel: "Annuler",
 	Play: "Lire",
 	Resume: "Reprendre",
 	Restart: "Recommencer",
@@ -145,7 +144,6 @@
 
 	loadingFeedList: "Chargement liste des flux",
 
-	Preferences: "Préférences",
 	applicationSettings: "Paramètres de l'application",
 	allowLandscape: "Permettre le mode paysage",
 	autoUpdate: "Mise à jour automatique",

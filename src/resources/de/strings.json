@@ -2,7 +2,6 @@
 	addPodcastXML: "Podcast Feed hinzufügen",
 	editPodcastXML: "Podcast Feed bearbeiten",
 	Authentication: "Authentifizierung",
-	Cancel: "Abbrechen",
 	Help: "Hilfe",
 	About: "Über",
 	RSSFeedURL: "RSS Feed URL",
@@ -147,7 +146,6 @@
 
 	loadingFeedList: "Feedliste wird geladen",
 
-	Preferences: "Einstellungen",
 	applicationSettings: "Programmeinstellungen",
 	allowLandscape: "Querformat",
 	autoUpdate: "Auto-Update",

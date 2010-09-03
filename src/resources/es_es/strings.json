@@ -2,7 +2,6 @@
 	addPodcastXML: "Añadir feed del podcast",
 	editPodcastXML: "Editar feed del podcast",
 	Authentication: "Autentificación",
-	Cancel: "Cancelar",
 	Help: "Ayuda",
 	About: "Acerca de",
 	RSSFeedURL: "URL feed RSS",
@@ -46,7 +45,6 @@
 
 	importDrpodder: "Importar de drpodder.xml",
 	exportDrpodder: "Exportar por e-mail",
-	Preferences: "Preferencias",
 	addDefaultFeeds: "Añadir feeds predeterminados",
 	reportProblem: "Informar de un problema",
 	errorReadingOPML: "Error al leer archivo OPML",

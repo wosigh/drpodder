@@ -2,7 +2,6 @@
 	addPodcastXML: "Añadir Podcast XML Feed",
 	editPodcastXML: "Edit Podcast XML Feed",
 	Authentication: "Autenticación",
-	Cancel: "Cancelar",
 	Help: "Ayuda",
 	About: "Acerca de",
 	RSSFeedURL: "RSS Feed URL",
@@ -46,7 +45,7 @@
 
 	importDrpodder: "Importar de drpodder.xml",
 	exportDrpodder: "Exportación a través de email",
-	Preferences: "Preferences",
+	Preferences: "Preferencias",
 	enableAnonymousStatistics: "Habilitar Estadísticas Anónimo",
 	addDefaultFeeds: "Añadir Feeds Predeterminado",
 	reportProblem: "Informar de un Problema",
@@ -146,7 +145,6 @@
 
 	loadingFeedList: "Cargando lista de feeds",
 
-	Preferences: "Preferencias",
 	applicationSettings: "Configuración de la Aplicación",
 	allowLandscape: "Permitir Apaisado",
 	autoUpdate: "Auto Actualización",

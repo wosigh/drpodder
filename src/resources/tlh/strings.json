@@ -104,7 +104,6 @@
 	am: "am",
 	Delete: "teq",
 	Download: "lI'",
-	Cancel: "qIl",
 	Play: "chu'",
 	Resume: "taH",
 	Restart: "chu'qa'",
@@ -147,7 +146,6 @@
 
 	loadingFeedList: "Feed tetlh lI'",
 
-	Preferences: "DuHmey",
 	applicationSettings: "Application DuHmey",
 	allowLandscape: "Landscape chaw'",
 	autoUpdate: "Auto Update",
