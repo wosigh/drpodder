@@ -190,7 +190,7 @@ PreferencesAssistant.prototype.localize = function() {
 	Util.localize(this, "autoUpdate", "Auto Update", "autoUpdate");
 	Util.localize(this, "enableWifi", "Enable WiFi", "enableWifi");
 	Util.localize(this, "playbackDashboard", "Dashboard Ctrls", "playbackDashboard");
-	Util.localize(this, "useMetrix", "Statistics");
+	Util.localize(this, "useMetrix", "Statistics", "useMetrix");
 	Util.localize(this, "limitToWifi", "DL only over WiFi", "limitToWifi");
 	Util.localize(this, "feedListSettings", "Feed List Settings", "feedListSettings");
 	Util.localize(this, "albumArt", "Show Album Art", "albumArt");

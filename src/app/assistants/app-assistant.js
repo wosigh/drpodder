@@ -55,7 +55,7 @@ AppAssistant.prototype.handleLaunch = function(launchParams) {
 		}
 	} else {
 		if (!DB.ready) {
-			DB.waitForFeeds(this.handleLaunchParams.bind(this, launchParams));
+			DB.waitForDB(this.handleLaunchParams.bind(this, launchParams));
 		} else {
 			this.handleLaunchParams(launchParams);
 		}

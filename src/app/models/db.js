@@ -36,7 +36,7 @@ DBClass.prototype.dbVersions = [
 									"DROP TABLE version"]}
 ];
 
-DBClass.prototype.waitForFeeds = function(callback) {
+DBClass.prototype.waitForDB = function(callback) {
 	this.ready = true;
 	Mojo.Controller.getAppController().sendToNotificationChain({
 		type: "updateLoadingMessage", message: $L({value:"Opening Database", key:"openingDatabase"})});

@@ -36,7 +36,7 @@ LoadingAssistant.prototype.setup = function() {
 
 LoadingAssistant.prototype.activate = function() {
 	if (!DB.ready) {
-		DB.waitForFeeds(this.waitForFeedsReady.bind(this));
+		DB.waitForDB(this.waitForFeedsReady.bind(this));
 	} else {
 		this.waitForFeedsReady();
 	}
