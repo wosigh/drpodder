@@ -86,7 +86,7 @@ Episode.prototype.loadFromXML = function(xmlObject) {
 	try {
 		var matches = this.getExtension.exec(this.enclosure);
 		if (matches && matches.length > 1) {
-			var extension = matches[1];
+			var extension = matches[1].toLowerCase();
 			switch (extension) {
 				case "mp3":
 					inferredType = "audio/mpeg";
