@@ -123,7 +123,7 @@ Utilities.prototype.escapeSpecial = function(file) {
 							replace(/\*/g,'_').replace(/\?/g,'_').replace(/\"/g,'_').
 							replace(/</g, '_').replace(/\>/g, '_').replace(/\|/g, '_').
 							replace(/'/g,'_').replace(/\#/g, '_').replace(/\n/g, '_').
-							replace(/\t/g,'_');
+							replace(/\t/g,'_').replace(/\!/g, '_').replace(/\./g, '_');
 
 	// don't allow filenames longer than 200 chars
 	if (file.length > 200) {

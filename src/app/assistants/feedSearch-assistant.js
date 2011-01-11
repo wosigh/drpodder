@@ -40,7 +40,7 @@ DigitalPodcastSearch.prototype.search = function(keyword, filter, callback) {
 	var url = t.evaluate({keyword:encodeURI(keyword), filter: filter});
 
 	//Mojo.Log.error("url: %s", url);
-
+	
 	var request = new Ajax.Request(url, {
 		method : "get",
 		evalJSON : "false",
@@ -288,12 +288,76 @@ GoogleListenSearch.prototype.searchResults = function(callback, transport) {
 	callback(results);
 };
 
+function ITSearch() {
+}
+
+ITSearch.prototype.url = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?term=#{keyword}&country=US&media=podcast&entity=podcast";
+ITSearch.prototype.providerLabel = "powered by <a href='http://http://www.apple.com/itunes//'>iTunes</a>";
+
+ITSearch.prototype.getProviderLabel = function() {
+	return this.providerLabel;
+};
+
+ITSearch.prototype.search = function(keyword, filter, callback) {
+	Mojo.Log.warn("ITSearch.search(%s, %s)", keyword, filter);
+	var t = new Template(this.url);
+	var url = t.evaluate({keyword:encodeURI(keyword), filter: filter});
+
+	//Mojo.Log.error("url: %s", url);
+
+	var request = new Ajax.Request(url, {
+		method : "get",
+		evalJSON : "true",
+		evalJS : "false",
+		onFailure : function(transport) {
+			Mojo.Log.error("Error contacting search service: %d", transport.status);
+			Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
+		},
+		onSuccess : this.searchResults.bind(this, callback)
+	});
+};
+
+
+ITSearch.prototype.searchResults = function(callback, transport) {
+	//Mojo.Log.error("transport.status = %d", transport.status);
+	var results = [];
+	var uniq = {};
+
+	if (!transport || transport.status === 0 || transport.status < 200 || transport.status > 299) {
+		Mojo.Log.error("Error contacting search service: %d", transport.status);
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), "HTTP Status:"+transport.status);
+		return;
+	}
+
+	var json = transport.responseText.evalJSON(true);
+
+	var totalResults = json.resultCount;
+
+	if (totalResults === undefined) {
+		Mojo.Log.error("Error contacting search service: result count not found");
+		Util.showError($L({value:"Error contacting search service", key:"errorContactingSearch"}), $L({value:"No Results Found", key:"noResults"}));
+		return;
+	}
+
+	json.results.forEach(function(f) {
+		var title = f.collectionName;
+		var url = f.trackViewUrl;
+		if (!uniq[url]) {
+			uniq[url] = true;
+			results.push({title: title, url: url});
+		}
+	});
+
+	callback(results);
+};
+
 function FeedSearchAssistant() {
 	this.searchService = "digitalPodcast";
 	this.searchServices = {"digitalPodcast": new DigitalPodcastSearch(),
 						   "podcastDe": new PodcastDeSearch(),
 						   "spokenWord": new SpokenWordSearch(),
-						   "googleListen": new GoogleListenSearch()};
+						   "googleListen": new GoogleListenSearch(),
+						   "itSearch": new ITSearch()};
 }
 
 FeedSearchAssistant.prototype.setup = function() {
@@ -314,7 +378,8 @@ FeedSearchAssistant.prototype.setup = function() {
 		{label: $L("Directory"),
 		 choices: [{label: "Digital Podcast", value: "digitalPodcast"},
 		           {label: "Podcast.de (German)", value: "podcastDe"},
-		           //{label: "Spoken Word", value: "spokenWord"}
+		           //{label: "Spoken Word", value: "spokenWord"},
+		           //{label: "iTunes Search", value: "itSearch"},
 		           {label: "Google Listen", value: "googleListen"}
 		]},
 		this.searchProviderModel = { value : LastSearchService });
