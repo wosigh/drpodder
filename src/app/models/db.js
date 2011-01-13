@@ -253,12 +253,20 @@ DBClass.prototype.loadEpisodes = function() {
 };
 
 DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
+	this.loadEpisodesChunk(results, 0);
+};
+
+DBClass.prototype.loadEpisodesChunk = function(results, startAt) {
 	//Mojo.Log.error("episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
-	try {
-	if (results.rows.length > 0) {
+	if (results.rows.length > startAt) {
+		Mojo.Controller.getAppController().sendToNotificationChain({
+			type: "updateLoadingMessage",
+			message: $L({value:"Loading Episodes", key:"loadingEpisodes"}) + " " + Math.round(100*startAt / results.rows.length) + "%"});
+		
+		try {
 		var oldFeedId = -1;
 		var f = null;
-		for (var i=0, len=results.rows.length; i<len; ++i) {
+		for (var i=startAt, len=Math.min(results.rows.length, startAt+100); i<len; ++i) {
 			var item = results.rows.item(i);
 			var attempts = 0;
 			var tryAgain = true;
@@ -309,15 +317,23 @@ DBClass.prototype.loadEpisodesSuccess = function(transaction, results) {
 				}
 			}
 		}
+	
+		} catch (exceptionCaught) {
+			Mojo.Log.error("Error loading episodes: %j", exceptionCaught);
+		}
+		
+		this.loadEpisodesChunk.bind(this).defer(results, startAt+100);
+	} else {
+		try {
+			feedModel.items.forEach(function(f) {
+				f.sortEpisodes();
+			}.bind(this));
+		} catch (exceptionCaught) {
+			Mojo.Log.error("Error sorting episodes: %j", exceptionCaught);
+		}
+		//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
+		this.callback();
 	}
-	feedModel.items.forEach(function(f) {
-		f.sortEpisodes();
-	}.bind(this));
-	} catch (exceptionCaught) {
-		Mojo.Log.error("Error loading episodes: %j", exceptionCaught);
-	}
-	//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
-	this.callback();
 };
 
 DBClass.prototype.saveFeedsOnly = function() {
