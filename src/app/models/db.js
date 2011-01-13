@@ -328,8 +328,8 @@ DBClass.prototype.loadEpisodesChunk = function(results, startAt) {
 			feedModel.items.forEach(function(f) {
 				f.sortEpisodes();
 			}.bind(this));
-		} catch (exceptionCaught) {
-			Mojo.Log.error("Error sorting episodes: %j", exceptionCaught);
+		} catch (exceptionCaught2) {
+			Mojo.Log.error("Error sorting episodes: %j", exceptionCaught2);
 		}
 		//Mojo.Log.error("finished episodeRetrival time: %d", (new Date()).getTime() - this.startEpisodeRetrieval);
 		this.callback();
