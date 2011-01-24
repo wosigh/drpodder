@@ -282,7 +282,7 @@ AddFeedAssistant.prototype.autoDownloadChanged = function(event) {
 
 AddFeedAssistant.prototype.updateFields = function() {
 	if (this.nameModel.value) {this.feed.title = this.nameModel.value;}
-	if (this.albumArtModel.value) {this.feed.albumArt = this.albumArtModel.value;}
+	this.feed.albumArt = this.albumArtModel.value;
 	this.feed.autoDownload = this.autoDownloadModel.value;
 	this.feed.autoDelete = this.autoDeleteModel.value;
 	this.feed.hideFromOS = this.hideFilesModel.value;
